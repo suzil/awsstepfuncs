@@ -31,7 +31,6 @@ setup(
     package_data={},
     packages=find_packages(where="src"),
     package_dir={"": "src"},
-    entry_points={"console_scripts": ["awsstepfuncs = awsstepfuncs.cli:cli"]},
     author="Susannah Klaneček",
     author_email="suzil@protonmail.ch",
     url="https://suzil.dev/",

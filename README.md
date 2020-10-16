@@ -21,20 +21,21 @@ $ pip install awsstepfuncs
 ## Usage
 
 ```py
-from awsstepfuncs import Pass
+from awsstepfuncs import PassState, StateMachine
 
-# Define a series of states
-pass_step1 = Pass("Pass 1", description="Passes its input to its output without performing work")
-pass_step2 = Pass("Pass 2", description="Here is a second pass step")
+# Define some states
+pass_step1 = PassState("Pass 1", description="Passes its input to its output without performing work")
+pass_step2 = PassState("Pass 2", description="Here is a second pass step")
 
-# Define a workflow that organizes the states
-workflow = pass_step1 >> pass_step2
+# Define a state machine that orchestrates the states
+pass_step1 >> pass_step2
+state_machine = StateMachine(pass_step1)
 
-# Compile the workflow to Amazon States Language
-workflow.compile("workflow.json")
+# Compile the state machine to Amazon States Language
+state_machine.compile("state_machine.json")
 
-# Simulate the workflow by actually running it
-workflow.run()
+# Simulate the state machine by executing it
+state_machine.run()
 ```
 
 
