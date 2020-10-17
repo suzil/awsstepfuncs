@@ -8,6 +8,7 @@
 <!-- [![codecov](https://codecov.io/gh/suzil/aws-step-functions/branch/master/graph/badge.svg?token=<add_token_here>)](https://codecov.io/gh/suzil/aws-step-functions) TODO: Enable when the repo is public -->
 <!-- TODO: Add ReadTheDocs badge -->
 
+WARNING: This project is still a work-in-progress. Buyer beware.
 
 ## Installation
 
