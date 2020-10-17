@@ -5,8 +5,8 @@
 [![Actions Status](https://github.com/suzil/aws-step-functions/workflows/GH/badge.svg)](https://github.com/suzil/aws-step-functions/actions)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
 [![Checked with mypy](http://www.mypy-lang.org/static/mypy_badge.svg)](http://mypy-lang.org/)
-<!-- [![codecov](https://codecov.io/gh/suzil/aws-step-functions/branch/master/graph/badge.svg?token=<add_token_here>)](https://codecov.io/gh/suzil/aws-step-functions) TODO: Enable when the repo is public -->
-<!-- TODO: Add ReadTheDocs badge -->
+[![codecov](https://codecov.io/gh/suzil/aws-step-functions/branch/master/graph/badge.svg?token=PF990VH0YU)](https://codecov.io/gh/suzil/aws-step-functions)
+[![Documentation Status](https://readthedocs.org/projects/aws-step-functions/badge/?version=latest)](https://aws-step-functions.readthedocs.io/en/latest/?badge=latest)
 
 WARNING: This project is still a work-in-progress. Buyer beware.
 
