@@ -1,4 +1,4 @@
-from awsstepfuncs.state_machine import State, StateType
+from awsstepfuncs.state import State, StateType
 
 
 class PassState(State):
