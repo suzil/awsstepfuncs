@@ -19,27 +19,34 @@ class State(ABC):
         *,
         comment: Optional[str] = None,
         input_path: str = "$",
+        output_path: str = "$",
     ):
         """Initialize a state.
 
         Args:
             name: The name of the state.
             comment: A human-readable description of the state.
-            input_path: Used to select a portion of the state input.
+            input_path: Used to select a portion of the state input. Default is
+                $ (pass everything).
+            output_path: Used to select a portion of the state output. Default
+                is $ (pass everything).
 
         Raises:
-            ValueError: Raised when the input path is an invalid JSONPath.
+            ValueError: Raised when the input path or output path is an invalid
+                JSONPath.
         """
         self.name = name
         self.comment = comment
         self.next_state: Optional[State] = None
 
-        try:
-            validate_json_path(input_path)
-        except ValueError:
-            raise
-        else:
-            self.input_path = input_path
+        for json_path in [input_path, output_path]:
+            try:
+                validate_json_path(json_path)
+            except ValueError:
+                raise
+
+        self.input_path = input_path
+        self.output_path = output_path
 
     def __init_subclass__(cls) -> None:
         """Validate subclasses.
