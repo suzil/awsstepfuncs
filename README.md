@@ -29,7 +29,7 @@ pass_step2 = PassState("Pass 2", description="Here is a second pass step")
 
 # Define a state machine that orchestrates the states
 pass_step1 >> pass_step2
-state_machine = StateMachine(pass_step1)
+state_machine = StateMachine(start_state=pass_step1)
 
 # Compile the state machine to Amazon States Language
 state_machine.compile("state_machine.json")
