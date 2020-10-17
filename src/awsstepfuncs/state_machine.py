@@ -4,8 +4,7 @@ import json
 from pathlib import Path
 from typing import Any, Callable, Dict, Union
 
-from jsonpath_rw import parse as parse_jsonpath
-
+from awsstepfuncs.json_path import apply_json_path
 from awsstepfuncs.state import State
 from awsstepfuncs.task_state import TaskState
 
@@ -72,6 +71,9 @@ class StateMachine:
         if isinstance(state, TaskState):
             compiled["Resource"] = state.resource_uri
 
+        if input_path := state.input_path:
+            compiled["InputPath"] = input_path
+
         if next_state := state.next_state:
             compiled["Next"] = next_state.name
         else:
@@ -84,12 +86,11 @@ class StateMachine:
         *,
         state_input: dict = None,
         resource_to_mock_fn: Dict[str, Callable] = None,
-    ) -> dict:
+    ) -> Any:
         """Simulate the state machine by executing all of the states.
 
         Args:
-            state_input: A dictionary representing data to pass to the first
-                state.
+            state_input: Data to pass to the first state.
             resource_to_mock_fn: A dictionary mapping Resource URI to a mock
                 function to use in the simulation.
 
@@ -103,47 +104,38 @@ class StateMachine:
             resource_to_mock_fn = {}
 
         for state in self.start_state:
-            print(f"Running {state.name}")  # noqa: T001
-            if isinstance(state, TaskState):
-                state_output = state.run(
-                    state_input, mock_fn=resource_to_mock_fn[state.resource_uri]
-                )
-            else:
-                state_output = state.run(state_input)
-
+            state_output = self._simulate_state(state, state_input, resource_to_mock_fn)
             state_input = state_output
 
         return state_output
 
     @staticmethod
-    def _apply_json_path(json_path: str, data: dict) -> Any:
-        """Parse then apply a JSONPath on some data.
+    def _simulate_state(
+        state: State,
+        state_input: Any,
+        resource_to_mock_fn: Dict[str, Callable],
+    ) -> Any:
+        """Simulate a single state.
 
         Args:
-            json_path: The JSONPath to parse and apply.
-            data: The data to use the JSONPath expression on.
-
-        Raises:
-            ValueError: Raised when JSONPath is an empty string or does not
-                begin with a "$".
-            ValueError: Raised when the JSONPath has an unsupported operator (an
-                operator that AWS Step Functions does not support).
-            ValueError: Raised when the JSONPath does not find any match. There
-                should always be some match found.
+            state: The state to simulate.
+            state_input: Data to pass to the state.
+            resource_to_mock_fn: A dictionary mapping Resource URI to a mock
+                function to use in the simulation.
 
         Returns:
-            The queried data.
+            The output state.
         """
-        if not json_path or json_path[0] != "$":
-            raise ValueError('JSONPath must begin with "$"')
+        print(f"Running {state.name}")  # noqa: T001
 
-        unsupported_operators = {"@", "..", ",", ":", "?", "*"}
-        for operator in unsupported_operators:
-            if operator in json_path:
-                raise ValueError(f'Unsupported JSONPath operator: "{operator}"')
+        # Use input_path to select a subset of the input state to process if
+        # defined
+        if input_path := state.input_path:
+            state_input = apply_json_path(input_path, state_input)
 
-        parsed_json_path = parse_jsonpath(json_path)
-        if matches := [match.value for match in parsed_json_path.find(data)]:
-            return matches[0]
+        if isinstance(state, TaskState):
+            return state.run(
+                state_input, mock_fn=resource_to_mock_fn[state.resource_uri]
+            )
         else:
-            raise ValueError(f'JSONPath "{json_path}" did not find a match')
+            return state.run(state_input)

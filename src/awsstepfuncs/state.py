@@ -4,22 +4,44 @@ from abc import ABC, abstractmethod
 from enum import Enum
 from typing import Optional
 
+from awsstepfuncs.json_path import validate_json_path
+
 
 class State(ABC):
     """An AWS Step Functions state."""
 
     state_type: Optional[StateType] = None
 
-    def __init__(self, name: str, /, *, comment: Optional[str] = None):
+    def __init__(
+        self,
+        name: str,
+        /,
+        *,
+        comment: Optional[str] = None,
+        input_path: Optional[str] = None,
+    ):
         """Initialize a state.
 
         Args:
             name: The name of the state.
             comment: A human-readable description of the state.
+            input_path: Used to select a portion of the state input.
+
+        Raises:
+            ValueError: Raised when the input path is an invalid JSONPath.
         """
         self.name = name
         self.comment = comment
         self.next_state: Optional[State] = None
+
+        self.input_path = None
+        if input_path:
+            try:
+                validate_json_path(input_path)
+            except ValueError:
+                raise
+            else:
+                self.input_path = input_path
 
     def __init_subclass__(cls) -> None:
         """Validate subclasses.
