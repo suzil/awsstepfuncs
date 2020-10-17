@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from abc import ABC, abstractmethod
 from enum import Enum
 from pathlib import Path
 from typing import Dict, Optional, Union
@@ -59,6 +60,12 @@ class StateMachine:
 
         return compiled
 
+    def simulate(self) -> None:
+        """Simulate the state machine by executing all of the states."""
+        for state in self.start_state:
+            print(f"Running {state.name}")  # noqa: T001
+            state.run()
+
 
 class StateType(Enum):
     """State types in Amazon States Language."""
@@ -66,7 +73,7 @@ class StateType(Enum):
     PASS = "Pass"
 
 
-class State:
+class State(ABC):
     """An AWS Step Functions state."""
 
     state_type: Optional[StateType] = None
@@ -120,3 +127,8 @@ class State:
 
         self._current = current.next_state
         return current
+
+    @abstractmethod
+    def run(self) -> None:
+        """Execute the state."""
+        raise NotImplementedError

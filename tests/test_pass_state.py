@@ -1,4 +1,7 @@
+import contextlib
 import json
+from contextlib import redirect_stdout
+from io import StringIO
 
 from awsstepfuncs import PassState, StateMachine
 
@@ -42,3 +45,20 @@ def test_pass_state(tmp_path):
             },
         },
     }
+
+    # Simulate the state machine
+    with contextlib.closing(StringIO()) as fp:
+        with redirect_stdout(fp):
+            state_machine.simulate()
+        stdout = fp.getvalue()
+
+    assert (
+        stdout
+        == """Running Pass 1
+Passing
+Running Pass 2
+Passing
+Running Pass 3
+Passing
+"""
+    )

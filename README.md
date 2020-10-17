@@ -36,7 +36,7 @@ state_machine = StateMachine(start_state=pass_step1)
 state_machine.compile("state_machine.json")
 
 # Simulate the state machine by executing it
-state_machine.run()
+state_machine.simulate()
 ```
 
 

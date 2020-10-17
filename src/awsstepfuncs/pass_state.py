@@ -8,3 +8,7 @@ class PassState(State):
     """
 
     state_type = StateType.PASS
+
+    def run(self) -> None:
+        """Execute the pass state according to Amazon States Language."""
+        print("Passing")  # noqa: T001
