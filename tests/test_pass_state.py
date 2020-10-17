@@ -1,12 +1,11 @@
 import contextlib
-import json
 from contextlib import redirect_stdout
 from io import StringIO
 
 from awsstepfuncs import PassState, StateMachine
 
 
-def test_pass_state(tmp_path):
+def test_pass_state(compile_state_machine):
     pass_state1 = PassState("Pass 1", comment="The starting state")
     pass_state2 = PassState("Pass 2")
     pass_state3 = PassState("Pass 3")
@@ -23,10 +22,7 @@ def test_pass_state(tmp_path):
     ]
 
     # Check the output from compiling
-    compiled_path = tmp_path / "state_machine.json"
-    state_machine.compile(compiled_path)
-    with compiled_path.open() as fp:
-        compiled = json.load(fp)
+    compiled = compile_state_machine(state_machine)
     assert compiled == {
         "StartAt": pass_state1.name,
         "States": {
@@ -62,3 +58,19 @@ Running Pass 3
 Passing
 """
     )
+
+
+def test_one_state(compile_state_machine):
+    pass_state = PassState("My Pass", comment="The only state")
+    state_machine = StateMachine(start_state=pass_state)
+    compiled = compile_state_machine(state_machine)
+    assert compiled == {
+        "StartAt": pass_state.name,
+        "States": {
+            pass_state.name: {
+                "Comment": pass_state.comment,
+                "Type": "Pass",
+                "End": True,
+            },
+        },
+    }
