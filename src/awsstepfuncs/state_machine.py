@@ -8,6 +8,8 @@ from awsstepfuncs.json_path import apply_json_path
 from awsstepfuncs.state import State
 from awsstepfuncs.task_state import TaskState
 
+CompiledState = Dict[str, Union[str, bool, Dict[str, str]]]
+
 
 class StateMachine:
     """An AWS Step Functions state machine."""
@@ -52,8 +54,7 @@ class StateMachine:
         with output_path.open("w") as fp:
             json.dump(compiled, fp)
 
-    @staticmethod
-    def _compile_state(state: State, /) -> Dict[str, Union[str, bool]]:
+    def _compile_state(self, state: State, /) -> CompiledState:
         """Compile a state to Amazon States Language.
 
         Args:
@@ -62,14 +63,15 @@ class StateMachine:
         Returns:
             The compiled representation of the state.
         """
-        compiled: Dict[str, Union[str, bool]] = {
+        compiled: CompiledState = {
             "Type": state.state_type.value,  # type: ignore
         }
-        if comment := state.comment:
-            compiled["Comment"] = comment
 
         if isinstance(state, TaskState):
-            compiled["Resource"] = state.resource_uri
+            self._compile_task_state_fields(compiled, state)
+
+        if comment := state.comment:
+            compiled["Comment"] = comment
 
         if state.input_path != "$":
             compiled["InputPath"] = state.input_path
@@ -83,6 +85,12 @@ class StateMachine:
             compiled["End"] = True
 
         return compiled
+
+    @staticmethod
+    def _compile_task_state_fields(compiled: CompiledState, state: TaskState) -> None:
+        compiled["Resource"] = state.resource_uri
+        if result_selector := state.result_selector:
+            compiled["ResultSelector"] = result_selector
 
     def simulate(
         self,
@@ -106,14 +114,15 @@ class StateMachine:
         if resource_to_mock_fn is None:
             resource_to_mock_fn = {}
 
+        state_output = None
         for state in self.start_state:
             state_output = self._simulate_state(state, state_input, resource_to_mock_fn)
             state_input = state_output
 
         return state_output
 
-    @staticmethod
     def _simulate_state(
+        self,
         state: State,
         state_input: Any,
         resource_to_mock_fn: Dict[str, Callable],
@@ -142,4 +151,32 @@ class StateMachine:
         else:
             state_output = state.run(state_input)
 
+        # TODO: Add Map, Parallel here
+        if isinstance(state, TaskState) and (result_selector := state.result_selector):
+            state_output = self._apply_result_selector(state_output, result_selector)
+
+        # TODO: Add ResultPath here
+
         return apply_json_path(state.output_path, state_output)
+
+    @staticmethod
+    def _apply_result_selector(
+        state_output: Any, result_selector: Dict[str, str]
+    ) -> Dict[str, Any]:
+        """Apply the ResultSelector to select a portion of the state output.
+
+        Args:
+            state_output: The state output to filter.
+            result_selector: The result selector which defines which fields to
+                keep.
+
+        Returns:
+            The filtered state output.
+        """
+        new_state_output = {}
+        for key, json_path in result_selector.items():
+            key = key[:-2]  # Strip ".$"
+            if extracted := apply_json_path(json_path, state_output):
+                new_state_output[key] = extracted
+
+        return new_state_output
