@@ -2,9 +2,10 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Dict, Union
+from typing import Callable, Dict, Union
 
 from awsstepfuncs.state import State
+from awsstepfuncs.task_state import LambdaState
 
 
 class StateMachine:
@@ -53,6 +54,9 @@ class StateMachine:
         if description := state.description:
             compiled["Comment"] = description
 
+        if isinstance(state, LambdaState):
+            compiled["Resource"] = state.resource_uri
+
         if next_state := state.next_state:
             compiled["Next"] = next_state.name
         else:
@@ -60,8 +64,19 @@ class StateMachine:
 
         return compiled
 
-    def simulate(self) -> None:
-        """Simulate the state machine by executing all of the states."""
+    def simulate(self, resource_to_mock_fn: Dict[str, Callable] = None) -> None:
+        """Simulate the state machine by executing all of the states.
+
+        Args:
+            resource_to_mock_fn: A dictionary mapping Resource URI to a mock
+                function to use in the simulation.
+        """
+        if resource_to_mock_fn is None:
+            resource_to_mock_fn = {}
+
         for state in self.start_state:
             print(f"Running {state.name}")  # noqa: T001
-            state.run()
+            if isinstance(state, LambdaState):
+                state.run(resource_to_mock_fn[state.resource_uri])
+            else:
+                state.run()

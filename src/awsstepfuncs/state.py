@@ -70,3 +70,4 @@ class StateType(Enum):
     """State types in Amazon States Language."""
 
     PASS = "Pass"
+    LAMBDA = "Task"
