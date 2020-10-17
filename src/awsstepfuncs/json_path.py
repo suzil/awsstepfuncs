@@ -13,8 +13,6 @@ def apply_json_path(json_path: str, data: dict) -> Any:
     Raises:
         ValueError: Raised when the JSONPath is invalid (for the subset that
             Amazon States Language uses).
-        ValueError: Raised when the JSONPath does not find any match. There
-            should always be some match found.
 
     Returns:
         The queried data.
@@ -27,8 +25,6 @@ def apply_json_path(json_path: str, data: dict) -> Any:
     parsed_json_path = parse_jsonpath(json_path)
     if matches := [match.value for match in parsed_json_path.find(data)]:
         return matches[0]
-    else:
-        raise ValueError(f'JSONPath "{json_path}" did not find a match')
 
 
 def validate_json_path(json_path: str) -> None:
