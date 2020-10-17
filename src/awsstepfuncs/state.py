@@ -18,7 +18,7 @@ class State(ABC):
         /,
         *,
         comment: Optional[str] = None,
-        input_path: Optional[str] = None,
+        input_path: str = "$",
     ):
         """Initialize a state.
 
@@ -34,14 +34,12 @@ class State(ABC):
         self.comment = comment
         self.next_state: Optional[State] = None
 
-        self.input_path = None
-        if input_path:
-            try:
-                validate_json_path(input_path)
-            except ValueError:
-                raise
-            else:
-                self.input_path = input_path
+        try:
+            validate_json_path(input_path)
+        except ValueError:
+            raise
+        else:
+            self.input_path = input_path
 
     def __init_subclass__(cls) -> None:
         """Validate subclasses.

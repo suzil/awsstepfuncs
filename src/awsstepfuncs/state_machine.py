@@ -71,8 +71,8 @@ class StateMachine:
         if isinstance(state, TaskState):
             compiled["Resource"] = state.resource_uri
 
-        if input_path := state.input_path:
-            compiled["InputPath"] = input_path
+        if state.input_path != "$":
+            compiled["InputPath"] = state.input_path
 
         if next_state := state.next_state:
             compiled["Next"] = next_state.name
@@ -130,8 +130,7 @@ class StateMachine:
 
         # Use input_path to select a subset of the input state to process if
         # defined
-        if input_path := state.input_path:
-            state_input = apply_json_path(input_path, state_input)
+        state_input = apply_json_path(state.input_path, state_input)
 
         if isinstance(state, TaskState):
             return state.run(
