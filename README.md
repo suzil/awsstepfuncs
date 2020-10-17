@@ -45,7 +45,10 @@ state_machine = StateMachine(start_state=pass_step)
 state_machine.compile("state_machine.json")
 
 # Simulate the state machine by executing it, use mock functions for tasks
-state_machine.simulate({divide_numbers_resource_uri: lambda: print(1 / 2)})
+state_machine.simulate(
+    state_input={},
+    resource_to_mock_fn={divide_numbers_resource_uri: lambda: print(1 / 2),
+})
 ```
 ```
 Running My Pass
