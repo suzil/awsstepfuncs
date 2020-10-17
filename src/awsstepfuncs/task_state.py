@@ -1,4 +1,4 @@
-from typing import Callable, Optional
+from typing import Any, Callable, Optional
 
 from awsstepfuncs.state import State, StateType
 
@@ -25,7 +25,7 @@ class TaskState(State):
         self.resource_uri = resource_uri
         super().__init__(name, comment=comment)
 
-    def run(self, state_input: dict, mock_fn: Callable) -> dict:  # type: ignore
+    def run(self, state_input: Any, mock_fn: Callable) -> Any:  # type: ignore
         """Execute the task state according to Amazon States Language.
 
         Args:
