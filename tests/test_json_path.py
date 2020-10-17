@@ -35,7 +35,4 @@ def test_apply_json_path_must_begin_with_dollar(sample_data):
 
 
 def test_apply_json_path_no_match(sample_data):
-    with pytest.raises(
-        ValueError, match=re.escape('JSONPath "$.notfound" did not find a match')
-    ):
-        apply_json_path("$.notfound", sample_data)
+    assert apply_json_path("$.notfound", sample_data) is None
