@@ -35,21 +35,24 @@ def test_task_state(compile_state_machine):
     }
 
     # Simulate the state machine
+
+    def mock_fn(data):
+        data["foo"] *= 2
+        return data
+
     with contextlib.closing(StringIO()) as fp:
         with redirect_stdout(fp):
-            state_machine.simulate(
-                state_input={},
-                resource_to_mock_fn={
-                    dummy_resource_uri: lambda: print(1 / 2)  # noqa: T001
-                },
+            state_output = state_machine.simulate(
+                state_input={"foo": 5, "bar": 1},
+                resource_to_mock_fn={dummy_resource_uri: mock_fn},
             )
         stdout = fp.getvalue()
 
+    assert state_output == {"foo": 10, "bar": 1}
     assert (
         stdout
         == """Running Pass
 Passing
 Running Task
-0.5
 """
     )
