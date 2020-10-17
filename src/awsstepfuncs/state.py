@@ -10,15 +10,15 @@ class State(ABC):
 
     state_type: Optional[StateType] = None
 
-    def __init__(self, name: str, /, *, description: Optional[str] = None):
+    def __init__(self, name: str, /, *, comment: Optional[str] = None):
         """Initialize a state.
 
         Args:
             name: The name of the state.
-            description: A description of the state.
+            comment: A human-readable description of the state.
         """
         self.name = name
-        self.description = description
+        self.comment = comment
         self.next_state: Optional[State] = None
 
     def __init_subclass__(cls) -> None:

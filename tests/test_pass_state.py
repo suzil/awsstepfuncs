@@ -7,7 +7,7 @@ from awsstepfuncs import PassState, StateMachine
 
 
 def test_pass_state(tmp_path):
-    pass_state1 = PassState("Pass 1", description="The starting state")
+    pass_state1 = PassState("Pass 1", comment="The starting state")
     pass_state2 = PassState("Pass 2")
     pass_state3 = PassState("Pass 3")
 
@@ -31,7 +31,7 @@ def test_pass_state(tmp_path):
         "StartAt": pass_state1.name,
         "States": {
             pass_state1.name: {
-                "Comment": pass_state1.description,
+                "Comment": pass_state1.comment,
                 "Type": "Pass",
                 "Next": pass_state2.name,
             },
