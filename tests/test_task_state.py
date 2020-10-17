@@ -1,12 +1,11 @@
 import contextlib
-import json
 from contextlib import redirect_stdout
 from io import StringIO
 
 from awsstepfuncs import LambdaState, PassState, StateMachine
 
 
-def test_task_state(tmp_path):
+def test_task_state(compile_state_machine):
     pass_state = PassState("Pass", comment="The starting state")
     dummy_resource_uri = (
         "arn:aws:lambda:ap-southeast-2:710187714096:function:DivideNumbers"
@@ -18,10 +17,7 @@ def test_task_state(tmp_path):
     state_machine = StateMachine(start_state=pass_state)
 
     # Check the output from compiling
-    compiled_path = tmp_path / "state_machine.json"
-    state_machine.compile(compiled_path)
-    with compiled_path.open() as fp:
-        compiled = json.load(fp)
+    compiled = compile_state_machine(state_machine)
     assert compiled == {
         "StartAt": pass_state.name,
         "States": {
