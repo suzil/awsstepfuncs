@@ -84,7 +84,7 @@ class StateMachine:
         *,
         state_input: dict = None,
         resource_to_mock_fn: Dict[str, Callable] = None,
-    ) -> None:
+    ) -> dict:
         """Simulate the state machine by executing all of the states.
 
         Args:
@@ -92,6 +92,9 @@ class StateMachine:
                 state.
             resource_to_mock_fn: A dictionary mapping Resource URI to a mock
                 function to use in the simulation.
+
+        Returns:
+            The final output state from simulating the state machine.
         """
         if state_input is None:
             state_input = {}
@@ -102,9 +105,15 @@ class StateMachine:
         for state in self.start_state:
             print(f"Running {state.name}")  # noqa: T001
             if isinstance(state, TaskState):
-                state.run(resource_to_mock_fn[state.resource_uri])
+                state_output = state.run(
+                    state_input, mock_fn=resource_to_mock_fn[state.resource_uri]
+                )
             else:
-                state.run()
+                state_output = state.run(state_input)
+
+            state_input = state_output
+
+        return state_output
 
     @staticmethod
     def _apply_json_path(json_path: str, data: dict) -> Any:

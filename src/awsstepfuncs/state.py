@@ -61,8 +61,15 @@ class State(ABC):
         return current
 
     @abstractmethod
-    def run(self) -> None:
-        """Execute the state."""
+    def run(self, state_input: dict) -> dict:
+        """Execute the state.
+
+        Args:
+            state_input: The input state data.
+
+        Raises:
+            NotImplementedError: Raised if not implemented by subclasses.
+        """
         raise NotImplementedError
 
 

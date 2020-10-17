@@ -45,9 +45,10 @@ def test_pass_state(compile_state_machine):
     # Simulate the state machine
     with contextlib.closing(StringIO()) as fp:
         with redirect_stdout(fp):
-            state_machine.simulate()
+            state_output = state_machine.simulate()
         stdout = fp.getvalue()
 
+    assert state_output == {}
     assert (
         stdout
         == """Running Pass 1

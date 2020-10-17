@@ -25,6 +25,14 @@ class TaskState(State):
         self.resource_uri = resource_uri
         super().__init__(name, comment=comment)
 
-    def run(self, mock_fn: Callable) -> None:  # type: ignore
-        """Execute the task state according to Amazon States Language."""
-        mock_fn()
+    def run(self, state_input: dict, mock_fn: Callable) -> dict:  # type: ignore
+        """Execute the task state according to Amazon States Language.
+
+        Args:
+            state_input: The input state data to be passed to the mock function.
+            mock_fn: The mock function to run for the simulation.
+
+        Returns:
+            The output state from running the mock function.
+        """
+        return mock_fn(state_input)
