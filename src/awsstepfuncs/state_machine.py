@@ -51,8 +51,8 @@ class StateMachine:
         compiled: Dict[str, Union[str, bool]] = {
             "Type": state.state_type.value,  # type: ignore
         }
-        if description := state.description:
-            compiled["Comment"] = description
+        if comment := state.comment:
+            compiled["Comment"] = comment
 
         if isinstance(state, LambdaState):
             compiled["Resource"] = state.resource_uri

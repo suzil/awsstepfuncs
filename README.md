@@ -26,14 +26,14 @@ from awsstepfuncs import LambdaState, PassState, StateMachine
 
 # Define some states
 pass_step = PassState(
-    "My Pass", description="Passes its input to its output without performing work"
+    "My Pass", comment="Passes its input to its output without performing work"
 )
 divide_numbers_resource_uri = (
     "arn:aws:lambda:ap-southeast-2:710187714096:function:DivideNumbers"
 )
 task_step = LambdaState(
     "My Lambda",
-    description="Divide numbers task",
+    comment="Divide numbers task",
     resource_uri=divide_numbers_resource_uri,
 )
 

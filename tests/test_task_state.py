@@ -7,7 +7,7 @@ from awsstepfuncs import LambdaState, PassState, StateMachine
 
 
 def test_task_state(tmp_path):
-    pass_state = PassState("Pass", description="The starting state")
+    pass_state = PassState("Pass", comment="The starting state")
     dummy_resource_uri = (
         "arn:aws:lambda:ap-southeast-2:710187714096:function:DivideNumbers"
     )
@@ -26,7 +26,7 @@ def test_task_state(tmp_path):
         "StartAt": pass_state.name,
         "States": {
             pass_state.name: {
-                "Comment": pass_state.description,
+                "Comment": pass_state.comment,
                 "Type": "Pass",
                 "Next": task_state.name,
             },
