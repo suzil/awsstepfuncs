@@ -74,6 +74,9 @@ class StateMachine:
         if state.input_path != "$":
             compiled["InputPath"] = state.input_path
 
+        if state.output_path != "$":
+            compiled["OutputPath"] = state.output_path
+
         if next_state := state.next_state:
             compiled["Next"] = next_state.name
         else:
@@ -133,8 +136,10 @@ class StateMachine:
         state_input = apply_json_path(state.input_path, state_input)
 
         if isinstance(state, TaskState):
-            return state.run(
+            state_output = state.run(
                 state_input, mock_fn=resource_to_mock_fn[state.resource_uri]
             )
         else:
-            return state.run(state_input)
+            state_output = state.run(state_input)
+
+        return apply_json_path(state.output_path, state_output)
