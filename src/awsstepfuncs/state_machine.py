@@ -14,13 +14,26 @@ class StateMachine:
     def __init__(self, *, start_state: State):
         """Initialize a state machine.
 
-        A state machine will contain a reference to the start state, the root node in
-        our state machine DAG.
+        A state machine will contain a reference to the start state. All states
+        in the state machine must have a unique name.
 
         Args:
             start_state: The starting state.
+
+        Raises:
+            ValueError: Raised when there are duplicate state names.
         """
+        if not self._has_unique_names(start_state):
+            raise ValueError(
+                "Duplicate names detected in state machine. Names must be unique"
+            )
+
         self.start_state = start_state
+
+    @staticmethod
+    def _has_unique_names(start_state: State) -> bool:
+        all_state_names = [state.name for state in start_state]
+        return len(all_state_names) == len(set(all_state_names))
 
     def compile(self, output_path: Union[str, Path]) -> None:  # noqa: A003
         """Compile a state machine to Amazon States Language.
