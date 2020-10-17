@@ -22,7 +22,7 @@ $ pip install awsstepfuncs
 ## Usage
 
 ```py
-from awsstepfuncs import LambdaState, PassState, StateMachine
+from awsstepfuncs import TaskState, PassState, StateMachine
 
 # Define some states
 pass_step = PassState(
@@ -31,8 +31,8 @@ pass_step = PassState(
 divide_numbers_resource_uri = (
     "arn:aws:lambda:ap-southeast-2:710187714096:function:DivideNumbers"
 )
-task_step = LambdaState(
-    "My Lambda",
+task_step = TaskState(
+    "My Task",
     comment="Divide numbers task",
     resource_uri=divide_numbers_resource_uri,
 )
@@ -50,7 +50,7 @@ state_machine.simulate({divide_numbers_resource_uri: lambda: print(1 / 2)})
 ```
 Running My Pass
 Passing
-Running My Lambda
+Running My Task
 0.5
 ```
 

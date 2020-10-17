@@ -3,18 +3,18 @@ from typing import Callable, Optional
 from awsstepfuncs.state import State, StateType
 
 
-class LambdaState(State):
-    """Lambda state in Amazon States Language.
+class TaskState(State):
+    """Task state in Amazon States Language.
 
     A task state represents a single unit of work performed by a state machine.
     """
 
-    state_type = StateType.LAMBDA
+    state_type = StateType.TASK
 
     def __init__(
         self, name: str, /, *, comment: Optional[str] = None, resource_uri: str
     ):
-        """Initialize a Lambda state.
+        """Initialize a task state.
 
         Args:
             name: The name of the state.
