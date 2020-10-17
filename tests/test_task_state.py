@@ -2,7 +2,7 @@ import contextlib
 from contextlib import redirect_stdout
 from io import StringIO
 
-from awsstepfuncs import LambdaState, PassState, StateMachine
+from awsstepfuncs import PassState, StateMachine, TaskState
 
 
 def test_task_state(compile_state_machine):
@@ -10,7 +10,7 @@ def test_task_state(compile_state_machine):
     dummy_resource_uri = (
         "arn:aws:lambda:ap-southeast-2:710187714096:function:DivideNumbers"
     )
-    task_state = LambdaState("Lambda", resource_uri=dummy_resource_uri)
+    task_state = TaskState("Task", resource_uri=dummy_resource_uri)
 
     # Define the state machine
     pass_state >> task_state
@@ -46,7 +46,7 @@ def test_task_state(compile_state_machine):
         stdout
         == """Running Pass
 Passing
-Running Lambda
+Running Task
 0.5
 """
     )

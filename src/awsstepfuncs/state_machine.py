@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Callable, Dict, Union
 
 from awsstepfuncs.state import State
-from awsstepfuncs.task_state import LambdaState
+from awsstepfuncs.task_state import TaskState
 
 
 class StateMachine:
@@ -67,7 +67,7 @@ class StateMachine:
         if comment := state.comment:
             compiled["Comment"] = comment
 
-        if isinstance(state, LambdaState):
+        if isinstance(state, TaskState):
             compiled["Resource"] = state.resource_uri
 
         if next_state := state.next_state:
@@ -89,7 +89,7 @@ class StateMachine:
 
         for state in self.start_state:
             print(f"Running {state.name}")  # noqa: T001
-            if isinstance(state, LambdaState):
+            if isinstance(state, TaskState):
                 state.run(resource_to_mock_fn[state.resource_uri])
             else:
                 state.run()
