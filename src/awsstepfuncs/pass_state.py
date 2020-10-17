@@ -1,10 +1,10 @@
-from awsstepfuncs.state_machine import State
+from awsstepfuncs.state_machine import State, StateType
 
 
 class PassState(State):
-    """Pass state.
+    """Pass state in Amazon States Language.
 
     A Pass state passes its input to its outputs without performing work.
     """
 
-    pass
+    state_type = StateType.PASS

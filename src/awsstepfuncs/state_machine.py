@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from enum import Enum
 from pathlib import Path
 from typing import Dict, Optional, Union
 
@@ -46,7 +47,7 @@ class StateMachine:
             The compiled representation of the state.
         """
         compiled: Dict[str, Union[str, bool]] = {
-            "Type": "Pass",  # TODO: Make it generic with an enum, init_subclasses
+            "Type": state.state_type.value,  # type: ignore
         }
         if description := state.description:
             compiled["Comment"] = description
@@ -59,8 +60,16 @@ class StateMachine:
         return compiled
 
 
+class StateType(Enum):
+    """State types in Amazon States Language."""
+
+    PASS = "Pass"
+
+
 class State:
     """An AWS Step Functions state."""
+
+    state_type: Optional[StateType] = None
 
     def __init__(self, name: str, /, *, description: Optional[str] = None):
         """Initialize a state.
@@ -72,6 +81,19 @@ class State:
         self.name = name
         self.description = description
         self.next_state: Optional[State] = None
+
+    def __init_subclass__(cls) -> None:
+        """Validate subclasses.
+
+        Args:
+            cls: The subclass being validated.
+
+        Raises:
+            ValueError: When state type is not specified.
+        """
+        super().__init_subclass__()
+        if not cls.state_type:  # pragma: no cover
+            raise ValueError("Must specify state_type attribute")
 
     def __rshift__(self, other: State, /) -> State:
         """Overload >> operator when state execution order.
