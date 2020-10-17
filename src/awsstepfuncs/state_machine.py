@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Callable, Dict, Union
+from typing import Any, Callable, Dict, Union
+
+from jsonpath_rw import parse as parse_jsonpath
 
 from awsstepfuncs.state import State
 from awsstepfuncs.task_state import TaskState
@@ -77,13 +79,23 @@ class StateMachine:
 
         return compiled
 
-    def simulate(self, resource_to_mock_fn: Dict[str, Callable] = None) -> None:
+    def simulate(
+        self,
+        *,
+        state_input: dict = None,
+        resource_to_mock_fn: Dict[str, Callable] = None,
+    ) -> None:
         """Simulate the state machine by executing all of the states.
 
         Args:
+            state_input: A dictionary representing data to pass to the first
+                state.
             resource_to_mock_fn: A dictionary mapping Resource URI to a mock
                 function to use in the simulation.
         """
+        if state_input is None:
+            state_input = {}
+
         if resource_to_mock_fn is None:
             resource_to_mock_fn = {}
 
@@ -93,3 +105,36 @@ class StateMachine:
                 state.run(resource_to_mock_fn[state.resource_uri])
             else:
                 state.run()
+
+    @staticmethod
+    def _apply_json_path(json_path: str, data: dict) -> Any:
+        """Parse then apply a JSONPath on some data.
+
+        Args:
+            json_path: The JSONPath to parse and apply.
+            data: The data to use the JSONPath expression on.
+
+        Raises:
+            ValueError: Raised when JSONPath is an empty string or does not
+                begin with a "$".
+            ValueError: Raised when the JSONPath has an unsupported operator (an
+                operator that AWS Step Functions does not support).
+            ValueError: Raised when the JSONPath does not find any match. There
+                should always be some match found.
+
+        Returns:
+            The queried data.
+        """
+        if not json_path or json_path[0] != "$":
+            raise ValueError('JSONPath must begin with "$"')
+
+        unsupported_operators = {"@", "..", ",", ":", "?", "*"}
+        for operator in unsupported_operators:
+            if operator in json_path:
+                raise ValueError(f'Unsupported JSONPath operator: "{operator}"')
+
+        parsed_json_path = parse_jsonpath(json_path)
+        if matches := [match.value for match in parsed_json_path.find(data)]:
+            return matches[0]
+        else:
+            raise ValueError(f'JSONPath "{json_path}" did not find a match')

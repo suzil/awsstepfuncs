@@ -38,7 +38,10 @@ def test_task_state(compile_state_machine):
     with contextlib.closing(StringIO()) as fp:
         with redirect_stdout(fp):
             state_machine.simulate(
-                {dummy_resource_uri: lambda: print(1 / 2)}  # noqa: T001
+                state_input={},
+                resource_to_mock_fn={
+                    dummy_resource_uri: lambda: print(1 / 2)  # noqa: T001
+                },
             )
         stdout = fp.getvalue()
 
