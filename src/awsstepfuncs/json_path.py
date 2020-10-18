@@ -24,6 +24,7 @@ def apply_json_path(json_path: str, data: dict) -> Any:
 
     parsed_json_path = parse_jsonpath(json_path)
     if matches := [match.value for match in parsed_json_path.find(data)]:
+        assert len(matches) == 1, "There should only be one match possible"
         return matches[0]
 
 
