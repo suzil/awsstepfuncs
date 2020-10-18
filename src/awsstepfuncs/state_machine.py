@@ -6,9 +6,11 @@ from pathlib import Path
 from typing import Any, Callable, Dict, Optional, Union
 
 from awsstepfuncs.json_path import apply_json_path
-from awsstepfuncs.pass_state import PassState
-from awsstepfuncs.state import AbstractState
-from awsstepfuncs.task_state import TaskState
+from awsstepfuncs.state import (
+    AbstractNextOrEndState,
+    AbstractResultPathState,
+    TaskState,
+)
 
 CompiledState = Dict[str, Union[str, bool, Dict[str, str], None]]
 
@@ -19,7 +21,7 @@ class StateMachine:
     def __init__(
         self,
         *,
-        start_state: AbstractState,
+        start_state: AbstractNextOrEndState,
         comment: Optional[str] = None,
         version: Optional[str] = None,
     ):
@@ -41,28 +43,24 @@ class StateMachine:
             raise ValueError(
                 "Duplicate names detected in state machine. Names must be unique"
             )
-
         self.start_state = start_state
         self.comment = comment
         self.version = version
 
     @staticmethod
-    def _has_unique_names(start_state: AbstractState) -> bool:
+    def _has_unique_names(start_state: AbstractNextOrEndState) -> bool:
         all_state_names = [state.name for state in start_state]
         return len(all_state_names) == len(set(all_state_names))
 
-    def compile(self, output_path: Union[str, Path]) -> None:  # noqa: A003
+    def compile(self) -> Dict[str, Any]:  # noqa: A003
         """Compile a state machine to Amazon States Language.
 
-        Args:
-            output_path: The path to save the compiled JSON.
+        Returns:
+            A dictionary of the compiled state in Amazon States Language.
         """
-        output_path = Path(output_path)
         compiled = {
             "StartAt": self.start_state.name,
-            "States": {
-                state.name: self._compile_state(state) for state in self.start_state
-            },
+            "States": {state.name: state.compile() for state in self.start_state},
         }
 
         if comment := self.comment:
@@ -71,80 +69,12 @@ class StateMachine:
         if version := self.version:
             compiled["Version"] = version
 
-        with output_path.open("w") as fp:
-            json.dump(compiled, fp)
-
-    def _compile_state(self, state: AbstractState, /) -> CompiledState:
-        """Compile a state to Amazon States Language.
-
-        Args:
-            state: The state to compile.
-
-        Returns:
-            The compiled representation of the state.
-        """
-        compiled: CompiledState = {"Type": state.state_type}
-
-        # TODO: Probably there is some nice way to move this class-specific
-        # compliation logic to those respective classes
-        if isinstance(state, TaskState):
-            self._compile_task_state_fields(compiled, state)
-        if isinstance(state, PassState):
-            self._compile_pass_state_fields(compiled, state)
-
-        self._compile_generic_state_fields(compiled, state)
-
         return compiled
 
-    @staticmethod
-    def _compile_task_state_fields(compiled: CompiledState, state: TaskState) -> None:
-        """Compile task state fields.
-
-        Args:
-            compiled: The compilation to save new fields to.
-            state: The state.
-        """
-        compiled["Resource"] = state.resource_uri
-        if result_selector := state.result_selector:
-            compiled["ResultSelector"] = result_selector
-
-    @staticmethod
-    def _compile_pass_state_fields(compiled: CompiledState, state: PassState) -> None:
-        """Compile pass state fields.
-
-        Args:
-            compiled: The compilation to save new fields to.
-            state: The state.
-        """
-        if result := state.result:
-            compiled["Result"] = result
-
-    @staticmethod
-    def _compile_generic_state_fields(
-        compiled: CompiledState, state: AbstractState
-    ) -> None:
-        """Compile state fields that are common to all states.
-
-        Args:
-            compiled: The compilation to save new fields to.
-            state: The state.
-        """
-        if comment := state.comment:
-            compiled["Comment"] = comment
-
-        if state.input_path != "$":
-            compiled["InputPath"] = state.input_path
-
-        if state.output_path != "$":
-            compiled["OutputPath"] = state.output_path
-
-        if state.result_path != "$":
-            compiled["ResultPath"] = state.result_path
-
-        if next_state := state.next_state:
-            compiled["Next"] = next_state.name
-        else:
-            compiled["End"] = True
+    def to_json(self, filename: Union[str, Path]) -> None:
+        filename = Path(filename)
+        with filename.open("w") as fp:
+            json.dump(self.compile(), fp)
 
     def simulate(
         self,
@@ -177,7 +107,7 @@ class StateMachine:
 
     def _simulate_state(
         self,
-        state: AbstractState,
+        state: AbstractNextOrEndState,
         state_input: Any,
         resource_to_mock_fn: Dict[str, Callable],
     ) -> Any:
@@ -201,7 +131,7 @@ class StateMachine:
         # Run the state to get the state output
         if isinstance(state, TaskState):
             state_output = state.run(
-                state_input, mock_fn=resource_to_mock_fn[state.resource_uri]
+                state_input, mock_fn=resource_to_mock_fn[state.resource]
             )
         else:
             state_output = state.run(state_input)
@@ -211,10 +141,13 @@ class StateMachine:
         if isinstance(state, TaskState) and (result_selector := state.result_selector):
             state_output = self._apply_result_selector(state_output, result_selector)
 
-        result_path_output = self._apply_result_path(
-            state_input, state_output, state.result_path
-        )
-        return apply_json_path(state.output_path, result_path_output)
+        if isinstance(state, AbstractResultPathState):
+            result_path_output = self._apply_result_path(
+                state_input, state_output, state.result_path
+            )
+            return apply_json_path(state.output_path, result_path_output)
+        else:
+            return apply_json_path(state.output_path, state_output)
 
     @staticmethod
     def _apply_result_selector(

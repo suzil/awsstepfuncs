@@ -8,13 +8,13 @@ from awsstepfuncs import PassState, StateMachine, TaskState
 
 
 @pytest.fixture(scope="session")
-def dummy_resource_uri():
+def dummy_resource():
     return "arn:aws:lambda:ap-southeast-2:710187714096:function:DivideNumbers"
 
 
-def test_task_state(compile_state_machine, dummy_resource_uri):
+def test_task_state(compile_state_machine, dummy_resource):
     pass_state = PassState("Pass", comment="The starting state")
-    task_state = TaskState("Task", resource_uri=dummy_resource_uri)
+    task_state = TaskState("Task", resource=dummy_resource)
 
     # Define the state machine
     pass_state >> task_state
@@ -32,7 +32,7 @@ def test_task_state(compile_state_machine, dummy_resource_uri):
             },
             task_state.name: {
                 "Type": "Task",
-                "Resource": dummy_resource_uri,
+                "Resource": dummy_resource,
                 "End": True,
             },
         },
@@ -48,7 +48,7 @@ def test_task_state(compile_state_machine, dummy_resource_uri):
         with redirect_stdout(fp):
             state_output = state_machine.simulate(
                 state_input={"foo": 5, "bar": 1},
-                resource_to_mock_fn={dummy_resource_uri: mock_fn},
+                resource_to_mock_fn={dummy_resource: mock_fn},
             )
         stdout = fp.getvalue()
 
@@ -62,14 +62,14 @@ Running Task
     )
 
 
-def test_result_selector(compile_state_machine, dummy_resource_uri):
+def test_result_selector(compile_state_machine, dummy_resource):
     result_selector = {
         "ClusterId.$": "$.output.ClusterId",
         "ResourceType.$": "$.resourceType",
         "SomethingElse.$": "$.keyDoesntExist",
     }
     task_state = TaskState(
-        "Task", resource_uri=dummy_resource_uri, result_selector=result_selector
+        "Task", resource=dummy_resource, result_selector=result_selector
     )
     state_machine = StateMachine(start_state=task_state)
 
@@ -79,7 +79,7 @@ def test_result_selector(compile_state_machine, dummy_resource_uri):
         "StartAt": task_state.name,
         "States": {
             task_state.name: {
-                "Resource": dummy_resource_uri,
+                "Resource": dummy_resource,
                 "ResultSelector": result_selector,
                 "Type": "Task",
                 "End": True,
@@ -109,7 +109,7 @@ def test_result_selector(compile_state_machine, dummy_resource_uri):
         }
 
     state_output = state_machine.simulate(
-        resource_to_mock_fn={dummy_resource_uri: mock_fn},
+        resource_to_mock_fn={dummy_resource: mock_fn},
     )
 
     assert state_output == {
@@ -118,8 +118,8 @@ def test_result_selector(compile_state_machine, dummy_resource_uri):
     }
 
 
-def test_result_path_only_state_output(compile_state_machine, dummy_resource_uri):
-    task_state = TaskState("Task", resource_uri=dummy_resource_uri, result_path="$")
+def test_result_path_only_state_output(compile_state_machine, dummy_resource):
+    task_state = TaskState("Task", resource=dummy_resource, result_path="$")
     state_machine = StateMachine(start_state=task_state)
 
     # Check the output from compiling
@@ -128,7 +128,7 @@ def test_result_path_only_state_output(compile_state_machine, dummy_resource_uri
         "StartAt": task_state.name,
         "States": {
             task_state.name: {
-                "Resource": dummy_resource_uri,
+                "Resource": dummy_resource,
                 "Type": "Task",
                 "End": True,
             },
@@ -149,15 +149,15 @@ def test_result_path_only_state_output(compile_state_machine, dummy_resource_uri
 
     state_output = state_machine.simulate(
         state_input=state_input,
-        resource_to_mock_fn={dummy_resource_uri: mock_fn},
+        resource_to_mock_fn={dummy_resource: mock_fn},
     )
 
     # Keeps the only the state output
     assert state_output == output_text
 
 
-def test_result_path_only_state_input(compile_state_machine, dummy_resource_uri):
-    task_state = TaskState("Task", resource_uri=dummy_resource_uri, result_path=None)
+def test_result_path_only_state_input(compile_state_machine, dummy_resource):
+    task_state = TaskState("Task", resource=dummy_resource, result_path=None)
     state_machine = StateMachine(start_state=task_state)
 
     # Check the output from compiling
@@ -166,7 +166,7 @@ def test_result_path_only_state_input(compile_state_machine, dummy_resource_uri)
         "StartAt": task_state.name,
         "States": {
             task_state.name: {
-                "Resource": dummy_resource_uri,
+                "Resource": dummy_resource,
                 "ResultPath": None,
                 "Type": "Task",
                 "End": True,
@@ -186,17 +186,17 @@ def test_result_path_only_state_input(compile_state_machine, dummy_resource_uri)
 
     state_output = state_machine.simulate(
         state_input=state_input,
-        resource_to_mock_fn={dummy_resource_uri: mock_fn},
+        resource_to_mock_fn={dummy_resource: mock_fn},
     )
 
     # Keeps the only the state output
     assert state_output == state_input
 
 
-def test_result_path_keep_both(compile_state_machine, dummy_resource_uri):
+def test_result_path_keep_both(compile_state_machine, dummy_resource):
     result_key = "taskresult"
     task_state = TaskState(
-        "Task", resource_uri=dummy_resource_uri, result_path=f"$.{result_key}"
+        "Task", resource=dummy_resource, result_path=f"$.{result_key}"
     )
     state_machine = StateMachine(start_state=task_state)
 
@@ -206,7 +206,7 @@ def test_result_path_keep_both(compile_state_machine, dummy_resource_uri):
         "StartAt": task_state.name,
         "States": {
             task_state.name: {
-                "Resource": dummy_resource_uri,
+                "Resource": dummy_resource,
                 "ResultPath": f"$.{result_key}",
                 "Type": "Task",
                 "End": True,
@@ -228,7 +228,7 @@ def test_result_path_keep_both(compile_state_machine, dummy_resource_uri):
 
     state_output = state_machine.simulate(
         state_input=state_input,
-        resource_to_mock_fn={dummy_resource_uri: mock_fn},
+        resource_to_mock_fn={dummy_resource: mock_fn},
     )
 
     state_input[result_key] = output_text
@@ -237,11 +237,11 @@ def test_result_path_keep_both(compile_state_machine, dummy_resource_uri):
     assert state_output == state_input
 
 
-def test_state_has_invalid_result_selector(dummy_resource_uri):
+def test_state_has_invalid_result_selector(dummy_resource):
     invalid_result_selector = {"ClusterId.$": "$.dataset*"}
     with pytest.raises(ValueError, match='Unsupported JSONPath operator: "*"'):
         TaskState(
             "My Task",
-            resource_uri=dummy_resource_uri,
+            resource=dummy_resource,
             result_selector=invalid_result_selector,
         )
