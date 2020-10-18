@@ -63,6 +63,29 @@ Passing
     )
 
 
+def test_result(compile_state_machine):
+    result = {"Hello": "world!"}
+    pass_state = PassState("My Pass", result=result)
+    state_machine = StateMachine(start_state=pass_state)
+
+    # Check the output from compiling
+    compiled = compile_state_machine(state_machine)
+    assert compiled == {
+        "StartAt": pass_state.name,
+        "States": {
+            pass_state.name: {
+                "Result": result,
+                "Type": "Pass",
+                "End": True,
+            },
+        },
+    }
+
+    # Simulate the state machine
+    state_output = state_machine.simulate()
+    assert state_output == result
+
+
 def test_input_path_output_path(compile_state_machine):
     input_path = "$.dataset2"
     output_path = "$.val1"
