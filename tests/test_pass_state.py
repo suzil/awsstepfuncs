@@ -5,6 +5,7 @@ from io import StringIO
 import pytest
 
 from awsstepfuncs import PassState, StateMachine
+from awsstepfuncs.state import MAX_STATE_NAME_LENGTH
 
 
 def test_pass_state(compile_state_machine):
@@ -122,3 +123,10 @@ def test_state_has_invalid_input_path():
     invalid_input_path = "$.dataset*"
     with pytest.raises(ValueError, match='Unsupported JSONPath operator: "*"'):
         PassState("Pass 1", input_path=invalid_input_path)
+
+
+def test_state_name_too_long():
+    with pytest.raises(
+        ValueError, match=r'State name "[a]+" must be less than 128 characters'
+    ):
+        PassState("a" * (MAX_STATE_NAME_LENGTH + 1))

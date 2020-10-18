@@ -6,6 +6,8 @@ from typing import Optional
 
 from awsstepfuncs.json_path import validate_json_path
 
+MAX_STATE_NAME_LENGTH = 128
+
 
 class State(ABC):
     """An AWS Step Functions state."""
@@ -27,7 +29,8 @@ class State(ABC):
         """Initialize a state.
 
         Args:
-            name: The name of the state.
+            name: The name of the state. Must be unique within the state machine
+                and its length cannot exceed 128 characters.
             comment: A human-readable description of the state.
             input_path: Used to select a portion of the state input. Default is
                 $ (pass everything).
@@ -39,8 +42,14 @@ class State(ABC):
                 as the state's output. Default is $ (pass only the output state).
 
         Raises:
+            ValueError: Raised when the state name exceeds 128 characters.
             ValueError: Raised when an invalid JSONPath is specified.
         """
+        if len(name) > MAX_STATE_NAME_LENGTH:
+            raise ValueError(
+                f'State name "{name}" must be less than {MAX_STATE_NAME_LENGTH} characters'
+            )
+
         self.name = name
         self.comment = comment
         self.next_state: Optional[State] = None
