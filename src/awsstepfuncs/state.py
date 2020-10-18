@@ -20,6 +20,9 @@ class State(ABC):
         comment: Optional[str] = None,
         input_path: str = "$",
         output_path: str = "$",
+        result_path: Optional[
+            str
+        ] = "$",  # TODO: Only applies to Pass, Task, Parallel (Mixin?)
     ):
         """Initialize a state.
 
@@ -30,16 +33,23 @@ class State(ABC):
                 $ (pass everything).
             output_path: Used to select a portion of the state output. Default
                 is $ (pass everything).
+            result_path: Specifies where (in the input) to place the "output" of
+                the virtual task specified in Result. The input is further filtered
+                as specified by the OutputPath field (if present) before being used
+                as the state's output. Default is $ (pass only the output state).
 
         Raises:
-            ValueError: Raised when the input path or output path is an invalid
-                JSONPath.
+            ValueError: Raised when an invalid JSONPath is specified.
         """
         self.name = name
         self.comment = comment
         self.next_state: Optional[State] = None
 
-        for json_path in [input_path, output_path]:
+        all_json_paths = [input_path, output_path]
+        if result_path:
+            all_json_paths.append(result_path)
+
+        for json_path in all_json_paths:
             try:
                 validate_json_path(json_path)
             except ValueError:
@@ -47,6 +57,7 @@ class State(ABC):
 
         self.input_path = input_path
         self.output_path = output_path
+        self.result_path = result_path
 
     def __init_subclass__(cls) -> None:
         """Validate subclasses.
