@@ -83,9 +83,7 @@ class StateMachine:
         Returns:
             The compiled representation of the state.
         """
-        compiled: CompiledState = {
-            "Type": state.state_type.value,  # type: ignore
-        }
+        compiled: CompiledState = {"Type": state.state_type}
 
         # TODO: Probably there is some nice way to move this class-specific
         # compliation logic to those respective classes

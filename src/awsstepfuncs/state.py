@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from enum import Enum
 from typing import Optional
 
 from awsstepfuncs.json_path import validate_json_path
@@ -12,7 +11,7 @@ MAX_STATE_NAME_LENGTH = 128
 class AbstractState(ABC):
     """An AWS Step Functions state."""
 
-    state_type: Optional[StateType] = None
+    state_type: Optional[str] = None
 
     def __init__(
         self,
@@ -118,10 +117,3 @@ class AbstractState(ABC):
             NotImplementedError: Raised if not implemented by subclasses.
         """
         raise NotImplementedError
-
-
-class StateType(Enum):
-    """State types in Amazon States Language."""
-
-    PASS = "Pass"
-    TASK = "Task"
