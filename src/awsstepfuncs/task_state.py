@@ -1,7 +1,7 @@
 from typing import Any, Callable, Dict, Optional
 
 from awsstepfuncs.json_path import validate_json_path
-from awsstepfuncs.state import AbstractState, StateType
+from awsstepfuncs.state import AbstractState
 
 
 class TaskState(AbstractState):
@@ -10,7 +10,7 @@ class TaskState(AbstractState):
     A task state represents a single unit of work performed by a state machine.
     """
 
-    state_type = StateType.TASK
+    state_type = "Task"
 
     def __init__(
         self,

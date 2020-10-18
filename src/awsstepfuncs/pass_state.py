@@ -1,6 +1,6 @@
 from typing import Any, Optional
 
-from awsstepfuncs.state import AbstractState, StateType
+from awsstepfuncs.state import AbstractState
 
 
 class PassState(AbstractState):
@@ -9,7 +9,7 @@ class PassState(AbstractState):
     A Pass state passes its input to its outputs without performing work.
     """
 
-    state_type = StateType.PASS
+    state_type = "Pass"
 
     def __init__(
         self,
