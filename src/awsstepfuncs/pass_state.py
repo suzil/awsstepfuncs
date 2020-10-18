@@ -1,9 +1,9 @@
 from typing import Any, Optional
 
-from awsstepfuncs.state import State, StateType
+from awsstepfuncs.state import AbstractState, StateType
 
 
-class PassState(State):
+class PassState(AbstractState):
     """Pass state in Amazon States Language.
 
     A Pass state passes its input to its outputs without performing work.
