@@ -49,6 +49,17 @@ class StateMachine:
 
     @staticmethod
     def _has_unique_names(start_state: AbstractNextOrEndState) -> bool:
+        """Check if all states have unique names.
+
+        All state names must be unique in a state machine.
+
+        Args:
+            start_state: The starting state (which has references to all
+                following states).
+
+        Returns:
+            Whether all states have unique names.
+        """
         all_state_names = [state.name for state in start_state]
         return len(all_state_names) == len(set(all_state_names))
 
@@ -72,6 +83,11 @@ class StateMachine:
         return compiled
 
     def to_json(self, filename: Union[str, Path]) -> None:
+        """Compile to Amazon States Language and then output to JSON.
+
+        Args:
+            filename: The name of the file to write the JSON to.
+        """
         filename = Path(filename)
         with filename.open("w") as fp:
             json.dump(self.compile(), fp)

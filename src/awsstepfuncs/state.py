@@ -21,7 +21,7 @@ language specification in our implementation and move `next_state` to
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Dict, List, Optional
 
 from awsstepfuncs.json_path import validate_json_path
 
@@ -29,10 +29,10 @@ MAX_STATE_NAME_LENGTH = 128
 
 
 class AbstractState(ABC):
-    """An AWS Step Functions state."""
+    """An Amazon States Language state including Name, Comment, and Type."""
 
     def __init__(self, name: str, comment: Optional[str] = None):
-        """Initialize a state.
+        """Initialize subclasses.
 
         Args:
             name: The name of the state. Must be unique within the state machine
@@ -51,6 +51,12 @@ class AbstractState(ABC):
         self.comment = comment
 
     def compile(self) -> Dict[str, Any]:  # noqa: A003
+        """Compile the state to Amazon States Language.
+
+        Returns:
+            A dictionary representing the compiled state in Amazon States
+            Language.
+        """
         assert self.state_type  # type: ignore
         compiled = {"Type": self.state_type}  # type: ignore
         if comment := self.comment:
@@ -71,11 +77,13 @@ class AbstractState(ABC):
 
 
 class FailState(AbstractState):
+    """The Fail State terminates the machine and marks it as a failure."""
+
     state_type = "Fail"
 
 
 class AbstractInputPathOutputPathState(AbstractState):
-    """Includes InputPath and OutputPath."""
+    """An Amazon States Language state including InputPath and OutputPath."""
 
     def __init__(
         self, *args: Any, input_path: str = "$", output_path: str = "$", **kwargs: Any
@@ -104,6 +112,12 @@ class AbstractInputPathOutputPathState(AbstractState):
         self.output_path = output_path
 
     def compile(self) -> Dict[str, Any]:  # noqa: A003
+        """Compile the state to Amazon States Language.
+
+        Returns:
+            A dictionary representing the compiled state in Amazon States
+            Language.
+        """
         compiled = super().compile()
         if (input_path := self.input_path) != "$":
             compiled["InputPath"] = input_path
@@ -113,15 +127,35 @@ class AbstractInputPathOutputPathState(AbstractState):
 
 
 class SucceedState(AbstractInputPathOutputPathState):
+    """The Succeed State terminates with a mark of success.
+
+    The branch can either be:
+        - The entire state machine
+        - A branch of a Parallel State
+        - An iteration of a Map State
+    """
+
     state_type = "Succeed"
 
 
 class ChoiceState(AbstractInputPathOutputPathState):
+    """A Choice State adds branching logic to a state machine."""
+
     state_type = "Choice"
 
 
 class AbstractNextOrEndState(AbstractInputPathOutputPathState):
+    """An Amazon States Language state including Next or End."""
+
     def __init__(self, *args: Any, **kwargs: Any):
+        """Initialize subclasses.
+
+        Initializes next state as null.
+
+        Args:
+            args: Args to pass to parent classes.
+            kwargs: Kwargs to pass ot parent classes.
+        """
         super().__init__(*args, **kwargs)
         self.next_state: Optional[AbstractNextOrEndState] = None
 
@@ -138,6 +172,12 @@ class AbstractNextOrEndState(AbstractInputPathOutputPathState):
         return other
 
     def compile(self) -> Dict[str, Any]:  # noqa: A003
+        """Compile the state to Amazon States Language.
+
+        Returns:
+            A dictionary representing the compiled state in Amazon States
+            Language.
+        """
         compiled = super().compile()
         if next_state := self.next_state:
             compiled["Next"] = next_state.name
@@ -161,10 +201,14 @@ class AbstractNextOrEndState(AbstractInputPathOutputPathState):
 
 
 class WaitState(AbstractNextOrEndState):
+    """A Wait State causes the interpreter to delay the machine for a specified time."""
+
     state_type = "Wait"
 
 
 class AbstractResultPathState(AbstractNextOrEndState):
+    """An Amazon States Language state including ResultPath."""
+
     def __init__(self, *args: Any, result_path: Optional[str] = "$", **kwargs: Any):
         """Initialize subclasses.
 
@@ -189,6 +233,12 @@ class AbstractResultPathState(AbstractNextOrEndState):
         self.result_path = result_path
 
     def compile(self) -> Dict[str, Any]:  # noqa: A003
+        """Compile the state to Amazon States Language.
+
+        Returns:
+            A dictionary representing the compiled state in Amazon States
+            Language.
+        """
         compiled = super().compile()
         if (result_path := self.result_path) != "$":
             compiled["ResultPath"] = result_path
@@ -196,13 +246,33 @@ class AbstractResultPathState(AbstractNextOrEndState):
 
 
 class AbstractParametersState(AbstractResultPathState):
+    """An Amazon States Language state includin Parameters."""
+
     def __init__(
         self, *args: Any, parameters: Optional[Dict[str, Any]] = None, **kwargs: Any
     ):
+        """Initialize subclasses.
+
+        Args:
+            args: Args to pass to parent classes.
+            parameters: Use the Parameters field to create a collection of
+                key-value pairs that are passed as input. The values of each can
+                either be static values that you include in your state machine
+                definition, or selected from either the input or the context object
+                with a path. For key-value pairs where the value is selected using a
+                path, the key name must end in .$.
+            kwargs: Kwargs to pass ot parent classes.
+        """
         super().__init__(*args, **kwargs)
         self.parameters = parameters or {}
 
     def compile(self) -> Dict[str, Any]:  # noqa: A003
+        """Compile the state to Amazon States Language.
+
+        Returns:
+            A dictionary representing the compiled state in Amazon States
+            Language.
+        """
         compiled = super().compile()
         if parameters := self.parameters:
             compiled["Parameters"] = parameters
@@ -210,13 +280,29 @@ class AbstractParametersState(AbstractResultPathState):
 
 
 class PassState(AbstractParametersState):
+    """The Pass State by default passes its input to its output, performing no work."""
+
     state_type = "Pass"
 
     def __init__(self, *args: Any, result: Any = None, **kwargs: Any):
+        """Initialize a Pass State.
+
+        Args:
+            args: Args to pass to parent classes.
+            result: If present, its value is treated as the output of a virtual
+                task, and placed as prescribed by the "ResultPath" field.
+            kwargs: Kwargs to pass ot parent classes.
+        """
         super().__init__(*args, **kwargs)
         self.result = result
 
     def compile(self) -> Dict[str, Any]:  # noqa: A003
+        """Compile the state to Amazon States Language.
+
+        Returns:
+            A dictionary representing the compiled state in Amazon States
+            Language.
+        """
         compiled = super().compile()
         if result := self.result:
             compiled["Result"] = result
@@ -240,9 +326,22 @@ class PassState(AbstractParametersState):
 
 
 class AbstractResultSelectorState(AbstractParametersState):
+    """An Amazon States Language state including ResultSelector."""
+
     def __init__(
         self, *args: Any, result_selector: Dict[str, str] = None, **kwargs: Any
     ):
+        """Initialize subclasses.
+
+        Args:
+            args: Args to pass to parent classes.
+            result_selector: Used to manipulate a state's result before
+                ResultPath is applied.
+            kwargs: Kwargs to pass ot parent classes.
+
+        Raises:
+            ValueError: Raised when the result selector is invalid.
+        """
         super().__init__(*args, **kwargs)
         if result_selector:
             try:
@@ -291,6 +390,12 @@ class AbstractResultSelectorState(AbstractParametersState):
                 raise
 
     def compile(self) -> Dict[str, Any]:  # noqa: A003
+        """Compile the state to Amazon States Language.
+
+        Returns:
+            A dictionary representing the compiled state in Amazon States
+            Language.
+        """
         compiled = super().compile()
         if result_selector := self.result_selector:
             compiled["ResultSelector"] = result_selector
@@ -298,13 +403,40 @@ class AbstractResultSelectorState(AbstractParametersState):
 
 
 class AbstractRetryCatchState(AbstractResultSelectorState):
-    # TODO: Types for retry and catch
-    def __init__(self, *args: Any, retry: Any = None, catch: Any = None, **kwargs: Any):
+    """An Amazon States Language state including Retry and Catch."""
+
+    def __init__(
+        self,
+        *args: Any,
+        retry: List[Dict[str, Any]] = None,
+        catch: List[Dict[str, Any]] = None,
+        **kwargs: Any,
+    ):
+        """Initialize subclasses.
+
+        TODO: Retriers and catches should be specified in a programmatic way.
+
+        Args:
+            args: Args to pass to parent classes.
+            retry: Retry the state by specifying a list of Retriers that
+                describes the retry policy for different errors.
+            catch: When a state reports an error and either there is no Retrier,
+                or retries have failed to resolve the error, the interpreter will
+                try to find a relevant Catcher which determines which state to
+                transition to.
+            kwargs: Kwargs to pass ot parent classes.
+        """
         super().__init__(*args, **kwargs)
         self.retry = retry
         self.catch = catch
 
     def compile(self) -> Dict[str, Any]:  # noqa: A003
+        """Compile the state to Amazon States Language.
+
+        Returns:
+            A dictionary representing the compiled state in Amazon States
+            Language.
+        """
         compiled = super().compile()
         if retry := self.retry:
             compiled["Retry"] = retry
@@ -314,13 +446,29 @@ class AbstractRetryCatchState(AbstractResultSelectorState):
 
 
 class TaskState(AbstractRetryCatchState):
+    """The Task State executes the work identified by the Resource field."""
+
     state_type = "Task"
 
     def __init__(self, *args: Any, resource: str, **kwargs: Any):
+        """Initialize a Task State.
+
+        Args:
+            args: Args to pass to parent classes.
+            resource: A URI, especially an ARN that uniquely identifies the
+                specific task to execute.
+            kwargs: Kwargs to pass ot parent classes.
+        """
         super().__init__(*args, **kwargs)
         self.resource = resource
 
     def compile(self) -> Dict[str, Any]:  # noqa: A003
+        """Compile the state to Amazon States Language.
+
+        Returns:
+            A dictionary representing the compiled state in Amazon States
+            Language.
+        """
         compiled = super().compile()
         compiled["Resource"] = self.resource
         return compiled
@@ -339,8 +487,12 @@ class TaskState(AbstractRetryCatchState):
 
 
 class ParallelState(AbstractRetryCatchState):
+    """The Parallel State causes parallel execution of branches."""
+
     state_type = "Parallel"
 
 
 class MapState(AbstractRetryCatchState):
+    """The Map State processes all the elements of an array."""
+
     state_type = "Map"
