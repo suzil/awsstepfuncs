@@ -101,7 +101,7 @@ class TaskState(State):
             except ValueError:
                 raise
 
-    def run(self, state_input: Any, mock_fn: Callable) -> Any:  # type: ignore
+    def run(self, state_input: Dict[str, Any], mock_fn: Callable) -> Dict[str, Any]:  # type: ignore
         """Execute the task state according to Amazon States Language.
 
         Args:

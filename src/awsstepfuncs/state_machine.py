@@ -178,9 +178,9 @@ class StateMachine:
     def _simulate_state(
         self,
         state: State,
-        state_input: Any,
+        state_input: Dict[str, Any],
         resource_to_mock_fn: Dict[str, Callable],
-    ) -> Any:
+    ) -> Dict[str, Any]:
         """Simulate a single state.
 
         Args:
@@ -218,7 +218,7 @@ class StateMachine:
 
     @staticmethod
     def _apply_result_selector(
-        state_output: Any, result_selector: Dict[str, str]
+        state_output: Dict[str, Any], result_selector: Dict[str, str]
     ) -> Dict[str, Any]:
         """Apply the ResultSelector to select a portion of the state output.
 
@@ -240,8 +240,10 @@ class StateMachine:
 
     @staticmethod
     def _apply_result_path(
-        state_input: Any, state_output: Any, result_path: Optional[str]
-    ) -> Any:
+        state_input: Dict[str, Any],
+        state_output: Dict[str, Any],
+        result_path: Optional[str],
+    ) -> Dict[str, Any]:
         """Apply ResultPath to combine state input with state output.
 
         Args:
