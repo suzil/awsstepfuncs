@@ -1,14 +1,15 @@
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
-from typing import Any, Callable, Dict, Union
+from typing import Any, Callable, Dict, Optional, Union
 
 from awsstepfuncs.json_path import apply_json_path
 from awsstepfuncs.state import State
 from awsstepfuncs.task_state import TaskState
 
-CompiledState = Dict[str, Union[str, bool, Dict[str, str]]]
+CompiledState = Dict[str, Union[str, bool, Dict[str, str], None]]
 
 
 class StateMachine:
@@ -79,6 +80,9 @@ class StateMachine:
         if state.output_path != "$":
             compiled["OutputPath"] = state.output_path
 
+        if state.result_path != "$":
+            compiled["ResultPath"] = state.result_path
+
         if next_state := state.next_state:
             compiled["Next"] = next_state.name
         else:
@@ -144,6 +148,7 @@ class StateMachine:
         # defined
         state_input = apply_json_path(state.input_path, state_input)
 
+        # Run the state to get the state output
         if isinstance(state, TaskState):
             state_output = state.run(
                 state_input, mock_fn=resource_to_mock_fn[state.resource_uri]
@@ -151,13 +156,15 @@ class StateMachine:
         else:
             state_output = state.run(state_input)
 
+        # Apply the ResultSelector to filter the state output
         # TODO: Add Map, Parallel here
         if isinstance(state, TaskState) and (result_selector := state.result_selector):
             state_output = self._apply_result_selector(state_output, result_selector)
 
-        # TODO: Add ResultPath here
-
-        return apply_json_path(state.output_path, state_output)
+        result_path_output = self._apply_result_path(
+            state_input, state_output, state.result_path
+        )
+        return apply_json_path(state.output_path, result_path_output)
 
     @staticmethod
     def _apply_result_selector(
@@ -180,3 +187,36 @@ class StateMachine:
                 new_state_output[key] = extracted
 
         return new_state_output
+
+    @staticmethod
+    def _apply_result_path(
+        state_input: Any, state_output: Any, result_path: Optional[str]
+    ) -> Any:
+        """Apply ResultPath to combine state input with state output.
+
+        Args:
+            state_input: The input state.
+            state_output: The output state.
+            result_path: A string that indicates whether to keep only the output
+                state, only the input state, or the output state as a key of the
+                input state.
+
+        Returns:
+            The state resulting from applying ResultPath.
+        """
+        if result_path == "$":
+            # Just keep state output
+            return state_output
+
+        elif result_path is None:
+            # Just keep state input, discard state_output
+            return state_input
+
+        elif match := re.fullmatch(r"\$\.([A-Za-z]+)", result_path):
+            # Move the state output as a key in state input
+            result_key = match.group(1)
+            state_input[result_key] = state_output
+            return state_input
+
+        else:  # pragma: no cover
+            assert False, "Should never happen"  # noqa: PT015

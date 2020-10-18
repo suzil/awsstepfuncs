@@ -18,6 +18,9 @@ class TaskState(State):
         /,
         *,
         comment: Optional[str] = None,
+        input_path: str = "$",
+        output_path: str = "$",
+        result_path: Optional[str] = "$",
         resource_uri: str,
         result_selector: Optional[Dict[str, str]] = None,
     ):
@@ -26,6 +29,14 @@ class TaskState(State):
         Args:
             name: The name of the state.
             comment: A human-readable description of the state.
+            input_path: Used to select a portion of the state input. Default is
+                $ (pass everything).
+            output_path: Used to select a portion of the state output. Default
+                is $ (pass everything).
+            result_path: Specifies where (in the input) to place the "output" of
+                the virtual task specified in Result. The input is further filtered
+                as specified by the OutputPath field (if present) before being used
+                as the state's output. Default is $ (pass only the output state).
             resource_uri: A URI, especially an ARN that uniquely identifies the
                 specific task to execute.
             result_selector: Used to manipulate a state's result before
@@ -33,6 +44,7 @@ class TaskState(State):
 
         Raises:
             ValueError: Raised when the result selector is an invalid.
+            ValueError: Raised when an invalid JSONPath is specified.
         """
         self.resource_uri = resource_uri
 
@@ -43,7 +55,13 @@ class TaskState(State):
                 raise
 
         self.result_selector = result_selector
-        super().__init__(name, comment=comment)
+        super().__init__(
+            name,
+            comment=comment,
+            input_path=input_path,
+            output_path=output_path,
+            result_path=result_path,
+        )
 
     @staticmethod
     def _validate_result_selector(result_selector: Dict[str, str]) -> None:
