@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any, Callable, Dict, Optional, Union
 
 from awsstepfuncs.json_path import apply_json_path
+from awsstepfuncs.pass_state import PassState
 from awsstepfuncs.state import State
 from awsstepfuncs.task_state import TaskState
 
@@ -68,9 +69,48 @@ class StateMachine:
             "Type": state.state_type.value,  # type: ignore
         }
 
+        # TODO: Probably there is some nice way to move this class-specific
+        # compliation logic to those respective classes
         if isinstance(state, TaskState):
             self._compile_task_state_fields(compiled, state)
+        if isinstance(state, PassState):
+            self._compile_pass_state_fields(compiled, state)
 
+        self._compile_generic_state_fields(compiled, state)
+
+        return compiled
+
+    @staticmethod
+    def _compile_task_state_fields(compiled: CompiledState, state: TaskState) -> None:
+        """Compile task state fields.
+
+        Args:
+            compiled: The compilation to save new fields to.
+            state: The state.
+        """
+        compiled["Resource"] = state.resource_uri
+        if result_selector := state.result_selector:
+            compiled["ResultSelector"] = result_selector
+
+    @staticmethod
+    def _compile_pass_state_fields(compiled: CompiledState, state: PassState) -> None:
+        """Compile pass state fields.
+
+        Args:
+            compiled: The compilation to save new fields to.
+            state: The state.
+        """
+        if result := state.result:
+            compiled["Result"] = result
+
+    @staticmethod
+    def _compile_generic_state_fields(compiled: CompiledState, state: State) -> None:
+        """Compile state fields that are common to all states.
+
+        Args:
+            compiled: The compilation to save new fields to.
+            state: The state.
+        """
         if comment := state.comment:
             compiled["Comment"] = comment
 
@@ -87,14 +127,6 @@ class StateMachine:
             compiled["Next"] = next_state.name
         else:
             compiled["End"] = True
-
-        return compiled
-
-    @staticmethod
-    def _compile_task_state_fields(compiled: CompiledState, state: TaskState) -> None:
-        compiled["Resource"] = state.resource_uri
-        if result_selector := state.result_selector:
-            compiled["ResultSelector"] = result_selector
 
     def simulate(
         self,
