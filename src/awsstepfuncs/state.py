@@ -77,7 +77,12 @@ class AbstractState(ABC):
         raise NotImplementedError
 
     def __rshift__(self, other: AbstractState, /) -> AbstractState:
-        """Overload >> operator when state execution order.
+        """Overload >> operator to set state execution order.
+
+        >>> pass_state = PassState("Pass")
+        >>> fail_state = FailState("Fail", error="JustBecause", cause="Because I feel like it")
+        >>> _ = pass_state >> fail_state
+        >>> assert pass_state.next_state is fail_state
 
         Args:
             other: The other state besides self.
