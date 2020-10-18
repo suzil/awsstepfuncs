@@ -64,7 +64,7 @@ class AbstractState(ABC):
         return compiled
 
     @abstractmethod
-    def run(self, state_input: dict) -> dict:
+    def run(self, state_input: Any) -> Any:
         """Execute the state.
 
         Args:
@@ -77,9 +77,47 @@ class AbstractState(ABC):
 
 
 class FailState(AbstractState):
-    """The Fail State terminates the machine and marks it as a failure."""
+    """The Fail State terminates the machine and marks it as a failure.
+
+    >>> fail_state = FailState("FailState", error="ErrorA", cause="Kaiju attack")
+    >>> fail_state.compile()
+    {'Type': 'Fail', 'Error': 'ErrorA', 'Cause': 'Kaiju attack'}
+    """
 
     state_type = "Fail"
+
+    def __init__(self, *args: Any, error: str, cause: str, **kwargs: Any):
+        """Initialize a Fail State.
+
+        Args:
+            args: Args to pass to parent classes.
+            error: The name of the error.
+            cause: A human-readable error message.
+            kwargs: Kwargs to pass ot parent classes.
+        """
+        super().__init__(*args, **kwargs)
+        self.error = error
+        self.cause = cause
+
+    def compile(self) -> Dict[str, Any]:  # noqa: A003
+        """Compile the state to Amazon States Language.
+
+        Returns:
+            A dictionary representing the compiled state in Amazon States
+            Language.
+        """
+        compiled = super().compile()
+        compiled["Error"] = self.error
+        compiled["Cause"] = self.cause
+        return compiled
+
+    def run(self, state_input: Any) -> None:
+        """Execute the Fail State according to Amazon States Language.
+
+        Args:
+            state_input: The input state data.
+        """
+        return
 
 
 class AbstractInputPathOutputPathState(AbstractState):
@@ -308,11 +346,11 @@ class PassState(AbstractParametersState):
             compiled["Result"] = result
         return compiled
 
-    def run(self, state_input: dict) -> dict:
-        """Execute the pass state according to Amazon States Language.
+    def run(self, state_input: Any) -> Any:
+        """Execute the Pass State according to Amazon States Language.
 
         Args:
-            state_input: The input state data. For the pass state, it will
+            state_input: The input state data. For the Pass State, it will
                 simply be passed as the output state with no transformation.
 
         Returns:
@@ -474,7 +512,7 @@ class TaskState(AbstractRetryCatchState):
         return compiled
 
     def run(self, state_input: Any, mock_fn: Callable) -> Any:  # type: ignore
-        """Execute the task state according to Amazon States Language.
+        """Execute the Task State according to Amazon States Language.
 
         Args:
             state_input: The input state data to be passed to the mock function.
