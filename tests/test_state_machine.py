@@ -5,11 +5,14 @@ from awsstepfuncs import PassState, StateMachine
 
 def test_one_state(compile_state_machine):
     pass_state = PassState("My Pass", comment="The only state")
-    state_machine = StateMachine(start_state=pass_state, comment="My state machine")
+    state_machine = StateMachine(
+        start_state=pass_state, comment="My state machine", version="1.1"
+    )
     compiled = compile_state_machine(state_machine)
     assert compiled == {
         "StartAt": pass_state.name,
         "Comment": state_machine.comment,
+        "Version": state_machine.version,
         "States": {
             pass_state.name: {
                 "Comment": pass_state.comment,

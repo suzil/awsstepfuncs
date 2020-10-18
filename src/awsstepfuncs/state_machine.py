@@ -16,7 +16,13 @@ CompiledState = Dict[str, Union[str, bool, Dict[str, str], None]]
 class StateMachine:
     """An AWS Step Functions state machine."""
 
-    def __init__(self, *, start_state: State, comment: Optional[str] = None):
+    def __init__(
+        self,
+        *,
+        start_state: State,
+        comment: Optional[str] = None,
+        version: Optional[str] = None,
+    ):
         """Initialize a state machine.
 
         A state machine will contain a reference to the start state. All states
@@ -25,6 +31,8 @@ class StateMachine:
         Args:
             start_state: The starting state.
             comment: A human-readable description of the state machine.
+            version: The verison of the state machine. If omitted, defaults to
+                "1.0".
 
         Raises:
             ValueError: Raised when there are duplicate state names.
@@ -36,6 +44,7 @@ class StateMachine:
 
         self.start_state = start_state
         self.comment = comment
+        self.version = version
 
     @staticmethod
     def _has_unique_names(start_state: State) -> bool:
@@ -58,6 +67,9 @@ class StateMachine:
 
         if comment := self.comment:
             compiled["Comment"] = comment
+
+        if version := self.version:
+            compiled["Version"] = version
 
         with output_path.open("w") as fp:
             json.dump(compiled, fp)
