@@ -7,8 +7,10 @@ from typing import Any, Callable, Dict, Optional, Union
 
 from awsstepfuncs.json_path import apply_json_path
 from awsstepfuncs.state import (
-    AbstractNextOrEndState,
+    AbstractInputPathOutputPathState,
     AbstractResultPathState,
+    AbstractResultSelectorState,
+    AbstractState,
     TaskState,
 )
 
@@ -21,7 +23,7 @@ class StateMachine:
     def __init__(
         self,
         *,
-        start_state: AbstractNextOrEndState,
+        start_state: AbstractState,
         comment: Optional[str] = None,
         version: Optional[str] = None,
     ):
@@ -48,7 +50,7 @@ class StateMachine:
         self.version = version
 
     @staticmethod
-    def _has_unique_names(start_state: AbstractNextOrEndState) -> bool:
+    def _has_unique_names(start_state: AbstractState) -> bool:
         """Check if all states have unique names.
 
         All state names must be unique in a state machine.
@@ -123,7 +125,7 @@ class StateMachine:
 
     def _simulate_state(
         self,
-        state: AbstractNextOrEndState,
+        state: AbstractState,
         state_input: Any,
         resource_to_mock_fn: Dict[str, Callable],
     ) -> Any:
@@ -140,9 +142,10 @@ class StateMachine:
         """
         print(f"Running {state.name}")  # noqa: T001
 
-        # Use input_path to select a subset of the input state to process if
-        # defined
-        state_input = apply_json_path(state.input_path, state_input)
+        if isinstance(state, AbstractInputPathOutputPathState):
+            # Use input_path to select a subset of the input state to process if
+            # defined
+            state_input = apply_json_path(state.input_path, state_input)
 
         # Run the state to get the state output
         if isinstance(state, TaskState):
@@ -153,17 +156,20 @@ class StateMachine:
             state_output = state.run(state_input)
 
         # Apply the ResultSelector to filter the state output
-        # TODO: Add Map, Parallel here
-        if isinstance(state, TaskState) and (result_selector := state.result_selector):
+        if isinstance(state, AbstractResultSelectorState) and (
+            result_selector := state.result_selector
+        ):
             state_output = self._apply_result_selector(state_output, result_selector)
 
         if isinstance(state, AbstractResultPathState):
-            result_path_output = self._apply_result_path(
+            state_output = self._apply_result_path(
                 state_input, state_output, state.result_path
             )
-            return apply_json_path(state.output_path, result_path_output)
-        else:
-            return apply_json_path(state.output_path, state_output)
+
+        if isinstance(state, AbstractInputPathOutputPathState):
+            state_output = apply_json_path(state.output_path, state_output)
+
+        return state_output
 
     @staticmethod
     def _apply_result_selector(
