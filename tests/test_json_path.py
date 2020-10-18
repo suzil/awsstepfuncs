@@ -59,5 +59,5 @@ def test_apply_json_path_no_match(sample_data):
     ],
 )
 def test_valid_reference_path(reference_path):
-    # Should raise no ValueError
+    # Should not raise any ValueError
     validate_json_path(reference_path)
