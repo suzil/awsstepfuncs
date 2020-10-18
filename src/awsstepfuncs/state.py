@@ -49,6 +49,7 @@ class AbstractState(ABC):
 
         self.name = name
         self.comment = comment
+        self.next_state: Optional[AbstractState] = None
 
     def compile(self) -> Dict[str, Any]:  # noqa: A003
         """Compile the state to Amazon States Language.
@@ -75,6 +76,38 @@ class AbstractState(ABC):
         """
         raise NotImplementedError
 
+    def __rshift__(self, other: AbstractState, /) -> AbstractState:
+        """Overload >> operator to set state execution order.
+
+        >>> pass_state = PassState("Pass")
+        >>> fail_state = FailState("Fail", error="JustBecause", cause="Because I feel like it")
+        >>> _ = pass_state >> fail_state
+        >>> assert pass_state.next_state is fail_state
+
+        Args:
+            other: The other state besides self.
+
+        Returns:
+            The latest state (for right shift, the right state).
+        """
+        # TODO: Add validation as Choice, Succeed, Fail cannot have a "next"
+        self.next_state = other
+        return other
+
+    def __iter__(self) -> AbstractState:
+        """Iterate through the states."""
+        self._current: Optional[AbstractState] = self
+        return self._current
+
+    def __next__(self) -> AbstractState:
+        """Get the next state."""
+        current = self._current
+        if not current:
+            raise StopIteration
+
+        self._current = current.next_state
+        return current
+
 
 class FailState(AbstractState):
     """The Fail State terminates the machine and marks it as a failure.
@@ -93,7 +126,7 @@ class FailState(AbstractState):
             args: Args to pass to parent classes.
             error: The name of the error.
             cause: A human-readable error message.
-            kwargs: Kwargs to pass ot parent classes.
+            kwargs: Kwargs to pass to parent classes.
         """
         super().__init__(*args, **kwargs)
         self.error = error
@@ -134,7 +167,7 @@ class AbstractInputPathOutputPathState(AbstractState):
                 $ (pass everything).
             output_path: Used to select a portion of the state output. Default
                 is $ (pass everything).
-            kwargs: Kwargs to pass ot parent classes.
+            kwargs: Kwargs to pass to parent classes.
 
         Raises:
             ValueError: Raised when an invalid JSONPath is specified.
@@ -185,30 +218,6 @@ class ChoiceState(AbstractInputPathOutputPathState):
 class AbstractNextOrEndState(AbstractInputPathOutputPathState):
     """An Amazon States Language state including Next or End."""
 
-    def __init__(self, *args: Any, **kwargs: Any):
-        """Initialize subclasses.
-
-        Initializes next state as null.
-
-        Args:
-            args: Args to pass to parent classes.
-            kwargs: Kwargs to pass ot parent classes.
-        """
-        super().__init__(*args, **kwargs)
-        self.next_state: Optional[AbstractNextOrEndState] = None
-
-    def __rshift__(self, other: AbstractNextOrEndState, /) -> AbstractNextOrEndState:
-        """Overload >> operator when state execution order.
-
-        Args:
-            other: The other state besides self.
-
-        Returns:
-            The latest state (for right shift, the right state).
-        """
-        self.next_state = other
-        return other
-
     def compile(self) -> Dict[str, Any]:  # noqa: A003
         """Compile the state to Amazon States Language.
 
@@ -222,20 +231,6 @@ class AbstractNextOrEndState(AbstractInputPathOutputPathState):
         else:
             compiled["End"] = True
         return compiled
-
-    def __iter__(self) -> AbstractNextOrEndState:
-        """Iterate through the states."""
-        self._current: Optional[AbstractNextOrEndState] = self
-        return self._current
-
-    def __next__(self) -> AbstractNextOrEndState:
-        """Get the next state."""
-        current = self._current
-        if not current:
-            raise StopIteration
-
-        self._current = current.next_state
-        return current
 
 
 class WaitState(AbstractNextOrEndState):
@@ -256,7 +251,7 @@ class AbstractResultPathState(AbstractNextOrEndState):
                 the virtual task specified in Result. The input is further filtered
                 as specified by the OutputPath field (if present) before being used
                 as the state's output. Default is $ (pass only the output state).
-            kwargs: Kwargs to pass ot parent classes.
+            kwargs: Kwargs to pass to parent classes.
 
         Raises:
             ValueError: Raised when the result_path is an invalid JSONPath.
@@ -299,7 +294,7 @@ class AbstractParametersState(AbstractResultPathState):
                 definition, or selected from either the input or the context object
                 with a path. For key-value pairs where the value is selected using a
                 path, the key name must end in .$.
-            kwargs: Kwargs to pass ot parent classes.
+            kwargs: Kwargs to pass to parent classes.
         """
         super().__init__(*args, **kwargs)
         self.parameters = parameters or {}
@@ -329,7 +324,7 @@ class PassState(AbstractParametersState):
             args: Args to pass to parent classes.
             result: If present, its value is treated as the output of a virtual
                 task, and placed as prescribed by the "ResultPath" field.
-            kwargs: Kwargs to pass ot parent classes.
+            kwargs: Kwargs to pass to parent classes.
         """
         super().__init__(*args, **kwargs)
         self.result = result
@@ -375,7 +370,7 @@ class AbstractResultSelectorState(AbstractParametersState):
             args: Args to pass to parent classes.
             result_selector: Used to manipulate a state's result before
                 ResultPath is applied.
-            kwargs: Kwargs to pass ot parent classes.
+            kwargs: Kwargs to pass to parent classes.
 
         Raises:
             ValueError: Raised when the result selector is invalid.
@@ -462,7 +457,7 @@ class AbstractRetryCatchState(AbstractResultSelectorState):
                 or retries have failed to resolve the error, the interpreter will
                 try to find a relevant Catcher which determines which state to
                 transition to.
-            kwargs: Kwargs to pass ot parent classes.
+            kwargs: Kwargs to pass to parent classes.
         """
         super().__init__(*args, **kwargs)
         self.retry = retry
@@ -495,7 +490,7 @@ class TaskState(AbstractRetryCatchState):
             args: Args to pass to parent classes.
             resource: A URI, especially an ARN that uniquely identifies the
                 specific task to execute.
-            kwargs: Kwargs to pass ot parent classes.
+            kwargs: Kwargs to pass to parent classes.
         """
         super().__init__(*args, **kwargs)
         self.resource = resource
