@@ -201,9 +201,6 @@ class StateMachine:
                 state, only the input state, or the output state as a key of the
                 input state.
 
-        Raises:
-            ValueError: Raised when result_path is invalid.
-
         Returns:
             The state resulting from applying ResultPath.
         """
@@ -222,4 +219,4 @@ class StateMachine:
             return state_input
 
         else:  # pragma: no cover
-            raise ValueError('Illegal result path: "{result_path}"')
+            assert False, "Should never happen"  # noqa: PT015
