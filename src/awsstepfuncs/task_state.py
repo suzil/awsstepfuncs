@@ -1,10 +1,10 @@
 from typing import Any, Callable, Dict, Optional
 
 from awsstepfuncs.json_path import validate_json_path
-from awsstepfuncs.state import State, StateType
+from awsstepfuncs.state import AbstractState, StateType
 
 
-class TaskState(State):
+class TaskState(AbstractState):
     """Task state in Amazon States Language.
 
     A task state represents a single unit of work performed by a state machine.

@@ -9,7 +9,7 @@ from awsstepfuncs.json_path import validate_json_path
 MAX_STATE_NAME_LENGTH = 128
 
 
-class State(ABC):
+class AbstractState(ABC):
     """An AWS Step Functions state."""
 
     state_type: Optional[StateType] = None
@@ -52,7 +52,7 @@ class State(ABC):
 
         self.name = name
         self.comment = comment
-        self.next_state: Optional[State] = None
+        self.next_state: Optional[AbstractState] = None
 
         all_json_paths = [input_path, output_path]
         if result_path:
@@ -81,7 +81,7 @@ class State(ABC):
         if not cls.state_type:  # pragma: no cover
             raise ValueError("Must specify state_type attribute")
 
-    def __rshift__(self, other: State, /) -> State:
+    def __rshift__(self, other: AbstractState, /) -> AbstractState:
         """Overload >> operator when state execution order.
 
         Args:
@@ -93,12 +93,12 @@ class State(ABC):
         self.next_state = other
         return other
 
-    def __iter__(self) -> State:
+    def __iter__(self) -> AbstractState:
         """Iterate through the states."""
-        self._current: Optional[State] = self
+        self._current: Optional[AbstractState] = self
         return self._current
 
-    def __next__(self) -> State:
+    def __next__(self) -> AbstractState:
         """Get the next state."""
         current = self._current
         if not current:

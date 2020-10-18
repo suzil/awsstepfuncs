@@ -7,7 +7,7 @@ from typing import Any, Callable, Dict, Optional, Union
 
 from awsstepfuncs.json_path import apply_json_path
 from awsstepfuncs.pass_state import PassState
-from awsstepfuncs.state import State
+from awsstepfuncs.state import AbstractState
 from awsstepfuncs.task_state import TaskState
 
 CompiledState = Dict[str, Union[str, bool, Dict[str, str], None]]
@@ -19,7 +19,7 @@ class StateMachine:
     def __init__(
         self,
         *,
-        start_state: State,
+        start_state: AbstractState,
         comment: Optional[str] = None,
         version: Optional[str] = None,
     ):
@@ -47,7 +47,7 @@ class StateMachine:
         self.version = version
 
     @staticmethod
-    def _has_unique_names(start_state: State) -> bool:
+    def _has_unique_names(start_state: AbstractState) -> bool:
         all_state_names = [state.name for state in start_state]
         return len(all_state_names) == len(set(all_state_names))
 
@@ -74,7 +74,7 @@ class StateMachine:
         with output_path.open("w") as fp:
             json.dump(compiled, fp)
 
-    def _compile_state(self, state: State, /) -> CompiledState:
+    def _compile_state(self, state: AbstractState, /) -> CompiledState:
         """Compile a state to Amazon States Language.
 
         Args:
@@ -122,7 +122,9 @@ class StateMachine:
             compiled["Result"] = result
 
     @staticmethod
-    def _compile_generic_state_fields(compiled: CompiledState, state: State) -> None:
+    def _compile_generic_state_fields(
+        compiled: CompiledState, state: AbstractState
+    ) -> None:
         """Compile state fields that are common to all states.
 
         Args:
@@ -177,7 +179,7 @@ class StateMachine:
 
     def _simulate_state(
         self,
-        state: State,
+        state: AbstractState,
         state_input: Any,
         resource_to_mock_fn: Dict[str, Callable],
     ) -> Any:
