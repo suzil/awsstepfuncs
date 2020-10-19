@@ -10,13 +10,6 @@ Each concrete class should implement its own run() method that will run the
 state according to its business logic when running a simulation. Each concrete
 class should also define a constant class variable called `state_type` that
 corresponds to type in Amazon States Language.
-
-TODO: Right now the iterable for passing through states is on the level of
-`AbstractNextOrEndState` as that is the state that has the `next_state` attribute,
-but it's unclear how other states should be incorporated into the state machine
-without using `next_state`. It might be a case where we need to deviate from the
-language specification in our implementation and move `next_state` to
-`AbstractState`.
 """
 from __future__ import annotations
 
