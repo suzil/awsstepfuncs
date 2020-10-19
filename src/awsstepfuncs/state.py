@@ -109,6 +109,28 @@ class AbstractState(ABC):
         self._current = current.next_state
         return current
 
+    def __repr__(self) -> str:
+        """Create a string representation of a state.
+
+        >>> pass_state = PassState("Pass", comment="This is a pass state")
+        >>> fail_state = FailState("Fail", error="MyBad", cause="It's a problem")
+        >>> _ = pass_state >> fail_state
+        >>> pass_state
+        PassState(name='Pass', comment='This is a pass state', next_state='Fail')
+        >>> fail_state
+        FailState(name='Fail')
+
+        Returns:
+            String representation of a state.
+        """
+        state_repr = f"{self.__class__.__name__}(name={self.name!r}"
+        if self.comment:
+            state_repr += f", comment={self.comment!r}"
+        if self.next_state:
+            state_repr += f", next_state={self.next_state.name!r}"
+        state_repr += ")"
+        return state_repr
+
 
 class FailState(AbstractState):
     """The Fail State terminates the machine and marks it as a failure.
