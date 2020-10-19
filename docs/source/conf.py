@@ -13,6 +13,7 @@
 import sys
 from pathlib import Path
 
+import sphinx_rtd_theme  # noqa: F401
 from sphinx.ext import apidoc
 
 from awsstepfuncs import __version__
@@ -46,10 +47,11 @@ release = __version__
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
+    "recommonmark",
+    "sphinx_rtd_theme",
     "sphinx.ext.autodoc",
     "sphinx.ext.coverage",
     "sphinx.ext.napoleon",
-    "recommonmark",
 ]
 autodoc_typehints = "description"
 
@@ -69,11 +71,7 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = "alabaster"
-html_theme_options = {
-    "github_user": "suzil",
-    "github_repo": "awsstepfuncs",
-}
+html_theme = "sphinx_rtd_theme"
 
 
 # Add any paths that contain custom static files (such as style sheets) here,
