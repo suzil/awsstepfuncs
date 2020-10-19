@@ -42,7 +42,7 @@ pass_step >> task_step
 state_machine = StateMachine(start_state=pass_step)
 
 # Compile the state machine to Amazon States Language
-state_machine.compile("state_machine.json")
+state_machine.to_json("state_machine.json")
 
 # Simulate the state machine by executing it, use mock functions for tasks
 
