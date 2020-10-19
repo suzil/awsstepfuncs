@@ -457,7 +457,7 @@ class Retrier:
             raise ValueError("interval_seconds must be a positive integer")
         if self.backoff_rate and self.backoff_rate < 1:  # pragma: no cover
             raise ValueError("backoff_rate must be greater than or equal to 1.0")
-        if self.max_attempts and self.max_attempts < 0:  # pragma: no cover
+        if self.max_attempts is not None and self.max_attempts < 0:  # pragma: no cover
             raise ValueError("max_attempts must be zero or a positive integer")
 
     def compile(self) -> Dict[str, Union[List[str], int, float]]:  # noqa: A003
@@ -473,7 +473,7 @@ class Retrier:
             compiled["IntervalSeconds"] = interval_seconds
         if backoff_rate := self.backoff_rate:  # pragma: no cover
             compiled["BackoffRate"] = backoff_rate
-        if max_attempts := self.max_attempts:  # pragma: no cover
+        if (max_attempts := self.max_attempts) is not None:  # pragma: no cover
             compiled["MaxAttempts"] = max_attempts
         return compiled
 
@@ -591,7 +591,7 @@ class TaskState(AbstractRetryCatchState):
 
     >>> task_state = TaskState("Task", resource="123").add_retrier(["SomeError"], max_attempts=0)
     >>> task_state.compile()
-    {'Type': 'Task', 'End': True, 'Retry': [{'ErrorEquals': ['SomeError']}], 'Resource': '123'}
+    {'Type': 'Task', 'End': True, 'Retry': [{'ErrorEquals': ['SomeError'], 'MaxAttempts': 0}], 'Resource': '123'}
 
     >>> fail_state = FailState("Fail", error="SomeError", cause="I did it!")
     >>> _ = task_state >> fail_state
@@ -603,7 +603,7 @@ class TaskState(AbstractRetryCatchState):
     >>> transition_state = TaskState("Cleanup", resource="456")
     >>> _ = task_state.add_catcher(["States.ALL"], next_state=transition_state)
     >>> task_state.compile()
-    {'Type': 'Task', 'Next': 'Fail', 'Retry': [{'ErrorEquals': ['SomeError']}], 'Catch': [{'ErrorEquals': ['States.ALL'], 'Next': 'Cleanup'}], 'Resource': '123'}
+    {'Type': 'Task', 'Next': 'Fail', 'Retry': [{'ErrorEquals': ['SomeError'], 'MaxAttempts': 0}], 'Catch': [{'ErrorEquals': ['States.ALL'], 'Next': 'Cleanup'}], 'Resource': '123'}
 
     >>> another_fail_state = FailState("AnotherFail", error="AnotherError", cause="I did it again!")
     >>> _ = task_state >> another_fail_state
