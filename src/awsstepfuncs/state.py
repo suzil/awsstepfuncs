@@ -21,7 +21,8 @@ language specification in our implementation and move `next_state` to
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Any, Callable, Dict, List, Optional
+from dataclasses import dataclass
+from typing import Any, Callable, Dict, List, Optional, Union
 
 from awsstepfuncs.json_path import validate_json_path
 
@@ -435,33 +436,79 @@ class AbstractResultSelectorState(AbstractParametersState):
         return compiled
 
 
+@dataclass
+class Retrier:
+    """Used to retry a failed state given the error names."""
+
+    error_equals: List[str]
+    interval_seconds: Optional[int] = None
+    backoff_rate: Optional[float] = None
+    max_attempts: Optional[int] = None
+
+    def __post_init__(self) -> None:
+        """Run validation on input values.
+
+        Raises:
+            ValueError: Raised when interval_seconds is negative.
+            ValueError: Raised when backoff_rate is less than 1.0.
+            ValueError: Raised when max_attempts is negative.
+        """
+        if self.interval_seconds and self.interval_seconds <= 0:  # pragma: no cover
+            raise ValueError("interval_seconds must be a positive integer")
+        if self.backoff_rate and self.backoff_rate < 1:  # pragma: no cover
+            raise ValueError("backoff_rate must be greater than or equal to 1.0")
+        if self.max_attempts is not None and self.max_attempts < 0:  # pragma: no cover
+            raise ValueError("max_attempts must be zero or a positive integer")
+
+    def compile(self) -> Dict[str, Union[List[str], int, float]]:  # noqa: A003
+        """Compile the Retrier to Amazon States Language.
+
+        Returns:
+            A Retrier in Amazon States Language.
+        """
+        compiled: Dict[str, Union[List[str], int, float]] = {
+            "ErrorEquals": self.error_equals
+        }
+        if interval_seconds := self.interval_seconds:  # pragma: no cover
+            compiled["IntervalSeconds"] = interval_seconds
+        if backoff_rate := self.backoff_rate:  # pragma: no cover
+            compiled["BackoffRate"] = backoff_rate
+        if (max_attempts := self.max_attempts) is not None:  # pragma: no cover
+            compiled["MaxAttempts"] = max_attempts
+        return compiled
+
+
+@dataclass
+class Catcher:
+    """Used to go from an errored state to another state."""
+
+    error_equals: List[str]
+    next_state: AbstractState
+
+    def compile(self) -> Dict[str, Union[List[str], str]]:  # noqa: A003
+        """Compile the Catcher to Amazon States Language.
+
+        Returns:
+            A Catcher in Amazon States Language.
+        """
+        compiled: Dict[str, Union[List[str], str]] = {"ErrorEquals": self.error_equals}
+        compiled["Next"] = self.next_state.name
+        return compiled
+
+
 class AbstractRetryCatchState(AbstractResultSelectorState):
     """An Amazon States Language state including Retry and Catch."""
 
-    def __init__(
-        self,
-        *args: Any,
-        retry: List[Dict[str, Any]] = None,
-        catch: List[Dict[str, Any]] = None,
-        **kwargs: Any,
-    ):
+    def __init__(self, *args: Any, **kwargs: Any):
         """Initialize subclasses.
-
-        TODO: Retriers and catches should be specified in a programmatic way.
 
         Args:
             args: Args to pass to parent classes.
-            retry: Retry the state by specifying a list of Retriers that
-                describes the retry policy for different errors.
-            catch: When a state reports an error and either there is no Retrier,
-                or retries have failed to resolve the error, the interpreter will
-                try to find a relevant Catcher which determines which state to
-                transition to.
             kwargs: Kwargs to pass to parent classes.
         """
         super().__init__(*args, **kwargs)
-        self.retry = retry
-        self.catch = catch
+        self._retriers: List[Retrier] = []
+        self._catchers: List[Catcher] = []
 
     def compile(self) -> Dict[str, Any]:  # noqa: A003
         """Compile the state to Amazon States Language.
@@ -471,15 +518,100 @@ class AbstractRetryCatchState(AbstractResultSelectorState):
             Language.
         """
         compiled = super().compile()
-        if retry := self.retry:
-            compiled["Retry"] = retry
-        if catch := self.catch:
-            compiled["Catch"] = catch
+        if retriers := self._retriers:
+            compiled["Retry"] = [retrier.compile() for retrier in retriers]
+        if catchers := self._catchers:
+            compiled["Catch"] = [catcher.compile() for catcher in catchers]
         return compiled
+
+    def add_retrier(
+        self,
+        error_equals: List[str],
+        *,
+        interval_seconds: Optional[int] = None,
+        backoff_rate: Optional[float] = None,
+        max_attempts: Optional[int] = None,
+    ) -> AbstractRetryCatchState:
+        """Add a Retrier to the state.
+
+        Retry the state by specifying a list of Retriers that describes the
+        retry policy for different errors.
+
+        Args:
+            error_equals: A list of error names.
+            interval_seconds: The number of seconds before the first retry
+                attempt. Defaults to 1 if not specified.
+            backoff_rate: A number which is the multiplier that increases the
+                retry interval on each attempt. Defaults to 2.0 if not specified.
+            max_attempts: The maximum number of retry to attempt. Defaults to 3
+                if not specified. A value of zero means that the error should never
+                be retried.
+
+        Returns:
+            Itself.
+        """
+        retrier = Retrier(
+            error_equals=error_equals,
+            interval_seconds=interval_seconds,
+            backoff_rate=backoff_rate,
+            max_attempts=max_attempts,
+        )
+        self._retriers.append(retrier)
+        return self
+
+    def add_catcher(
+        self,
+        error_equals: List[str],
+        *,
+        next_state: AbstractState,
+    ) -> AbstractRetryCatchState:
+        """Add a Catcher to the state.
+
+        When a state reports an error and either there is no Retrier, or retries
+        have failed to resolve the error, the interpreter will try to find a
+        relevant Catcher which determines which state to transition to.
+
+        Args:
+            error_equals: A list of error names.
+            next_state: The name of the next state.
+
+        Returns:
+            Itself.
+        """
+        catcher = Catcher(
+            error_equals=error_equals,
+            next_state=next_state,
+        )
+        self._catchers.append(catcher)
+        return self
 
 
 class TaskState(AbstractRetryCatchState):
-    """The Task State executes the work identified by the Resource field."""
+    """The Task State executes the work identified by the Resource field.
+
+    >>> task_state = TaskState("Task", resource="123").add_retrier(["SomeError"], max_attempts=0)
+    >>> task_state.compile()
+    {'Type': 'Task', 'End': True, 'Retry': [{'ErrorEquals': ['SomeError'], 'MaxAttempts': 0}], 'Resource': '123'}
+
+    >>> fail_state = FailState("Fail", error="SomeError", cause="I did it!")
+    >>> _ = task_state >> fail_state
+
+    When the state machine simulates the previous example, task_state should not
+    get retried as even though a retrier was set for the thrown error, max
+    attempts set to zero means it will not be retried.
+
+    >>> transition_state = TaskState("Cleanup", resource="456")
+    >>> _ = task_state.add_catcher(["States.ALL"], next_state=transition_state)
+    >>> task_state.compile()
+    {'Type': 'Task', 'Next': 'Fail', 'Retry': [{'ErrorEquals': ['SomeError'], 'MaxAttempts': 0}], 'Catch': [{'ErrorEquals': ['States.ALL'], 'Next': 'Cleanup'}], 'Resource': '123'}
+
+    >>> another_fail_state = FailState("AnotherFail", error="AnotherError", cause="I did it again!")
+    >>> _ = task_state >> another_fail_state
+
+    When the state machine simulates the previous example, in this case, we
+    should end up at `transition_state` because "States.ALL" catches all errors
+    and transitions to `transition_state`.
+    """
 
     state_type = "Task"
 
