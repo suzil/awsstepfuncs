@@ -16,9 +16,10 @@ from __future__ import annotations
 import re
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 from awsstepfuncs.json_path import apply_json_path, validate_json_path
+from awsstepfuncs.types import ResourceToMockFn
 
 MAX_STATE_NAME_LENGTH = 128
 
@@ -60,20 +61,32 @@ class AbstractState(ABC):
         return compiled
 
     @abstractmethod
-    def run(self, state_input: Any) -> Any:
-        """Execute the state.
+    def _run(self, state_input: Any, resource_to_mock_fn: ResourceToMockFn) -> Any:
+        """Run the state.
 
         Args:
             state_input: The input state data.
+            resource_to_mock_fn: A mapping of resource URIs to mock functions to
+                use if the state performs a task.
 
         Raises:
             NotImplementedError: Raised if not implemented by subclasses.
         """
         raise NotImplementedError
 
-    def simulate(self, state_input, resource_to_mock_fn):
+    def simulate(self, state_input: Any, resource_to_mock_fn: ResourceToMockFn) -> Any:
+        """Simulate the state including input and output processing.
+
+        Args:
+            state_input: The input to the state.
+            resource_to_mock_fn: A mapping of resource URIs to mock functions to
+                use if the state performs a task.
+
+        Returns:
+            The output of the state after applying any output processing.
+        """
         print(f"Running {self.name}")  # noqa: T001
-        return self.run(state_input, resource_to_mock_fn)
+        return self._run(state_input, resource_to_mock_fn)
 
     def __rshift__(self, other: AbstractState, /) -> AbstractState:
         """Overload >> operator to set state execution order.
@@ -165,11 +178,13 @@ class FailState(AbstractState):
         compiled["Cause"] = self.cause
         return compiled
 
-    def run(self, state_input: Any, resource_to_mock_fn) -> None:
-        """Execute the Fail State according to Amazon States Language.
+    def _run(self, state_input: Any, resource_to_mock_fn: ResourceToMockFn) -> None:
+        """Run the Fail State.
 
         Args:
             state_input: The input state data.
+            resource_to_mock_fn: A mapping of resource URIs to mock functions to
+                use if the state performs a task.
         """
         return
 
@@ -203,10 +218,20 @@ class AbstractInputPathOutputPathState(AbstractState):
         self.input_path = input_path
         self.output_path = output_path
 
-    def simulate(self, state_input, resource_to_mock_fn):
+    def simulate(self, state_input: Any, resource_to_mock_fn: ResourceToMockFn) -> Any:
+        """Simulate the state including input and output processing.
+
+        Args:
+            state_input: The input to the state.
+            resource_to_mock_fn: A mapping of resource URIs to mock functions to
+                use if the state performs a task.
+
+        Returns:
+            The output of the state after applying any output processing.
+        """
         print(f"Running {self.name}")  # noqa: T001
         state_input = apply_json_path(self.input_path, state_input)
-        state_output = self.run(state_input, resource_to_mock_fn)
+        state_output = self._run(state_input, resource_to_mock_fn)
         return apply_json_path(self.output_path, state_output)
 
     def compile(self) -> Dict[str, Any]:  # noqa: A003
@@ -304,10 +329,20 @@ class AbstractResultPathState(AbstractNextOrEndState):
             compiled["ResultPath"] = result_path
         return compiled
 
-    def simulate(self, state_input, resource_to_mock_fn):
+    def simulate(self, state_input: Any, resource_to_mock_fn: ResourceToMockFn) -> Any:
+        """Simulate the state including input and output processing.
+
+        Args:
+            state_input: The input to the state.
+            resource_to_mock_fn: A mapping of resource URIs to mock functions to
+                use if the state performs a task.
+
+        Returns:
+            The output of the state after applying any output processing.
+        """
         print(f"Running {self.name}")  # noqa: T001
         state_input = apply_json_path(self.input_path, state_input)
-        state_output = self.run(state_input, resource_to_mock_fn)
+        state_output = self._run(state_input, resource_to_mock_fn)
         state_output = self._apply_result_path(state_input, state_output)
         return apply_json_path(self.output_path, state_output)
 
@@ -317,9 +352,6 @@ class AbstractResultPathState(AbstractNextOrEndState):
         Args:
             state_input: The input state.
             state_output: The output state.
-            result_path: A string that indicates whether to keep only the output
-                state, only the input state, or the output state as a key of the
-                input state.
 
         Returns:
             The state resulting from applying ResultPath.
@@ -405,15 +437,16 @@ class PassState(AbstractParametersState):
             compiled["Result"] = result
         return compiled
 
-    def run(self, state_input: Any, resource_to_mock_fn) -> Any:
-        """Execute the Pass State according to Amazon States Language.
+    def _run(self, state_input: Any, resource_to_mock_fn: ResourceToMockFn) -> Any:
+        """Run the Pass State.
 
         Args:
-            state_input: The input state data. For the Pass State, it will
-                simply be passed as the output state with no transformation.
+            state_input: The input state data.
+            resource_to_mock_fn: A mapping of resource URIs to mock functions to
+                use if the state performs a task.
 
         Returns:
-            The output state, same as the input state in this case.
+            The output of the state, same as input if result is not provided.
         """
         print("Passing")  # noqa: T001
         if result := self.result:
@@ -498,12 +531,23 @@ class AbstractResultSelectorState(AbstractParametersState):
             compiled["ResultSelector"] = result_selector
         return compiled
 
-    def simulate(self, state_input, resource_to_mock_fn):
+    def simulate(self, state_input: Any, resource_to_mock_fn: ResourceToMockFn) -> Any:
+        """Simulate the state including input and output processing.
+
+        Args:
+            state_input: The input to the state.
+            resource_to_mock_fn: A mapping of resource URIs to mock functions to
+                use if the state performs a task.
+
+        Returns:
+            The output of the state after applying any output processing.
+        """
         print(f"Running {self.name}")  # noqa: T001
         state_input = apply_json_path(self.input_path, state_input)
-        state_output = self.run(state_input, resource_to_mock_fn)
+        state_output = self._run(state_input, resource_to_mock_fn)
         if self.result_selector:
             state_output = self._apply_result_selector(state_output)
+        state_output = self._apply_result_path(state_input, state_output)
         return apply_json_path(self.output_path, state_output)
 
     def _apply_result_selector(self, state_output: Any) -> Dict[str, Any]:
@@ -511,14 +555,12 @@ class AbstractResultSelectorState(AbstractParametersState):
 
         Args:
             state_output: The state output to filter.
-            result_selector: The result selector which defines which fields to
-                keep.
 
         Returns:
             The filtered state output.
         """
         new_state_output = {}
-        for key, json_path in self.result_selector.items():
+        for key, json_path in self.result_selector.items():  # type: ignore
             key = key[:-2]  # Strip ".$"
             if extracted := apply_json_path(json_path, state_output):
                 new_state_output[key] = extracted
@@ -728,15 +770,16 @@ class TaskState(AbstractRetryCatchState):
         compiled["Resource"] = self.resource
         return compiled
 
-    def run(self, state_input: Any, resource_to_mock_fn) -> Any:  # type: ignore
-        """Execute the Task State according to Amazon States Language.
+    def _run(self, state_input: Any, resource_to_mock_fn: ResourceToMockFn) -> Any:
+        """Run the Task State.
 
         Args:
-            state_input: The input state data to be passed to the mock function.
-            mock_fn: The mock function to run for the simulation.
+            state_input: The input state data.
+            resource_to_mock_fn: A mapping of resource URIs to mock functions to
+                use if the state performs a task.
 
         Returns:
-            The output state from running the mock function.
+            The output of the state from running the mock function.
         """
         return resource_to_mock_fn[self.resource](state_input)
 

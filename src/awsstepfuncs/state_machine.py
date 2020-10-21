@@ -2,9 +2,10 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any, Callable, Dict, Optional, Union
+from typing import Any, Dict, Optional, Union
 
 from awsstepfuncs.state import AbstractState
+from awsstepfuncs.types import ResourceToMockFn
 
 CompiledState = Dict[str, Union[str, bool, Dict[str, str], None]]
 
@@ -90,7 +91,7 @@ class StateMachine:
         self,
         *,
         state_input: dict = None,
-        resource_to_mock_fn: Dict[str, Callable] = None,
+        resource_to_mock_fn: ResourceToMockFn = None,
     ) -> Any:
         """Simulate the state machine by executing all of the states.
 
