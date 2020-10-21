@@ -13,11 +13,12 @@ corresponds to type in Amazon States Language.
 """
 from __future__ import annotations
 
+import re
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Any, Callable, Dict, List, Optional, Union
 
-from awsstepfuncs.json_path import validate_json_path
+from awsstepfuncs.json_path import apply_json_path, validate_json_path
 
 MAX_STATE_NAME_LENGTH = 128
 
@@ -69,6 +70,10 @@ class AbstractState(ABC):
             NotImplementedError: Raised if not implemented by subclasses.
         """
         raise NotImplementedError
+
+    def simulate(self, state_input, resource_to_mock_fn):
+        print(f"Running {self.name}")  # noqa: T001
+        return self.run(state_input, resource_to_mock_fn)
 
     def __rshift__(self, other: AbstractState, /) -> AbstractState:
         """Overload >> operator to set state execution order.
@@ -160,7 +165,7 @@ class FailState(AbstractState):
         compiled["Cause"] = self.cause
         return compiled
 
-    def run(self, state_input: Any) -> None:
+    def run(self, state_input: Any, resource_to_mock_fn) -> None:
         """Execute the Fail State according to Amazon States Language.
 
         Args:
@@ -197,6 +202,12 @@ class AbstractInputPathOutputPathState(AbstractState):
 
         self.input_path = input_path
         self.output_path = output_path
+
+    def simulate(self, state_input, resource_to_mock_fn):
+        print(f"Running {self.name}")  # noqa: T001
+        state_input = apply_json_path(self.input_path, state_input)
+        state_output = self.run(state_input, resource_to_mock_fn)
+        return apply_json_path(self.output_path, state_output)
 
     def compile(self) -> Dict[str, Any]:  # noqa: A003
         """Compile the state to Amazon States Language.
@@ -293,6 +304,43 @@ class AbstractResultPathState(AbstractNextOrEndState):
             compiled["ResultPath"] = result_path
         return compiled
 
+    def simulate(self, state_input, resource_to_mock_fn):
+        print(f"Running {self.name}")  # noqa: T001
+        state_input = apply_json_path(self.input_path, state_input)
+        state_output = self.run(state_input, resource_to_mock_fn)
+        state_output = self._apply_result_path(state_input, state_output)
+        return apply_json_path(self.output_path, state_output)
+
+    def _apply_result_path(self, state_input: Any, state_output: Any) -> Any:
+        """Apply ResultPath to combine state input with state output.
+
+        Args:
+            state_input: The input state.
+            state_output: The output state.
+            result_path: A string that indicates whether to keep only the output
+                state, only the input state, or the output state as a key of the
+                input state.
+
+        Returns:
+            The state resulting from applying ResultPath.
+        """
+        if self.result_path == "$":
+            # Just keep state output
+            return state_output
+
+        elif self.result_path is None:
+            # Just keep state input, discard state_output
+            return state_input
+
+        elif match := re.fullmatch(r"\$\.([A-Za-z]+)", self.result_path):
+            # Move the state output as a key in state input
+            result_key = match.group(1)
+            state_input[result_key] = state_output
+            return state_input
+
+        else:  # pragma: no cover
+            assert False, "Should never happen"  # noqa: PT015
+
 
 class AbstractParametersState(AbstractResultPathState):
     """An Amazon States Language state includin Parameters."""
@@ -357,7 +405,7 @@ class PassState(AbstractParametersState):
             compiled["Result"] = result
         return compiled
 
-    def run(self, state_input: Any) -> Any:
+    def run(self, state_input: Any, resource_to_mock_fn) -> Any:
         """Execute the Pass State according to Amazon States Language.
 
         Args:
@@ -449,6 +497,33 @@ class AbstractResultSelectorState(AbstractParametersState):
         if result_selector := self.result_selector:
             compiled["ResultSelector"] = result_selector
         return compiled
+
+    def simulate(self, state_input, resource_to_mock_fn):
+        print(f"Running {self.name}")  # noqa: T001
+        state_input = apply_json_path(self.input_path, state_input)
+        state_output = self.run(state_input, resource_to_mock_fn)
+        if self.result_selector:
+            state_output = self._apply_result_selector(state_output)
+        return apply_json_path(self.output_path, state_output)
+
+    def _apply_result_selector(self, state_output: Any) -> Dict[str, Any]:
+        """Apply the ResultSelector to select a portion of the state output.
+
+        Args:
+            state_output: The state output to filter.
+            result_selector: The result selector which defines which fields to
+                keep.
+
+        Returns:
+            The filtered state output.
+        """
+        new_state_output = {}
+        for key, json_path in self.result_selector.items():
+            key = key[:-2]  # Strip ".$"
+            if extracted := apply_json_path(json_path, state_output):
+                new_state_output[key] = extracted
+
+        return new_state_output
 
 
 @dataclass
@@ -653,7 +728,7 @@ class TaskState(AbstractRetryCatchState):
         compiled["Resource"] = self.resource
         return compiled
 
-    def run(self, state_input: Any, mock_fn: Callable) -> Any:  # type: ignore
+    def run(self, state_input: Any, resource_to_mock_fn) -> Any:  # type: ignore
         """Execute the Task State according to Amazon States Language.
 
         Args:
@@ -663,7 +738,7 @@ class TaskState(AbstractRetryCatchState):
         Returns:
             The output state from running the mock function.
         """
-        return mock_fn(state_input)
+        return resource_to_mock_fn[self.resource](state_input)
 
 
 class ParallelState(AbstractRetryCatchState):
