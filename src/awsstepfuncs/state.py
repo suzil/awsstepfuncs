@@ -654,8 +654,8 @@ class AbstractRetryCatchState(AbstractResultSelectorState):
             kwargs: Kwargs to pass to parent classes.
         """
         super().__init__(*args, **kwargs)
-        self._retriers: List[Retrier] = []
-        self._catchers: List[Catcher] = []
+        self.retriers: List[Retrier] = []
+        self.catchers: List[Catcher] = []
 
     def compile(self) -> Dict[str, Any]:  # noqa: A003
         """Compile the state to Amazon States Language.
@@ -665,9 +665,9 @@ class AbstractRetryCatchState(AbstractResultSelectorState):
             Language.
         """
         compiled = super().compile()
-        if retriers := self._retriers:
+        if retriers := self.retriers:
             compiled["Retry"] = [retrier.compile() for retrier in retriers]
-        if catchers := self._catchers:
+        if catchers := self.catchers:
             compiled["Catch"] = [catcher.compile() for catcher in catchers]
         return compiled
 
@@ -703,7 +703,7 @@ class AbstractRetryCatchState(AbstractResultSelectorState):
             backoff_rate=backoff_rate,
             max_attempts=max_attempts,
         )
-        self._retriers.append(retrier)
+        self.retriers.append(retrier)
         return self
 
     def add_catcher(
@@ -729,7 +729,7 @@ class AbstractRetryCatchState(AbstractResultSelectorState):
             error_equals=error_equals,
             next_state=next_state,
         )
-        self._catchers.append(catcher)
+        self.catchers.append(catcher)
         return self
 
 
