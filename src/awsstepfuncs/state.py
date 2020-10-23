@@ -96,13 +96,28 @@ class AbstractState(ABC):
         >>> _ = pass_state >> fail_state
         >>> assert pass_state.next_state is fail_state
 
+        You cannot set a next state on a ChoiceState, SucceedState, or FailState
+        as they are terminal states.
+
+        >>> fail_state >> pass_state
+        Traceback (most recent call last):
+            ...
+        ValueError: FailState cannot have a next state
+
         Args:
             other: The other state besides self.
+
+        Raises:
+            ValueError: Raised when trying to set next state on a terminal
+                state.
 
         Returns:
             The latest state (for right shift, the right state).
         """
-        # TODO: Add validation as Choice, Succeed, Fail cannot have a "next"
+        for terminal_state in [ChoiceState, SucceedState, FailState]:
+            if isinstance(self, terminal_state):
+                raise ValueError(f"{terminal_state.__name__} cannot have a next state")
+
         self.next_state = other
         return other
 
