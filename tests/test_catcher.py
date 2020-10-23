@@ -16,6 +16,19 @@ def test_catcher():
     task_state.add_catcher(["States.ALL"], next_state=fail_state)
 
     state_machine = StateMachine(start_state=task_state)
+    assert state_machine.compile() == {
+        "StartAt": "Task",
+        "States": {
+            "Task": {
+                "Type": "Task",
+                "Next": "Success",
+                "Catch": [{"ErrorEquals": ["States.ALL"], "Next": "Failure"}],
+                "Resource": "123",
+            },
+            "Success": {"Type": "Succeed"},
+            "Failure": {"Type": "Fail", "Error": "IFailed", "Cause": "I failed!"},
+        },
+    }
 
     def success_mock_fn(_):
         assert True
