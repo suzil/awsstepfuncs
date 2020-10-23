@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 from typing import Any, Dict, Optional, Union
 
-from awsstepfuncs.state import AbstractState
+from awsstepfuncs.state import AbstractRetryCatchState, AbstractState
 from awsstepfuncs.types import ResourceToMockFn
 
 CompiledState = Dict[str, Union[str, bool, Dict[str, str], None]]
@@ -55,7 +55,14 @@ class StateMachine:
         Returns:
             Whether all states have unique names.
         """
-        all_state_names = [state.name for state in start_state]
+        all_states = set()
+        for state in start_state:
+            all_states.add(state)
+            if isinstance(state, AbstractRetryCatchState):
+                for catcher in state.catchers:
+                    all_states.add(catcher.next_state)
+
+        all_state_names = [state.name for state in all_states]
         return len(all_state_names) == len(set(all_state_names))
 
     def compile(self) -> Dict[str, Any]:  # noqa: A003
