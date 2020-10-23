@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Optional, Set, Union
 
 from awsstepfuncs.state import AbstractRetryCatchState, AbstractState
 from awsstepfuncs.types import ResourceToMockFn
@@ -34,35 +34,40 @@ class StateMachine:
         Raises:
             ValueError: Raised when there are duplicate state names.
         """
-        if not self._has_unique_names(start_state):
+        self.start_state = start_state
+
+        if not self._has_unique_names():
             raise ValueError(
                 "Duplicate names detected in state machine. Names must be unique"
             )
-        self.start_state = start_state
+
         self.comment = comment
         self.version = version
 
-    @staticmethod
-    def _has_unique_names(start_state: AbstractState) -> bool:
-        """Check if all states have unique names.
-
-        All state names must be unique in a state machine.
-
-        Args:
-            start_state: The starting state (which has references to all
-                following states).
+    @property
+    def all_states(self) -> Set[AbstractState]:
+        """Return all states in the state machine.
 
         Returns:
-            Whether all states have unique names.
+            A set of all possible states in the state machine.
         """
         all_states = set()
-        for state in start_state:
+        for state in self.start_state:
             all_states.add(state)
             if isinstance(state, AbstractRetryCatchState):
                 for catcher in state.catchers:
                     all_states.add(catcher.next_state)
+        return all_states
 
-        all_state_names = [state.name for state in all_states]
+    def _has_unique_names(self) -> bool:
+        """Check if all states have unique names.
+
+        All state names must be unique in a state machine.
+
+        Returns:
+            Whether all states have unique names.
+        """
+        all_state_names = [state.name for state in self.all_states]
         return len(all_state_names) == len(set(all_state_names))
 
     def compile(self) -> Dict[str, Any]:  # noqa: A003
@@ -73,7 +78,7 @@ class StateMachine:
         """
         compiled = {
             "StartAt": self.start_state.name,
-            "States": {state.name: state.compile() for state in self.start_state},
+            "States": {state.name: state.compile() for state in self.all_states},
         }
 
         if comment := self.comment:
