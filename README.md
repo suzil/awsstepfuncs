@@ -25,21 +25,21 @@ $ pip install awsstepfuncs
 from awsstepfuncs import TaskState, PassState, StateMachine
 
 # Define some states
-pass_step = PassState(
+pass_state = PassState(
     "My Pass", comment="Passes its input to its output without performing work"
 )
 times_two_resource = (
     "arn:aws:lambda:ap-southeast-2:710187714096:function:DivideNumbers"
 )
-task_step = TaskState(
+task_state = TaskState(
     "My Task",
     comment="Times two task",
     resource=times_two_resource,
 )
 
 # Define a state machine that orchestrates the states
-pass_step >> task_step
-state_machine = StateMachine(start_state=pass_step)
+pass_state >> task_state
+state_machine = StateMachine(start_state=pass_state)
 
 # Compile the state machine to Amazon States Language
 state_machine.to_json("state_machine.json")
