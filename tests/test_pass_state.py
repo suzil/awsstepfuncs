@@ -55,11 +55,8 @@ def test_pass_state(compile_state_machine):
     assert (
         stdout
         == """Running Pass 1
-Passing
 Running Pass 2
-Passing
 Running Pass 3
-Passing
 """
     )
 

@@ -14,7 +14,7 @@ corresponds to type in Amazon States Language.
 from __future__ import annotations
 
 import re
-from abc import ABC, abstractmethod
+from abc import ABC
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Union
 
@@ -60,7 +60,6 @@ class AbstractState(ABC):
             compiled["Comment"] = comment
         return compiled
 
-    @abstractmethod
     def _run(self, state_input: Any, resource_to_mock_fn: ResourceToMockFn) -> Any:
         """Run the state.
 
@@ -68,11 +67,8 @@ class AbstractState(ABC):
             state_input: The input state data.
             resource_to_mock_fn: A mapping of resource URIs to mock functions to
                 use if the state performs a task.
-
-        Raises:
-            NotImplementedError: Raised if not implemented by subclasses.
         """
-        raise NotImplementedError
+        return
 
     def simulate(self, state_input: Any, resource_to_mock_fn: ResourceToMockFn) -> Any:
         """Simulate the state including input and output processing.
@@ -192,16 +188,6 @@ class FailState(AbstractState):
         compiled["Error"] = self.error
         compiled["Cause"] = self.cause
         return compiled
-
-    def _run(self, state_input: Any, resource_to_mock_fn: ResourceToMockFn) -> None:
-        """Run the Fail State.
-
-        Args:
-            state_input: The input state data.
-            resource_to_mock_fn: A mapping of resource URIs to mock functions to
-                use if the state performs a task.
-        """
-        return
 
 
 class AbstractInputPathOutputPathState(AbstractState):
@@ -463,7 +449,6 @@ class PassState(AbstractParametersState):
         Returns:
             The output of the state, same as input if result is not provided.
         """
-        print("Passing")  # noqa: T001
         if result := self.result:
             return result
         else:

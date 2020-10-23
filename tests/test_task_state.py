@@ -56,7 +56,6 @@ def test_task_state(compile_state_machine, dummy_resource):
     assert (
         stdout
         == """Running Pass
-Passing
 Running Task
 """
     )
