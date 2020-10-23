@@ -6,10 +6,14 @@ Each row in the table is its own ABC. All latter rows inherit from previous
 rows. States (the columns) are concrete classes that inherit from the ABC that
 has the right fields available.
 
-Each concrete class should implement its own run() method that will run the
+Each concrete class should implement its own _run() method that will run the
 state according to its business logic when running a simulation. Each concrete
 class should also define a constant class variable called `state_type` that
 corresponds to type in Amazon States Language.
+
+There are two interesting methods common for many classes:
+- simulate() -- Simulate the state including input/output processing
+- _run() -- Run the state, eg. for a WaitState wait the designated time
 """
 from __future__ import annotations
 
