@@ -117,8 +117,34 @@ class StateMachine:
             resource_to_mock_fn = {}
 
         state_output = None
-        for state in self.start_state:
-            state_output = state.simulate(state_input, resource_to_mock_fn)
+        current_state: Optional[AbstractState] = self.start_state
+        while current_state is not None:
+            try:
+                state_output = current_state.simulate(state_input, resource_to_mock_fn)
+            except Exception:
+                current_state = self._check_for_catchers(current_state)
+            else:
+                current_state = current_state.next_state
+
             state_input = state_output
 
         return state_output
+
+    @staticmethod
+    def _check_for_catchers(state: AbstractState) -> Optional[AbstractState]:
+        """Check for any failed state catchers.
+
+        Currently only checks for the "catch-all" catcher of error name
+        States.ALL.
+
+        Args:
+            state: The state to check for catchers.
+
+        Returns:
+            The state to transition to if a catcher can be applied.
+        """
+        if isinstance(state, AbstractRetryCatchState):
+            for catcher in state.catchers:
+                if "States.ALL" in catcher.error_equals:
+                    return catcher.next_state
+        return None
