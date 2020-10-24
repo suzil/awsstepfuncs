@@ -398,6 +398,10 @@ class AbstractResultSelectorState(AbstractParametersState):
         state_output = self._run(state_input, resource_to_mock_fn) or {}
         if self.result_selector:
             state_output = self._apply_result_selector(state_output)
+            print(
+                f"State output after applying result selector {self.result_selector}:",
+                state_output,
+            )
         state_output = self._apply_result_path(state_input, state_output)
         return apply_output_path(self.output_path, state_output)
 
