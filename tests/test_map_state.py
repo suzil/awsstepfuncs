@@ -73,18 +73,18 @@ def test_map_state(state_input):
 
     assert stdout == [
         "Starting simulation of state machine",
-        f"State input: {state_input}",
         "Running Validate-All",
+        f"State input: {state_input}",
         f'State input applying input path of "$.detail": {state_input["detail"]}',
         "Starting simulation of state machine",
-        f"State input: {state_input['detail']['shipped'][0]}",
         "Running Validate",
+        f"State input: {state_input['detail']['shipped'][0]}",
         f'State input applying input path of "$": {state_input["detail"]["shipped"][0]}',
         f"State output: {expected_state_output[0]}",
         "Terminating simulation of state machine",
         "Starting simulation of state machine",
-        f"State input: {state_input['detail']['shipped'][1]}",
         "Running Validate",
+        f"State input: {state_input['detail']['shipped'][1]}",
         f'State input applying input path of "$": {state_input["detail"]["shipped"][1]}',
         f"State output: {expected_state_output[1]}",
         "Terminating simulation of state machine",
@@ -118,14 +118,14 @@ def test_bad_items_path(state_input):
 
     assert stdout == [
         "Starting simulation of state machine",
-        f"State input: {state_input}",
         "Running Validate-All",
+        f"State input: {state_input}",
         f'State input applying input path of "$.detail": {state_input["detail"]}',
         "Error encountered in state, checking for catchers",
         'Found catcher, transitioning to "Fail"',
         "State output: {}",
-        "State input: {}",
         "Running Fail",
+        "State input: {}",
         "State output: {}",
         "Terminating simulation of state machine",
     ]
