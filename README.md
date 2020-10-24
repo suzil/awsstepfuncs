@@ -12,7 +12,7 @@ WARNING: This project is still a work-in-progress. Buyer beware.
 
 ## Installation
 
-This package is available on PyPI:
+~~This package is available on PyPI:~~
 
 ```sh
 $ pip install awsstepfuncs
