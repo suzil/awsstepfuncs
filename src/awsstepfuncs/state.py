@@ -14,6 +14,8 @@ corresponds to type in Amazon States Language.
 There are two interesting methods common for many classes:
 - simulate() -- Simulate the state including input/output processing
 - _run() -- Run the state, eg. for a WaitState wait the designated time
+
+TODO: Missing ResultPath
 """
 from __future__ import annotations
 
@@ -27,6 +29,7 @@ from awsstepfuncs.abstract_state import (
     AbstractRetryCatchState,
     AbstractState,
 )
+from awsstepfuncs.json_path import apply_json_path
 from awsstepfuncs.state_machine import StateMachine
 from awsstepfuncs.types import ResourceToMockFn
 
@@ -246,7 +249,7 @@ class MapState(AbstractRetryCatchState):
         self,
         *args: Any,
         iterator: StateMachine,
-        items_path: str,
+        items_path: str = "$",
         max_concurrency: int,
         **kwargs: Any,
     ):
@@ -276,7 +279,33 @@ class MapState(AbstractRetryCatchState):
         """
         compiled = super().compile()
         compiled["ItemsPath"] = self.items_path
-        compiled["ResultPath"] = self.result_path
         compiled["MaxConcurrency"] = self.max_concurrency
         compiled["Iterator"] = self.iterator.compile()
         return compiled
+
+    def _run(self, state_input: Any, resource_to_mock_fn: ResourceToMockFn) -> Any:
+        """Run the Map State.
+
+        Args:
+            state_input: The input state data.
+            resource_to_mock_fn: A mapping of resource URIs to mock functions to
+                use if the state performs a task.
+
+        Raises:
+            ValueError: Raised when ItemsPath does not return a list.
+
+        Returns:
+            The output of the state from running the mock function.
+        """
+        items = apply_json_path(self.items_path, state_input)
+        if not isinstance(items, list):
+            raise ValueError("items_path must yield a list")
+
+        state_output = []
+        for item in items:
+            state_output.append(
+                self.iterator.simulate(
+                    state_input=item, resource_to_mock_fn=resource_to_mock_fn
+                )
+            )
+        return state_output

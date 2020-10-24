@@ -1,7 +1,37 @@
+import contextlib
+from contextlib import redirect_stdout
+from io import StringIO
+
+import pytest
+
 from awsstepfuncs import MapState, StateMachine, TaskState
+from awsstepfuncs.state import FailState
 
 
-def test_map_state():
+@pytest.fixture()
+def state_input():
+    return {
+        "ship-date": "2016-03-14T01:59:00Z",
+        "detail": {
+            "delivery-partner": "UQS",
+            "shipped": [
+                {"prod": "R31", "dest-code": 9511, "quantity": 1344},
+                {"prod": "S39", "dest-code": 9511, "quantity": 40},
+                {"prod": "R31", "dest-code": 9833, "quantity": 12},
+                {"prod": "R40", "dest-code": 9860, "quantity": 887},
+                {"prod": "R40", "dest-code": 9511, "quantity": 1220},
+            ],
+        },
+    }
+
+
+def mock_fn(state_input):
+    state_input = state_input.copy()
+    state_input["quantity"] *= 2
+    return state_input
+
+
+def test_map_state(state_input):
     resource = "123"
     task_state = TaskState("Validate", resource=resource)
     iterator = StateMachine(start_state=task_state)
@@ -10,7 +40,6 @@ def test_map_state():
         input_path="$.detail",
         items_path="$.shipped",
         max_concurrency=0,
-        result_path="$.detail.shipped",
         iterator=iterator,
     )
     state_machine = StateMachine(start_state=map_state)
@@ -28,31 +57,61 @@ def test_map_state():
                         "Validate": {"Type": "Task", "Resource": resource, "End": True}
                     },
                 },
-                "ResultPath": "$.detail.shipped",
                 "End": True,
             }
         },
     }
 
-    state_input = {
-        "ship-date": "2016-03-14T01:59:00Z",
-        "detail": {
-            "delivery-partner": "UQS",
-            "shipped": [
-                {"prod": "R31", "dest-code": 9511, "quantity": 1344},
-                {"prod": "S39", "dest-code": 9511, "quantity": 40},
-                {"prod": "R31", "dest-code": 9833, "quantity": 12},
-                {"prod": "R40", "dest-code": 9860, "quantity": 887},
-                {"prod": "R40", "dest-code": 9511, "quantity": 1220},
-            ],
-        },
-    }
+    with contextlib.closing(StringIO()) as fp:
+        with redirect_stdout(fp):
+            state_output = state_machine.simulate(
+                state_input=state_input, resource_to_mock_fn={resource: mock_fn}
+            )
+        stdout = fp.getvalue()
 
-    def mock_fn(_):
-        return "hello"
+    assert (
+        stdout
+        == """Running Validate-All
+Running Validate
+Running Validate
+Running Validate
+Running Validate
+Running Validate
+"""
+    )
+    assert state_output == [
+        {"dest-code": 9511, "prod": "R31", "quantity": 2688},
+        {"dest-code": 9511, "prod": "S39", "quantity": 80},
+        {"dest-code": 9833, "prod": "R31", "quantity": 24},
+        {"dest-code": 9860, "prod": "R40", "quantity": 1774},
+        {"dest-code": 9511, "prod": "R40", "quantity": 2440},
+    ]
 
-    # TODO: Implement simulation for map (just returns right now, not actually
-    # implemented)
-    state_machine.simulate(
-        state_input=state_input, resource_to_mock_fn={resource: mock_fn}
+
+def test_bad_items_path(state_input):
+    resource = "123"
+    task_state = TaskState("Validate", resource=resource)
+    iterator = StateMachine(start_state=task_state)
+    fail_state = FailState("Fail", error="ValueError", cause="Me")
+    map_state = MapState(
+        "Validate-All",
+        input_path="$.detail",
+        items_path="$.delivery-partner",
+        max_concurrency=0,
+        iterator=iterator,
+    ).add_catcher(["States.ALL"], next_state=fail_state)
+    state_machine = StateMachine(start_state=map_state)
+
+    with contextlib.closing(StringIO()) as fp:
+        with redirect_stdout(fp):
+            state_machine.simulate(
+                state_input=state_input, resource_to_mock_fn={resource: mock_fn}
+            )
+        stdout = fp.getvalue()
+
+    assert (
+        stdout
+        == """Running Validate-All
+Running Fail
+"""
     )
