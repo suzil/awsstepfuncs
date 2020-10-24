@@ -54,9 +54,11 @@ def test_pass_state(compile_state_machine):
     assert state_output == {}
     assert (
         stdout
-        == """Running Pass 1
+        == """Starting simulation of state machine
+Running Pass 1
 Running Pass 2
 Running Pass 3
+Terminating simulation of state machine
 """
     )
 

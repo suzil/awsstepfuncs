@@ -55,8 +55,10 @@ def test_task_state(compile_state_machine, dummy_resource):
     assert state_output == {"foo": 10, "bar": 1}
     assert (
         stdout
-        == """Running Pass
+        == """Starting simulation of state machine
+Running Pass
 Running Task
+Terminating simulation of state machine
 """
     )
 

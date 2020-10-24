@@ -71,12 +71,24 @@ def test_map_state(state_input):
 
     assert (
         stdout
-        == """Running Validate-All
+        == """Starting simulation of state machine
+Running Validate-All
+Starting simulation of state machine
 Running Validate
+Terminating simulation of state machine
+Starting simulation of state machine
 Running Validate
+Terminating simulation of state machine
+Starting simulation of state machine
 Running Validate
+Terminating simulation of state machine
+Starting simulation of state machine
 Running Validate
+Terminating simulation of state machine
+Starting simulation of state machine
 Running Validate
+Terminating simulation of state machine
+Terminating simulation of state machine
 """
     )
     assert state_output == [
@@ -107,11 +119,11 @@ def test_bad_items_path(state_input):
             state_machine.simulate(
                 state_input=state_input, resource_to_mock_fn={resource: mock_fn}
             )
-        stdout = fp.getvalue()
+        stdout = [line for line in fp.getvalue().split("\n") if line]
 
-    assert (
-        stdout
-        == """Running Validate-All
-Running Fail
-"""
-    )
+    assert stdout == [
+        "Starting simulation of state machine",
+        "Running Validate-All",
+        "Running Fail",
+        "Terminating simulation of state machine",
+    ]
