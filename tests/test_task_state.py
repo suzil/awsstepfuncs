@@ -55,8 +55,12 @@ def test_task_state(compile_state_machine, dummy_resource):
     assert state_output == {"foo": 10, "bar": 1}
     assert stdout == [
         "Starting simulation of state machine",
-        "Running Pass with state input: {'foo': 5, 'bar': 1}",
-        "Running Task with state input: {'foo': 5, 'bar': 1}",
+        "State input: {'foo': 5, 'bar': 1}",
+        "Running Pass",
+        "State output: {'foo': 5, 'bar': 1}",
+        "State input: {'foo': 5, 'bar': 1}",
+        "Running Task",
+        "State output: {'foo': 10, 'bar': 1}",
         "Terminating simulation of state machine",
     ]
 

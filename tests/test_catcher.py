@@ -49,16 +49,26 @@ def test_catcher():
 
     assert stdouts[success_mock_fn] == [
         "Starting simulation of state machine",
-        "Running Task with state input: {}",
-        "Running Success with state input: {}",
+        "State input: {}",
+        "Running Task",
+        "State output: {}",
+        "State input: {}",
+        "Running Success",
+        "State output: {}",
         "Terminating simulation of state machine",
     ]
     assert stdouts[failure_mock_fn] == [
         "Starting simulation of state machine",
-        "Running Task with state input: {}",
+        "State input: {}",
+        "Running Task",
         "Error encountered in state, checking for catchers",
         'Found catcher, transitioning to "Pass"',
-        "Running Pass with state input: {}",
-        "Running Failure with state input: {}",
+        "State output: {}",
+        "State input: {}",
+        "Running Pass",
+        "State output: {}",
+        "State input: {}",
+        "Running Failure",
+        "State output: {}",
         "Terminating simulation of state machine",
     ]

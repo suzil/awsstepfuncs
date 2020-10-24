@@ -54,9 +54,15 @@ def test_pass_state(compile_state_machine):
     assert state_output == {}
     assert stdout == [
         "Starting simulation of state machine",
-        "Running Pass 1 with state input: {}",
-        "Running Pass 2 with state input: {}",
-        "Running Pass 3 with state input: {}",
+        "State input: {}",
+        "Running Pass 1",
+        "State output: {}",
+        "State input: {}",
+        "Running Pass 2",
+        "State output: {}",
+        "State input: {}",
+        "Running Pass 3",
+        "State output: {}",
         "Terminating simulation of state machine",
     ]
 
