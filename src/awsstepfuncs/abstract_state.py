@@ -15,6 +15,15 @@ from awsstepfuncs.types import ResourceToMockFn
 MAX_STATE_NAME_LENGTH = 128
 
 
+def apply_input_path(input_path: JSONPath, state_input: Any) -> Any:
+    """Apply input path to some state input."""
+    state_input = input_path.apply(state_input)
+    print(  # noqa: T001
+        f'State input applying input path of "{input_path}":', state_input
+    )
+    return state_input
+
+
 class AbstractState(ABC):
     """An Amazon States Language state including Name, Comment, and Type."""
 
@@ -146,7 +155,7 @@ class AbstractInputPathOutputPathState(AbstractState):
         Returns:
             The output of the state after applying any output processing.
         """
-        state_input = self.input_path.apply(state_input)
+        state_input = apply_input_path(self.input_path, state_input)
         state_output = self._run(state_input, resource_to_mock_fn)
         return self.output_path.apply(state_output)
 
@@ -223,7 +232,7 @@ class AbstractResultPathState(AbstractNextOrEndState):
         Returns:
             The output of the state after applying any output processing.
         """
-        state_input = self.input_path.apply(state_input)
+        state_input = apply_input_path(self.input_path, state_input)
         state_output = self._run(state_input, resource_to_mock_fn)
         state_output = self._apply_result_path(state_input, state_output)
         return self.output_path.apply(state_output)
@@ -374,7 +383,7 @@ class AbstractResultSelectorState(AbstractParametersState):
         Returns:
             The output of the state after applying any output processing.
         """
-        state_input = self.input_path.apply(state_input)
+        state_input = apply_input_path(self.input_path, state_input)
         state_output = self._run(state_input, resource_to_mock_fn)
         if self.result_selector:
             state_output = self._apply_result_selector(state_output)
