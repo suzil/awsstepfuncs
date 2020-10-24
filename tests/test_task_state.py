@@ -58,10 +58,12 @@ def test_task_state(compile_state_machine, dummy_resource):
         "Running Pass",
         "State input: {'foo': 5, 'bar': 1}",
         "State input applying input path of \"$\": {'foo': 5, 'bar': 1}",
+        "State output applying output path of \"$\": {'foo': 5, 'bar': 1}",
         "State output: {'foo': 5, 'bar': 1}",
         "Running Task",
         "State input: {'foo': 5, 'bar': 1}",
         "State input applying input path of \"$\": {'foo': 5, 'bar': 1}",
+        "State output applying output path of \"$\": {'foo': 10, 'bar': 1}",
         "State output: {'foo': 10, 'bar': 1}",
         "Terminating simulation of state machine",
     ]
