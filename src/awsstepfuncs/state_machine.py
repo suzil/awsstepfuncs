@@ -136,9 +136,12 @@ class StateMachine:
         current_state: Optional[AbstractState] = self.start_state
         print("Starting simulation of state machine")  # noqa: T001
         while current_state is not None:
+            print("State input:", current_data)  # noqa: T001
+            print(f"Running {current_state.name}")  # noqa: T001
             current_state, current_data = self._simulate_state(
                 current_state, current_data, resource_to_mock_fn
             )
+            print("State output:", current_data)  # noqa: T001
 
         print("Terminating simulation of state machine")  # noqa: T001
 

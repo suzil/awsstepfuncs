@@ -17,9 +17,6 @@ def state_input():
             "shipped": [
                 {"prod": "R31", "dest-code": 9511, "quantity": 1344},
                 {"prod": "S39", "dest-code": 9511, "quantity": 40},
-                {"prod": "R31", "dest-code": 9833, "quantity": 12},
-                {"prod": "R40", "dest-code": 9860, "quantity": 887},
-                {"prod": "R40", "dest-code": 9511, "quantity": 1220},
             ],
         },
     }
@@ -69,33 +66,30 @@ def test_map_state(state_input):
             )
         stdout = [line for line in fp.getvalue().split("\n") if line]
 
+    expected_state_output = [
+        {"prod": "R31", "dest-code": 9511, "quantity": 2688},
+        {"prod": "S39", "dest-code": 9511, "quantity": 80},
+    ]
+
     assert stdout == [
         "Starting simulation of state machine",
-        f"Running Validate-All with state input: {state_input}",
+        f"State input: {state_input}",
+        "Running Validate-All",
         "Starting simulation of state machine",
-        f"Running Validate with state input: {state_input['detail']['shipped'][0]}",
+        f"State input: {state_input['detail']['shipped'][0]}",
+        "Running Validate",
+        f"State output: {expected_state_output[0]}",
         "Terminating simulation of state machine",
         "Starting simulation of state machine",
-        f"Running Validate with state input: {state_input['detail']['shipped'][1]}",
+        f"State input: {state_input['detail']['shipped'][1]}",
+        "Running Validate",
+        f"State output: {expected_state_output[1]}",
         "Terminating simulation of state machine",
-        "Starting simulation of state machine",
-        f"Running Validate with state input: {state_input['detail']['shipped'][2]}",
-        "Terminating simulation of state machine",
-        "Starting simulation of state machine",
-        f"Running Validate with state input: {state_input['detail']['shipped'][3]}",
-        "Terminating simulation of state machine",
-        "Starting simulation of state machine",
-        f"Running Validate with state input: {state_input['detail']['shipped'][4]}",
-        "Terminating simulation of state machine",
+        f"State output: {expected_state_output}",
         "Terminating simulation of state machine",
     ]
-    assert state_output == [
-        {"dest-code": 9511, "prod": "R31", "quantity": 2688},
-        {"dest-code": 9511, "prod": "S39", "quantity": 80},
-        {"dest-code": 9833, "prod": "R31", "quantity": 24},
-        {"dest-code": 9860, "prod": "R40", "quantity": 1774},
-        {"dest-code": 9511, "prod": "R40", "quantity": 2440},
-    ]
+
+    assert state_output == expected_state_output
 
 
 def test_bad_items_path(state_input):
@@ -121,9 +115,13 @@ def test_bad_items_path(state_input):
 
     assert stdout == [
         "Starting simulation of state machine",
-        f"Running Validate-All with state input: {state_input}",
+        f"State input: {state_input}",
+        "Running Validate-All",
         "Error encountered in state, checking for catchers",
         'Found catcher, transitioning to "Fail"',
-        "Running Fail with state input: {}",
+        "State output: {}",
+        "State input: {}",
+        "Running Fail",
+        "State output: {}",
         "Terminating simulation of state machine",
     ]
