@@ -49,14 +49,18 @@ def test_catcher():
 
     assert (
         stdouts[success_mock_fn]
-        == """Running Task
+        == """Starting simulation of state machine
+Running Task
 Running Success
+Terminating simulation of state machine
 """
     )
     assert (
         stdouts[failure_mock_fn]
-        == """Running Task
+        == """Starting simulation of state machine
+Running Task
 Running Pass
 Running Failure
+Terminating simulation of state machine
 """
     )

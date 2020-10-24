@@ -134,6 +134,7 @@ class StateMachine:
 
         state_output = None
         current_state: Optional[AbstractState] = self.start_state
+        print("Starting simulation of state machine")  # noqa: T001
         while current_state is not None:
             try:
                 state_output = current_state.simulate(state_input, resource_to_mock_fn)
@@ -143,6 +144,8 @@ class StateMachine:
                 current_state = current_state.next_state
 
             state_input = state_output
+
+        print("Terminating simulation of state machine")  # noqa: T001
 
         return state_output
 
