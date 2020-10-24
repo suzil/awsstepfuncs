@@ -3,6 +3,7 @@ from contextlib import redirect_stdout
 from io import StringIO
 
 from awsstepfuncs import FailState, SucceedState, TaskState
+from awsstepfuncs.state import PassState
 from awsstepfuncs.state_machine import StateMachine
 
 
@@ -10,10 +11,12 @@ def test_catcher():
     resource = "123"
     task_state = TaskState("Task", resource=resource)
     succeed_state = SucceedState("Success")
+    pass_state = PassState("Pass")
     fail_state = FailState("Failure", error="IFailed", cause="I failed!")
 
     task_state >> succeed_state
-    task_state.add_catcher(["States.ALL"], next_state=fail_state)
+    pass_state >> fail_state
+    task_state.add_catcher(["States.ALL"], next_state=pass_state)
 
     state_machine = StateMachine(start_state=task_state)
     assert state_machine.compile() == {
@@ -22,10 +25,11 @@ def test_catcher():
             "Task": {
                 "Type": "Task",
                 "Next": "Success",
-                "Catch": [{"ErrorEquals": ["States.ALL"], "Next": "Failure"}],
+                "Catch": [{"ErrorEquals": ["States.ALL"], "Next": "Pass"}],
                 "Resource": "123",
             },
             "Success": {"Type": "Succeed"},
+            "Pass": {"Type": "Pass", "Next": "Failure"},
             "Failure": {"Type": "Fail", "Error": "IFailed", "Cause": "I failed!"},
         },
     }
@@ -52,6 +56,7 @@ Running Success
     assert (
         stdouts[failure_mock_fn]
         == """Running Task
+Running Pass
 Running Failure
 """
     )

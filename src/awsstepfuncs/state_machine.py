@@ -51,12 +51,23 @@ class StateMachine:
         Returns:
             A set of all possible states in the state machine.
         """
+        return self._all_states_recursive(self.start_state)
+
+    def _all_states_recursive(self, start_state: AbstractState) -> Set[AbstractState]:
+        """Return all states from the given starting state.
+
+        Args:
+            start_state: The starting state.
+
+        Returns:
+            All possible states from the given starting state.
+        """
         all_states = set()
-        for state in self.start_state:
+        for state in start_state:
             all_states.add(state)
             if isinstance(state, AbstractRetryCatchState):
                 for catcher in state.catchers:
-                    all_states.add(catcher.next_state)
+                    all_states |= self._all_states_recursive(catcher.next_state)
         return all_states
 
     def _has_unique_names(self) -> bool:
