@@ -4,6 +4,7 @@
 from awsstepfuncs._repo_version import version as __version__  # noqa:F401
 from awsstepfuncs.state import (  # noqa: F401
     FailState,
+    MapState,
     PassState,
     SucceedState,
     TaskState,
