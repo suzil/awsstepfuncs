@@ -67,30 +67,28 @@ def test_map_state(state_input):
             state_output = state_machine.simulate(
                 state_input=state_input, resource_to_mock_fn={resource: mock_fn}
             )
-        stdout = fp.getvalue()
+        stdout = [line for line in fp.getvalue().split("\n") if line]
 
-    assert (
-        stdout
-        == """Starting simulation of state machine
-Running Validate-All
-Starting simulation of state machine
-Running Validate
-Terminating simulation of state machine
-Starting simulation of state machine
-Running Validate
-Terminating simulation of state machine
-Starting simulation of state machine
-Running Validate
-Terminating simulation of state machine
-Starting simulation of state machine
-Running Validate
-Terminating simulation of state machine
-Starting simulation of state machine
-Running Validate
-Terminating simulation of state machine
-Terminating simulation of state machine
-"""
-    )
+    assert stdout == [
+        "Starting simulation of state machine",
+        "Running Validate-All",
+        "Starting simulation of state machine",
+        "Running Validate",
+        "Terminating simulation of state machine",
+        "Starting simulation of state machine",
+        "Running Validate",
+        "Terminating simulation of state machine",
+        "Starting simulation of state machine",
+        "Running Validate",
+        "Terminating simulation of state machine",
+        "Starting simulation of state machine",
+        "Running Validate",
+        "Terminating simulation of state machine",
+        "Starting simulation of state machine",
+        "Running Validate",
+        "Terminating simulation of state machine",
+        "Terminating simulation of state machine",
+    ]
     assert state_output == [
         {"dest-code": 9511, "prod": "R31", "quantity": 2688},
         {"dest-code": 9511, "prod": "S39", "quantity": 80},
@@ -124,6 +122,8 @@ def test_bad_items_path(state_input):
     assert stdout == [
         "Starting simulation of state machine",
         "Running Validate-All",
+        "Error encountered in state, checking for catchers",
+        'Found catcher, transitioning to "Fail"',
         "Running Fail",
         "Terminating simulation of state machine",
     ]

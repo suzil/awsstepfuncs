@@ -139,6 +139,7 @@ class StateMachine:
             try:
                 state_output = current_state.simulate(state_input, resource_to_mock_fn)
             except Exception:
+                print("Error encountered in state, checking for catchers")  # noqa: T001
                 current_state = self._check_for_catchers(current_state)
             else:
                 current_state = current_state.next_state
@@ -165,5 +166,8 @@ class StateMachine:
         if isinstance(state, AbstractRetryCatchState):
             for catcher in state.catchers:
                 if "States.ALL" in catcher.error_equals:
+                    print(  # noqa: T001
+                        f'Found catcher, transitioning to "{catcher.next_state.name}"'
+                    )
                     return catcher.next_state
         return None
