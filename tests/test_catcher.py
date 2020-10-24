@@ -45,22 +45,20 @@ def test_catcher():
         with contextlib.closing(StringIO()) as fp:
             with redirect_stdout(fp):
                 state_machine.simulate(resource_to_mock_fn={resource: mock_fn})
-            stdouts[mock_fn] = fp.getvalue()
+            stdouts[mock_fn] = [line for line in fp.getvalue().split("\n") if line]
 
-    assert (
-        stdouts[success_mock_fn]
-        == """Starting simulation of state machine
-Running Task
-Running Success
-Terminating simulation of state machine
-"""
-    )
-    assert (
-        stdouts[failure_mock_fn]
-        == """Starting simulation of state machine
-Running Task
-Running Pass
-Running Failure
-Terminating simulation of state machine
-"""
-    )
+    assert stdouts[success_mock_fn] == [
+        "Starting simulation of state machine",
+        "Running Task",
+        "Running Success",
+        "Terminating simulation of state machine",
+    ]
+    assert stdouts[failure_mock_fn] == [
+        "Starting simulation of state machine",
+        "Running Task",
+        "Error encountered in state, checking for catchers",
+        'Found catcher, transitioning to "Pass"',
+        "Running Pass",
+        "Running Failure",
+        "Terminating simulation of state machine",
+    ]
