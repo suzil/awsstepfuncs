@@ -28,6 +28,10 @@ class JSONPath:
         """Return the JSONPath string."""
         return self.json_path
 
+    def __bool__(self) -> bool:
+        """Whether the JSONPath has something besides $ (default)."""
+        return self.json_path != "$"
+
     def _validate(self) -> None:
         """Validate a JSONPath for Amazon States Language.
 

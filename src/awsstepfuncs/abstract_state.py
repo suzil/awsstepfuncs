@@ -160,9 +160,9 @@ class AbstractInputPathOutputPathState(AbstractState):
             Language.
         """
         compiled = super().compile()
-        if (input_path := self.input_path) and str(input_path) != "$":
+        if input_path := self.input_path:
             compiled["InputPath"] = str(input_path)
-        if (output_path := self.output_path) and str(output_path) != "$":
+        if output_path := self.output_path:
             compiled["OutputPath"] = str(output_path)
         return compiled
 
@@ -210,7 +210,7 @@ class AbstractResultPathState(AbstractNextOrEndState):
             Language.
         """
         compiled = super().compile()
-        if str(self.result_path) != "$":
+        if self.result_path is None or self.result_path:
             compiled["ResultPath"] = str(self.result_path) if self.result_path else None
         return compiled
 
