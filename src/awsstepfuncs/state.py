@@ -295,7 +295,8 @@ class MapState(AbstractRetryCatchState):
             ValueError: Raised when ItemsPath does not return a list.
 
         Returns:
-            The output of the state from running the mock function.
+            The output of the state by running the iterator state machine for
+            all items.
         """
         items = apply_json_path(self.items_path, state_input)
         if not isinstance(items, list):
