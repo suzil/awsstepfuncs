@@ -54,6 +54,14 @@ class StateMachine:
         return self._all_states_recursive(self.start_state)
 
     def _all_states_recursive(self, start_state: AbstractState) -> Set[AbstractState]:
+        """Return all states from the given starting state.
+
+        Args:
+            start_state: The starting state.
+
+        Returns:
+            All possible states from the given starting state.
+        """
         all_states = set()
         for state in start_state:
             all_states.add(state)
