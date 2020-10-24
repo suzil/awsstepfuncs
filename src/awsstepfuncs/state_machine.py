@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any, Dict, Optional, Set, Union
+from typing import Any, Dict, Optional, Set, Tuple, Union
 
 from awsstepfuncs.state import AbstractRetryCatchState, AbstractState
 from awsstepfuncs.types import ResourceToMockFn
@@ -132,25 +132,45 @@ class StateMachine:
         if resource_to_mock_fn is None:
             resource_to_mock_fn = {}
 
-        state_output: Any = {}
+        current_data = state_input
         current_state: Optional[AbstractState] = self.start_state
         print("Starting simulation of state machine")  # noqa: T001
         while current_state is not None:
-            try:
-                state_output = (
-                    current_state.simulate(state_input, resource_to_mock_fn) or {}
-                )
-            except Exception:
-                print("Error encountered in state, checking for catchers")  # noqa: T001
-                current_state = self._check_for_catchers(current_state)
-            else:
-                current_state = current_state.next_state
-
-            state_input = state_output
+            current_state, current_data = self._simulate_state(
+                current_state, current_data, resource_to_mock_fn
+            )
 
         print("Terminating simulation of state machine")  # noqa: T001
 
-        return state_output
+        return current_data
+
+    def _simulate_state(
+        self,
+        state: AbstractState,
+        state_input: Any,
+        resource_to_mock_fn: ResourceToMockFn,
+    ) -> Tuple[Optional[AbstractState], Any]:
+        """Simulate a state, handling input and output data and errors.
+
+        Args:
+            state: The current state.
+            state_input: The current data (passed as state input).
+            resource_to_mock_fn: A dictionary mapping Resource URI to a mock
+                function to use in the simulation.
+
+        Returns:
+            The next state and the output data.
+        """
+        try:
+            state_output = state.simulate(state_input, resource_to_mock_fn) or {}
+        except Exception:
+            print("Error encountered in state, checking for catchers")  # noqa: T001
+            next_state = self._check_for_catchers(state)
+            state_output = {}
+        else:
+            next_state = state.next_state
+
+        return next_state, state_output
 
     @staticmethod
     def _check_for_catchers(state: AbstractState) -> Optional[AbstractState]:
