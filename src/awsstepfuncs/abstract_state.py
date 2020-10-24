@@ -18,9 +18,7 @@ MAX_STATE_NAME_LENGTH = 128
 def apply_input_path(input_path: JSONPath, state_input: Any) -> Any:
     """Apply input path to some state input."""
     state_input = input_path.apply(state_input)
-    print(  # noqa: T001
-        f'State input applying input path of "{input_path}":', state_input
-    )
+    print(f'State input applying input path of "{input_path}":', state_input)
     return state_input
 
 

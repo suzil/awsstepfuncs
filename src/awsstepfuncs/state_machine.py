@@ -134,16 +134,16 @@ class StateMachine:
 
         current_data = state_input
         current_state: Optional[AbstractState] = self.start_state
-        print("Starting simulation of state machine")  # noqa: T001
+        print("Starting simulation of state machine")
         while current_state is not None:
-            print(f"Running {current_state.name}")  # noqa: T001
-            print("State input:", current_data)  # noqa: T001
+            print(f"Running {current_state.name}")
+            print("State input:", current_data)
             current_state, current_data = self._simulate_state(
                 current_state, current_data, resource_to_mock_fn
             )
-            print("State output:", current_data)  # noqa: T001
+            print("State output:", current_data)
 
-        print("Terminating simulation of state machine")  # noqa: T001
+        print("Terminating simulation of state machine")
 
         return current_data
 
@@ -167,7 +167,7 @@ class StateMachine:
         try:
             state_output = state.simulate(state_input, resource_to_mock_fn) or {}
         except Exception:
-            print("Error encountered in state, checking for catchers")  # noqa: T001
+            print("Error encountered in state, checking for catchers")
             next_state = self._check_for_catchers(state)
             state_output = {}
         else:
@@ -191,7 +191,7 @@ class StateMachine:
         if isinstance(state, AbstractRetryCatchState):
             for catcher in state.catchers:
                 if "States.ALL" in catcher.error_equals:
-                    print(  # noqa: T001
+                    print(
                         f'Found catcher, transitioning to "{catcher.next_state.name}"'
                     )
                     return catcher.next_state
