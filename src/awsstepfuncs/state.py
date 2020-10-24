@@ -14,8 +14,6 @@ corresponds to type in Amazon States Language.
 There are two interesting methods common for many classes:
 - simulate() -- Simulate the state including input/output processing
 - _run() -- Run the state, eg. for a WaitState wait the designated time
-
-TODO: Missing ResultPath
 """
 from __future__ import annotations
 

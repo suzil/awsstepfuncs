@@ -70,7 +70,6 @@ def test_map_state(state_input):
         {"prod": "R31", "dest-code": 9511, "quantity": 2688},
         {"prod": "S39", "dest-code": 9511, "quantity": 80},
     ]
-
     assert stdout == [
         "Starting simulation of state machine",
         "Running Validate-All",
@@ -80,6 +79,7 @@ def test_map_state(state_input):
         "Running Validate",
         f"State input: {state_input['detail']['shipped'][0]}",
         f'State input after applying input path of "$": {state_input["detail"]["shipped"][0]}',
+        f'Output from applying result path of "$": {expected_state_output[0]}',
         f'State output after applying output path of "$": {expected_state_output[0]}',
         f"State output: {expected_state_output[0]}",
         "Terminating simulation of state machine",
@@ -87,14 +87,15 @@ def test_map_state(state_input):
         "Running Validate",
         f"State input: {state_input['detail']['shipped'][1]}",
         f'State input after applying input path of "$": {state_input["detail"]["shipped"][1]}',
+        f'Output from applying result path of "$": {expected_state_output[1]}',
         f'State output after applying output path of "$": {expected_state_output[1]}',
         f"State output: {expected_state_output[1]}",
         "Terminating simulation of state machine",
+        f'Output from applying result path of "$": {expected_state_output}',
         f'State output after applying output path of "$": {expected_state_output}',
         f"State output: {expected_state_output}",
         "Terminating simulation of state machine",
     ]
-
     assert state_output == expected_state_output
 
 
