@@ -28,9 +28,7 @@ from awsstepfuncs import TaskState, PassState, StateMachine
 pass_state = PassState(
     "My Pass", comment="Passes its input to its output without performing work"
 )
-times_two_resource = (
-    "arn:aws:lambda:ap-southeast-2:710187714096:function:DivideNumbers"
-)
+times_two_resource = "arn:aws:lambda:ap-southeast-2:710187714096:function:DivideNumbers"
 task_state = TaskState(
     "My Task",
     comment="Times two task",
@@ -46,14 +44,18 @@ state_machine.to_json("state_machine.json")
 
 # Simulate the state machine by executing it, use mock functions for tasks
 
+
 def mock_times_two(data):
     data["foo"] *= 2
     return data
 
+
 state_output = state_machine.simulate(
     state_input={"foo": 5, "bar": 1},
-    resource_to_mock_fn={times_two_resource: mock_times_two,
-})
+    resource_to_mock_fn={
+        times_two_resource: mock_times_two,
+    },
+)
 
 assert state_output == {"foo": 10, "bar": 1}
 ```
