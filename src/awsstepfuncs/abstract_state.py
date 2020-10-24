@@ -72,8 +72,11 @@ class AbstractState(ABC):
             state_input: The input state data.
             resource_to_mock_fn: A mapping of resource URIs to mock functions to
                 use if the state performs a task.
+
+        Returns:
+            An empty output state.
         """
-        return
+        return {}
 
     def simulate(self, state_input: Any, resource_to_mock_fn: ResourceToMockFn) -> Any:
         """Simulate the state including input and output processing.
@@ -254,20 +257,23 @@ class AbstractResultPathState(AbstractNextOrEndState):
         """
         if str(self.result_path) == "$":
             # Just keep state output
-            return state_output
+            output = state_output
 
         elif self.result_path is None:
             # Just keep state input, discard state_output
-            return state_input
+            output = state_input
 
         elif match := re.fullmatch(r"\$\.([A-Za-z]+)", str(self.result_path)):
             # Move the state output as a key in state input
             result_key = match.group(1)
             state_input[result_key] = state_output
-            return state_input
+            output = state_input
 
         else:  # pragma: no cover
             assert False, "Should never happen"  # noqa: PT015
+
+        print(f'Output from applying result path of "{self.result_path}":', output)
+        return output
 
 
 class AbstractParametersState(AbstractResultPathState):
@@ -392,6 +398,10 @@ class AbstractResultSelectorState(AbstractParametersState):
         state_output = self._run(state_input, resource_to_mock_fn) or {}
         if self.result_selector:
             state_output = self._apply_result_selector(state_output)
+            print(
+                f"State output after applying result selector {self.result_selector}:",
+                state_output,
+            )
         state_output = self._apply_result_path(state_input, state_output)
         return apply_output_path(self.output_path, state_output)
 
