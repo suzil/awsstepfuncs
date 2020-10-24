@@ -18,14 +18,14 @@ MAX_STATE_NAME_LENGTH = 128
 def apply_input_path(input_path: JSONPath, state_input: Any) -> Any:
     """Apply input path to some state input."""
     state_input = input_path.apply(state_input)
-    print(f'State input applying input path of "{input_path}":', state_input)
+    print(f'State input after applying input path of "{input_path}":', state_input)
     return state_input
 
 
 def apply_output_path(output_path: JSONPath, state_output: Any) -> Any:
     """Apply output path to some state output."""
     state_output = output_path.apply(state_output)
-    print(f'State output applying output path of "{output_path}":', state_output)
+    print(f'State output after applying output path of "{output_path}":', state_output)
     return state_output
 
 
