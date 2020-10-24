@@ -49,18 +49,16 @@ def test_pass_state(compile_state_machine):
     with contextlib.closing(StringIO()) as fp:
         with redirect_stdout(fp):
             state_output = state_machine.simulate()
-        stdout = fp.getvalue()
+        stdout = [line for line in fp.getvalue().split("\n") if line]
 
     assert state_output == {}
-    assert (
-        stdout
-        == """Starting simulation of state machine
-Running Pass 1
-Running Pass 2
-Running Pass 3
-Terminating simulation of state machine
-"""
-    )
+    assert stdout == [
+        "Starting simulation of state machine",
+        "Running Pass 1 with state input: {}",
+        "Running Pass 2 with state input: {}",
+        "Running Pass 3 with state input: {}",
+        "Terminating simulation of state machine",
+    ]
 
 
 def test_result(compile_state_machine):

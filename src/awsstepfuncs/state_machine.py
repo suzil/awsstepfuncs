@@ -132,12 +132,14 @@ class StateMachine:
         if resource_to_mock_fn is None:
             resource_to_mock_fn = {}
 
-        state_output = None
+        state_output: Any = {}
         current_state: Optional[AbstractState] = self.start_state
         print("Starting simulation of state machine")  # noqa: T001
         while current_state is not None:
             try:
-                state_output = current_state.simulate(state_input, resource_to_mock_fn)
+                state_output = (
+                    current_state.simulate(state_input, resource_to_mock_fn) or {}
+                )
             except Exception:
                 print("Error encountered in state, checking for catchers")  # noqa: T001
                 current_state = self._check_for_catchers(current_state)

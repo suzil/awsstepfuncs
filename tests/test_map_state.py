@@ -71,21 +71,21 @@ def test_map_state(state_input):
 
     assert stdout == [
         "Starting simulation of state machine",
-        "Running Validate-All",
+        f"Running Validate-All with state input: {state_input}",
         "Starting simulation of state machine",
-        "Running Validate",
+        f"Running Validate with state input: {state_input['detail']['shipped'][0]}",
         "Terminating simulation of state machine",
         "Starting simulation of state machine",
-        "Running Validate",
+        f"Running Validate with state input: {state_input['detail']['shipped'][1]}",
         "Terminating simulation of state machine",
         "Starting simulation of state machine",
-        "Running Validate",
+        f"Running Validate with state input: {state_input['detail']['shipped'][2]}",
         "Terminating simulation of state machine",
         "Starting simulation of state machine",
-        "Running Validate",
+        f"Running Validate with state input: {state_input['detail']['shipped'][3]}",
         "Terminating simulation of state machine",
         "Starting simulation of state machine",
-        "Running Validate",
+        f"Running Validate with state input: {state_input['detail']['shipped'][4]}",
         "Terminating simulation of state machine",
         "Terminating simulation of state machine",
     ]
@@ -121,9 +121,9 @@ def test_bad_items_path(state_input):
 
     assert stdout == [
         "Starting simulation of state machine",
-        "Running Validate-All",
+        f"Running Validate-All with state input: {state_input}",
         "Error encountered in state, checking for catchers",
         'Found catcher, transitioning to "Fail"',
-        "Running Fail",
+        "Running Fail with state input: {}",
         "Terminating simulation of state machine",
     ]

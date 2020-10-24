@@ -50,17 +50,15 @@ def test_task_state(compile_state_machine, dummy_resource):
                 state_input={"foo": 5, "bar": 1},
                 resource_to_mock_fn={dummy_resource: mock_fn},
             )
-        stdout = fp.getvalue()
+        stdout = [line for line in fp.getvalue().split("\n") if line]
 
     assert state_output == {"foo": 10, "bar": 1}
-    assert (
-        stdout
-        == """Starting simulation of state machine
-Running Pass
-Running Task
-Terminating simulation of state machine
-"""
-    )
+    assert stdout == [
+        "Starting simulation of state machine",
+        "Running Pass with state input: {'foo': 5, 'bar': 1}",
+        "Running Task with state input: {'foo': 5, 'bar': 1}",
+        "Terminating simulation of state machine",
+    ]
 
 
 def test_result_selector(compile_state_machine, dummy_resource):

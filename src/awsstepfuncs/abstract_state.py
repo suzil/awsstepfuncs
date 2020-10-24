@@ -15,6 +15,11 @@ from awsstepfuncs.types import ResourceToMockFn
 MAX_STATE_NAME_LENGTH = 128
 
 
+def print_simulation_entry(name: str, state_input: Any) -> None:
+    """Print the state name and its input."""
+    print(f"Running {name} with state input: {state_input}")  # noqa: T001
+
+
 class AbstractState(ABC):
     """An Amazon States Language state including Name, Comment, and Type."""
 
@@ -72,7 +77,7 @@ class AbstractState(ABC):
         Returns:
             The output of the state after applying any output processing.
         """
-        print(f"Running {self.name}")  # noqa: T001
+        print_simulation_entry(self.name, state_input)
         return self._run(state_input, resource_to_mock_fn)
 
     def __rshift__(self, other: AbstractState, /) -> AbstractState:
@@ -147,7 +152,7 @@ class AbstractInputPathOutputPathState(AbstractState):
         Returns:
             The output of the state after applying any output processing.
         """
-        print(f"Running {self.name}")  # noqa: T001
+        print_simulation_entry(self.name, state_input)
         state_input = self.input_path.apply(state_input)
         state_output = self._run(state_input, resource_to_mock_fn)
         return self.output_path.apply(state_output)
@@ -225,7 +230,7 @@ class AbstractResultPathState(AbstractNextOrEndState):
         Returns:
             The output of the state after applying any output processing.
         """
-        print(f"Running {self.name}")  # noqa: T001
+        print_simulation_entry(self.name, state_input)
         state_input = self.input_path.apply(state_input)
         state_output = self._run(state_input, resource_to_mock_fn)
         state_output = self._apply_result_path(state_input, state_output)
@@ -377,7 +382,7 @@ class AbstractResultSelectorState(AbstractParametersState):
         Returns:
             The output of the state after applying any output processing.
         """
-        print(f"Running {self.name}")  # noqa: T001
+        print_simulation_entry(self.name, state_input)
         state_input = self.input_path.apply(state_input)
         state_output = self._run(state_input, resource_to_mock_fn)
         if self.result_selector:
