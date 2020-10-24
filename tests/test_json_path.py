@@ -2,7 +2,7 @@ import re
 
 import pytest
 
-from awsstepfuncs.json_path import apply_json_path, validate_json_path
+from awsstepfuncs.json_path import JSONPath
 
 
 @pytest.fixture(scope="session")
@@ -21,21 +21,21 @@ def sample_data():
     [("$.foo", 123), ("$.bar", ["a", "b", "c"]), ("$.car.cdr", True)],
 )
 def test_apply_json_path(json_path, match, sample_data):
-    assert apply_json_path(json_path, sample_data) == match
+    assert JSONPath(json_path).apply(sample_data) == match
 
 
-def test_apply_json_path_unsupported_operator(sample_data):
+def test_json_path_unsupported_operator():
     with pytest.raises(ValueError, match='Unsupported JSONPath operator: "*"'):
-        apply_json_path("$foo[*].baz", sample_data)
+        JSONPath("$foo[*].baz")
 
 
-def test_apply_json_path_must_begin_with_dollar(sample_data):
+def test_json_path_must_begin_with_dollar():
     with pytest.raises(ValueError, match=re.escape('JSONPath must begin with "$"')):
-        apply_json_path("foo[*].baz", sample_data)
+        JSONPath("foo[*].baz")
 
 
 def test_apply_json_path_no_match(sample_data):
-    assert apply_json_path("$.notfound", sample_data) is None
+    assert JSONPath("$.notfound").apply(sample_data) is None
 
 
 @pytest.mark.parametrize(
@@ -60,4 +60,4 @@ def test_apply_json_path_no_match(sample_data):
 )
 def test_valid_reference_path(reference_path):
     # Should not raise any ValueError
-    validate_json_path(reference_path)
+    JSONPath(reference_path)

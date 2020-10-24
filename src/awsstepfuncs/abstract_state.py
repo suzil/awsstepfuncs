@@ -9,7 +9,7 @@ from abc import ABC
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Union
 
-from awsstepfuncs.json_path import apply_json_path, validate_json_path
+from awsstepfuncs.json_path import JSONPath
 from awsstepfuncs.types import ResourceToMockFn
 
 MAX_STATE_NAME_LENGTH = 128
@@ -131,19 +131,10 @@ class AbstractInputPathOutputPathState(AbstractState):
             output_path: Used to select a portion of the state output. Default
                 is $ (pass everything).
             kwargs: Kwargs to pass to parent classes.
-
-        Raises:
-            ValueError: Raised when an invalid JSONPath is specified.
         """
         super().__init__(*args, **kwargs)
-        for json_path in [input_path, output_path]:
-            try:
-                validate_json_path(json_path)
-            except ValueError:
-                raise
-
-        self.input_path = input_path
-        self.output_path = output_path
+        self.input_path = JSONPath(input_path)
+        self.output_path = JSONPath(output_path)
 
     def simulate(self, state_input: Any, resource_to_mock_fn: ResourceToMockFn) -> Any:
         """Simulate the state including input and output processing.
@@ -157,9 +148,9 @@ class AbstractInputPathOutputPathState(AbstractState):
             The output of the state after applying any output processing.
         """
         print(f"Running {self.name}")  # noqa: T001
-        state_input = apply_json_path(self.input_path, state_input)
+        state_input = self.input_path.apply(state_input)
         state_output = self._run(state_input, resource_to_mock_fn)
-        return apply_json_path(self.output_path, state_output)
+        return self.output_path.apply(state_output)
 
     def compile(self) -> Dict[str, Any]:  # noqa: A003
         """Compile the state to Amazon States Language.
@@ -169,10 +160,10 @@ class AbstractInputPathOutputPathState(AbstractState):
             Language.
         """
         compiled = super().compile()
-        if (input_path := self.input_path) != "$":
-            compiled["InputPath"] = input_path
-        if (output_path := self.output_path) != "$":
-            compiled["OutputPath"] = output_path
+        if (input_path := self.input_path) and str(input_path) != "$":
+            compiled["InputPath"] = str(input_path)
+        if (output_path := self.output_path) and str(output_path) != "$":
+            compiled["OutputPath"] = str(output_path)
         return compiled
 
 
@@ -207,18 +198,9 @@ class AbstractResultPathState(AbstractNextOrEndState):
                 as specified by the OutputPath field (if present) before being used
                 as the state's output. Default is $ (pass only the output state).
             kwargs: Kwargs to pass to parent classes.
-
-        Raises:
-            ValueError: Raised when the result_path is an invalid JSONPath.
         """
         super().__init__(*args, **kwargs)
-        if result_path:
-            try:
-                validate_json_path(result_path)
-            except ValueError:
-                raise
-
-        self.result_path = result_path
+        self.result_path = JSONPath(result_path) if result_path else None
 
     def compile(self) -> Dict[str, Any]:  # noqa: A003
         """Compile the state to Amazon States Language.
@@ -228,8 +210,8 @@ class AbstractResultPathState(AbstractNextOrEndState):
             Language.
         """
         compiled = super().compile()
-        if (result_path := self.result_path) != "$":
-            compiled["ResultPath"] = result_path
+        if str(self.result_path) != "$":
+            compiled["ResultPath"] = str(self.result_path) if self.result_path else None
         return compiled
 
     def simulate(self, state_input: Any, resource_to_mock_fn: ResourceToMockFn) -> Any:
@@ -244,10 +226,10 @@ class AbstractResultPathState(AbstractNextOrEndState):
             The output of the state after applying any output processing.
         """
         print(f"Running {self.name}")  # noqa: T001
-        state_input = apply_json_path(self.input_path, state_input)
+        state_input = self.input_path.apply(state_input)
         state_output = self._run(state_input, resource_to_mock_fn)
         state_output = self._apply_result_path(state_input, state_output)
-        return apply_json_path(self.output_path, state_output)
+        return self.output_path.apply(state_output)
 
     def _apply_result_path(self, state_input: Any, state_output: Any) -> Any:
         """Apply ResultPath to combine state input with state output.
@@ -259,7 +241,7 @@ class AbstractResultPathState(AbstractNextOrEndState):
         Returns:
             The state resulting from applying ResultPath.
         """
-        if self.result_path == "$":
+        if str(self.result_path) == "$":
             # Just keep state output
             return state_output
 
@@ -267,7 +249,7 @@ class AbstractResultPathState(AbstractNextOrEndState):
             # Just keep state input, discard state_output
             return state_input
 
-        elif match := re.fullmatch(r"\$\.([A-Za-z]+)", self.result_path):
+        elif match := re.fullmatch(r"\$\.([A-Za-z]+)", str(self.result_path)):
             # Move the state output as a key in state input
             result_key = match.group(1)
             state_input[result_key] = state_output
@@ -370,10 +352,7 @@ class AbstractResultSelectorState(AbstractParametersState):
             if not key[-2:] == ".$":
                 raise ValueError("All resource selector keys must end with .$")
 
-            try:
-                validate_json_path(json_path)
-            except ValueError:
-                raise
+            JSONPath(json_path)
 
     def compile(self) -> Dict[str, Any]:  # noqa: A003
         """Compile the state to Amazon States Language.
@@ -399,12 +378,12 @@ class AbstractResultSelectorState(AbstractParametersState):
             The output of the state after applying any output processing.
         """
         print(f"Running {self.name}")  # noqa: T001
-        state_input = apply_json_path(self.input_path, state_input)
+        state_input = self.input_path.apply(state_input)
         state_output = self._run(state_input, resource_to_mock_fn)
         if self.result_selector:
             state_output = self._apply_result_selector(state_output)
         state_output = self._apply_result_path(state_input, state_output)
-        return apply_json_path(self.output_path, state_output)
+        return self.output_path.apply(state_output)
 
     def _apply_result_selector(self, state_output: Any) -> Dict[str, Any]:
         """Apply the ResultSelector to select a portion of the state output.
@@ -418,7 +397,7 @@ class AbstractResultSelectorState(AbstractParametersState):
         new_state_output = {}
         for key, json_path in self.result_selector.items():  # type: ignore
             key = key[:-2]  # Strip ".$"
-            if extracted := apply_json_path(json_path, state_output):
+            if extracted := JSONPath(json_path).apply(state_output):
                 new_state_output[key] = extracted
 
         return new_state_output
