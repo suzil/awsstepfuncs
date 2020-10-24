@@ -18,8 +18,15 @@ MAX_STATE_NAME_LENGTH = 128
 def apply_input_path(input_path: JSONPath, state_input: Any) -> Any:
     """Apply input path to some state input."""
     state_input = input_path.apply(state_input)
-    print(f'State input applying input path of "{input_path}":', state_input)
+    print(f'State input after applying input path of "{input_path}":', state_input)
     return state_input
+
+
+def apply_output_path(output_path: JSONPath, state_output: Any) -> Any:
+    """Apply output path to some state output."""
+    state_output = output_path.apply(state_output)
+    print(f'State output after applying output path of "{output_path}":', state_output)
+    return state_output
 
 
 class AbstractState(ABC):
@@ -79,7 +86,7 @@ class AbstractState(ABC):
         Returns:
             The output of the state after applying any output processing.
         """
-        return self._run(state_input, resource_to_mock_fn)
+        return self._run(state_input, resource_to_mock_fn) or {}
 
     def __rshift__(self, other: AbstractState, /) -> AbstractState:
         """Overload >> operator to set state execution order.
@@ -154,8 +161,8 @@ class AbstractInputPathOutputPathState(AbstractState):
             The output of the state after applying any output processing.
         """
         state_input = apply_input_path(self.input_path, state_input)
-        state_output = self._run(state_input, resource_to_mock_fn)
-        return self.output_path.apply(state_output)
+        state_output = self._run(state_input, resource_to_mock_fn) or {}
+        return apply_output_path(self.output_path, state_output)
 
     def compile(self) -> Dict[str, Any]:  # noqa: A003
         """Compile the state to Amazon States Language.
@@ -231,9 +238,9 @@ class AbstractResultPathState(AbstractNextOrEndState):
             The output of the state after applying any output processing.
         """
         state_input = apply_input_path(self.input_path, state_input)
-        state_output = self._run(state_input, resource_to_mock_fn)
+        state_output = self._run(state_input, resource_to_mock_fn) or {}
         state_output = self._apply_result_path(state_input, state_output)
-        return self.output_path.apply(state_output)
+        return apply_output_path(self.output_path, state_output)
 
     def _apply_result_path(self, state_input: Any, state_output: Any) -> Any:
         """Apply ResultPath to combine state input with state output.
@@ -382,11 +389,11 @@ class AbstractResultSelectorState(AbstractParametersState):
             The output of the state after applying any output processing.
         """
         state_input = apply_input_path(self.input_path, state_input)
-        state_output = self._run(state_input, resource_to_mock_fn)
+        state_output = self._run(state_input, resource_to_mock_fn) or {}
         if self.result_selector:
             state_output = self._apply_result_selector(state_output)
         state_output = self._apply_result_path(state_input, state_output)
-        return self.output_path.apply(state_output)
+        return apply_output_path(self.output_path, state_output)
 
     def _apply_result_selector(self, state_output: Any) -> Dict[str, Any]:
         """Apply the ResultSelector to select a portion of the state output.
