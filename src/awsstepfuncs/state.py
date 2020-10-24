@@ -27,6 +27,7 @@ from awsstepfuncs.abstract_state import (
     AbstractRetryCatchState,
     AbstractState,
 )
+from awsstepfuncs.state_machine import StateMachine
 from awsstepfuncs.types import ResourceToMockFn
 
 MAX_STATE_NAME_LENGTH = 128
@@ -240,3 +241,42 @@ class MapState(AbstractRetryCatchState):
     """The Map State processes all the elements of an array."""
 
     state_type = "Map"
+
+    def __init__(
+        self,
+        *args: Any,
+        iterator: StateMachine,
+        items_path: str,
+        max_concurrency: int,
+        **kwargs: Any,
+    ):
+        """Initialize a Map State.
+
+        Args:
+            args: Args to pass to parent classes.
+            iterator: The state machine which will process each element of the
+                array.
+            items_path: A Reference Path identifying where in the effective
+                input the array field is found.
+            max_concurrency: The upper bound on how many invocations of the
+                Iterator may run in parallel.
+            kwargs: Kwargs to pass to parent classes.
+        """
+        super().__init__(*args, **kwargs)
+        self.iterator = iterator
+        self.items_path = items_path
+        self.max_concurrency = max_concurrency
+
+    def compile(self) -> Dict[str, Any]:  # noqa: A003
+        """Compile the state to Amazon States Language.
+
+        Returns:
+            A dictionary representing the compiled state in Amazon States
+            Language.
+        """
+        compiled = super().compile()
+        compiled["ItemsPath"] = self.items_path
+        compiled["ResultPath"] = self.result_path
+        compiled["MaxConcurrency"] = self.max_concurrency
+        compiled["Iterator"] = self.iterator.compile()
+        return compiled
