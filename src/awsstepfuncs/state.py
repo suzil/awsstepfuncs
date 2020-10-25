@@ -164,7 +164,7 @@ class WaitState(AbstractNextOrEndState):
         compiled = super().compile()
         if seconds := self.seconds:
             compiled["Seconds"] = seconds
-        elif timestamp := self.timestamp:
+        if timestamp := self.timestamp:
             compiled["Timestamp"] = timestamp.isoformat()
         return compiled
 
