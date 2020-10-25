@@ -8,5 +8,6 @@ from awsstepfuncs.state import (  # noqa: F401
     PassState,
     SucceedState,
     TaskState,
+    WaitState,
 )
 from awsstepfuncs.state_machine import StateMachine  # noqa: F401

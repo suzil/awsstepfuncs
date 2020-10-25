@@ -1,1 +1,2 @@
 jsonpath_rw==1.4.0
+pause==0.2
