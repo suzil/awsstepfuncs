@@ -1,7 +1,6 @@
 import pytest
 
-from awsstepfuncs import PassState, StateMachine
-from awsstepfuncs.state import FailState, TaskState
+from awsstepfuncs import FailState, PassState, StateMachine, TaskState
 
 
 def test_one_state(compile_state_machine):

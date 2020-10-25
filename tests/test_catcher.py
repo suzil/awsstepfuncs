@@ -2,9 +2,7 @@ import contextlib
 from contextlib import redirect_stdout
 from io import StringIO
 
-from awsstepfuncs import FailState, SucceedState, TaskState
-from awsstepfuncs.state import PassState
-from awsstepfuncs.state_machine import StateMachine
+from awsstepfuncs import FailState, PassState, StateMachine, SucceedState, TaskState
 
 
 def test_catcher():
