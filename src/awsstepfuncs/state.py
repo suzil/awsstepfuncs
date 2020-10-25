@@ -17,8 +17,12 @@ There are two interesting methods common for many classes:
 """
 from __future__ import annotations
 
+import time
 from abc import ABC
+from datetime import datetime
 from typing import Any, Dict
+
+import pause
 
 from awsstepfuncs.abstract_state import (
     AbstractInputPathOutputPathState,
@@ -118,6 +122,70 @@ class WaitState(AbstractNextOrEndState):
     """A Wait State causes the interpreter to delay the machine for a specified time."""
 
     state_type = "Wait"
+
+    def __init__(
+        self, *args: Any, seconds: int = None, timestamp: datetime = None, **kwargs: Any
+    ):
+        """Initialize a Wait State.
+
+        Either seconds or timestamp must be specified, and they cannot both be
+        specified. If timestamp is a datetime that has already passed, then
+        there is no wait.
+
+        TODO: Add support for SecondsPath and TimestampPath
+
+        Refs: https://states-language.net/#wait-state
+
+        Args:
+            args: Args to pass to parent classes.
+            seconds: The number of seconds to wait.
+            timestamp: Wait until the specified time.
+            kwargs: Kwargs to pass to parent classes.
+
+        Raises:
+            ValueError: Raised when seconds or timestamp are not specified or if
+                both are specified.
+        """
+        super().__init__(*args, **kwargs)
+
+        if not ((seconds or timestamp) and not (seconds and timestamp)):
+            raise ValueError("Seconds or timestamp must be specified, but not both")
+
+        self.seconds = seconds
+        self.timestamp = timestamp
+
+    def compile(self) -> Dict[str, Any]:  # noqa: A003
+        """Compile the state to Amazon States Language.
+
+        Returns:
+            A dictionary representing the compiled state in Amazon States
+            Language.
+        """
+        compiled = super().compile()
+        if seconds := self.seconds:
+            compiled["Seconds"] = seconds
+        if timestamp := self.timestamp:
+            compiled["Timestamp"] = timestamp.isoformat()
+        return compiled
+
+    def _run(self, state_input: Any, resource_to_mock_fn: ResourceToMockFn) -> Any:
+        """Run the Wait State.
+
+        Args:
+            state_input: The input state data.
+            resource_to_mock_fn: A mapping of resource URIs to mock functions to
+                use if the state performs a task.
+
+        Returns:
+            The output of the state, same as input for the Wait State.
+        """
+        if seconds := self.seconds:
+            print(f"Waiting {seconds} seconds")
+            time.sleep(seconds)
+        elif self.timestamp and (datetime.now() < self.timestamp):
+            print(f"Waiting until {self.timestamp.isoformat()}")
+            pause.until(self.timestamp)
+        return state_input
 
 
 class PassState(AbstractParametersState):
