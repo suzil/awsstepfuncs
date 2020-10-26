@@ -174,7 +174,7 @@ class StateMachine:
         state_input: Any,
         resource_to_mock_fn: ResourceToMockFn,
     ) -> Tuple[Optional[AbstractState], Any]:
-        """Simulate a state, handling input and output data and errors.
+        """Simulate a state, while handling input and output data and errors.
 
         Args:
             state: The current state.
