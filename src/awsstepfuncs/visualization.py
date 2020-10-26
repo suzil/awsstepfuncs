@@ -73,8 +73,6 @@ class Visualization:
             previous_state: The previous state.
             next_state: The next state.
         """
+        self.animation.next_step()
         self.animation.highlight_edge(previous_state.name, next_state.name)
-
-    def step(self) -> None:
-        """Complete a time step of the visualization."""
         self.animation.next_step()

@@ -156,9 +156,7 @@ class StateMachine:
             )
 
             if visualization and next_state:
-                visualization.step()
                 visualization.highlight_state_transition(current_state, next_state)
-                visualization.step()
 
             current_state, current_data = next_state, next_data
             print("State output:", current_data)
