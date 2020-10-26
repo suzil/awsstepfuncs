@@ -4,8 +4,7 @@ from io import StringIO
 
 import pytest
 
-from awsstepfuncs import MapState, StateMachine, TaskState
-from awsstepfuncs.state import FailState
+from awsstepfuncs import FailState, MapState, StateMachine, TaskState
 
 
 @pytest.fixture()
