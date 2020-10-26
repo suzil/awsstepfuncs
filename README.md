@@ -10,6 +10,33 @@
 
 WARNING: This project is still a work-in-progress. Buyer beware.
 
+The Python SDK `awsstepfuncs` can compile to Amazon States Machine to use in a real AWS Step Functions application and can run simulations with mocked functions to debug state machines.
+
+```py
+resource = "arn:aws:lambda:ap-southeast-2:710187714096:function:DummyResource"
+task_state = TaskState("My task", resource=resource)
+succeed_state = SucceedState("Success")
+pass_state = PassState("Do some cleanup")
+fail_state = FailState("Failure", error="IFailed", cause="I failed!")
+
+task_state >> succeed_state
+pass_state >> fail_state
+task_state.add_catcher(["States.ALL"], next_state=pass_state)
+
+state_machine = StateMachine(start_state=task_state)
+
+def failure_mock_fn(_):
+    assert False
+
+state_machine.simulate(
+    resource_to_mock_fn={resource: failure_mock_fn}, show_visualization=True
+)
+```
+
+<p align="center">
+  <img src="assets/state_machine.gif">
+</p>
+
 ## Installation
 
 ~~This package is available on PyPI:~~
@@ -18,8 +45,16 @@ WARNING: This project is still a work-in-progress. Buyer beware.
 $ pip install awsstepfuncs
 ```
 
+To create visualizations, you need to have [GraphViz](https://graphviz.org/) installed on your system.
+
+## API coverage
+
+TODO
+
 
 ## Usage
+
+TODO: Add a better tutorial
 
 ```py
 from awsstepfuncs import TaskState, PassState, StateMachine

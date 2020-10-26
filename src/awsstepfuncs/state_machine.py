@@ -6,6 +6,7 @@ from typing import Any, Dict, Optional, Set, Tuple, Union
 
 from awsstepfuncs.state import AbstractRetryCatchState, AbstractState
 from awsstepfuncs.types import ResourceToMockFn
+from awsstepfuncs.visualization import Visualization
 
 CompiledState = Dict[str, Union[str, bool, Dict[str, str], None]]
 
@@ -110,11 +111,12 @@ class StateMachine:
         with filename.open("w") as fp:
             json.dump(self.compile(), fp)
 
-    def simulate(
+    def simulate(  # noqa: CCR001
         self,
         *,
         state_input: dict = None,
         resource_to_mock_fn: ResourceToMockFn = None,
+        show_visualization: bool = False,
     ) -> Any:
         """Simulate the state machine by executing all of the states.
 
@@ -122,6 +124,9 @@ class StateMachine:
             state_input: Data to pass to the first state.
             resource_to_mock_fn: A dictionary mapping Resource URI to a mock
                 function to use in the simulation.
+            show_visualization: Whether or not to create an animated GIF
+                visualization of the state machine when simulating. Outputs to
+                `state_machine.gif`.
 
         Returns:
             The final output state from simulating the state machine.
@@ -132,16 +137,34 @@ class StateMachine:
         if resource_to_mock_fn is None:
             resource_to_mock_fn = {}
 
+        visualization = None
+        if show_visualization:
+            visualization = Visualization(self.start_state)
+
         current_data = state_input
         current_state: Optional[AbstractState] = self.start_state
         print("Starting simulation of state machine")
+
         while current_state is not None:
             print(f"Running {current_state.name}")
             print("State input:", current_data)
-            current_state, current_data = self._simulate_state(
+            if visualization:
+                visualization.highlight_state(current_state)
+
+            next_state, next_data = self._simulate_state(
                 current_state, current_data, resource_to_mock_fn
             )
+
+            if visualization and next_state:
+                visualization.step()
+                visualization.highlight_state_transition(current_state, next_state)
+                visualization.step()
+
+            current_state, current_data = next_state, next_data
             print("State output:", current_data)
+
+        if visualization:
+            visualization.render()
 
         print("Terminating simulation of state machine")
 

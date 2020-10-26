@@ -48,6 +48,7 @@ jobs:
       run: |
         pip install -U pip setuptools wheel
         make install
+        sudo apt install graphviz
         pip install codecov
 
     - name: Lint
