@@ -10,7 +10,7 @@
 
 WARNING: This project is still a work-in-progress. Buyer beware.
 
-The Python SDK `awsstepfuncs` can compile to Amazon States Machine to use in a real AWS Step Functions application and can run simulations with mocked functions to debug state machines.
+The Python SDK `awsstepfuncs` can compile to [Amazon States Machine](https://states-language.net/) to use in a real AWS Step Functions application and can run simulations with mocked functions to debug state machines.
 
 ```py
 resource = "arn:aws:lambda:ap-southeast-2:710187714096:function:DummyResource"
