@@ -45,6 +45,8 @@ state_machine.simulate(
 $ pip install awsstepfuncs
 ```
 
+To create visualizations, you need to have [GraphViz](https://graphviz.org/) installed on your system.
+
 ## API coverage
 
 TODO
