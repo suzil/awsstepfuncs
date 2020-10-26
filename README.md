@@ -16,7 +16,7 @@ The Python SDK `awsstepfuncs` can compile to Amazon States Machine to use in a r
 resource = "arn:aws:lambda:ap-southeast-2:710187714096:function:DummyResource"
 task_state = TaskState("My task", resource=resource)
 succeed_state = SucceedState("Success")
-pass_state = PassState("Do some cleanup")
+pass_state = PassState("Just passing")
 fail_state = FailState("Failure", error="IFailed", cause="I failed!")
 
 task_state >> succeed_state
