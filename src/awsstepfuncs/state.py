@@ -20,7 +20,7 @@ from __future__ import annotations
 import time
 from abc import ABC
 from datetime import datetime
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 import pause
 
@@ -124,7 +124,13 @@ class WaitState(AbstractNextOrEndState):
     state_type = "Wait"
 
     def __init__(
-        self, *args: Any, seconds: int = None, timestamp: datetime = None, **kwargs: Any
+        self,
+        *args: Any,
+        seconds: Optional[int] = None,
+        timestamp: Optional[datetime] = None,
+        seconds_path: Optional[str] = None,
+        timestamp_path: Optional[str] = None,
+        **kwargs: Any,
     ):
         """Initialize a Wait State.
 
@@ -140,22 +146,43 @@ class WaitState(AbstractNextOrEndState):
             args: Args to pass to parent classes.
             seconds: The number of seconds to wait.
             timestamp: Wait until the specified time.
+            seconds_path: A Reference Path to the number of seconds to wait.
+            timestamp_path: A Reference Path to the timestamp to wait until.
             kwargs: Kwargs to pass to parent classes.
 
         Raises:
-            ValueError: Raised when seconds or timestamp are not specified or if
-                both are specified.
+            ValueError: Raised when not exactly one is defined: seconds,
+                timestamp, seconds_path, timestamp_path.
         """
         super().__init__(*args, **kwargs)
 
-        if not ((seconds or timestamp) and not (seconds and timestamp)):
-            raise ValueError("Seconds or timestamp must be specified, but not both")
+        if (
+            sum(bool(a) for a in [seconds, timestamp, seconds_path, timestamp_path])
+            != 1
+        ):
+            raise ValueError(
+                "Exactly one must be defined: seconds, timestamp, seconds_path, timestamp_path"
+            )
 
         self.seconds = seconds
         self.timestamp = timestamp
+        self.seconds_path = JSONPath(seconds_path) if seconds_path else None
+        self.timestamp_path = JSONPath(timestamp_path) if timestamp_path else None
 
     def compile(self) -> Dict[str, Any]:  # noqa: A003
         """Compile the state to Amazon States Language.
+
+        >>> WaitState("Wait!", seconds=5).compile()
+        {'Type': 'Wait', 'End': True, 'Seconds': 5}
+
+        >>> WaitState("Wait!", timestamp=datetime(2020,1,1)).compile()
+        {'Type': 'Wait', 'End': True, 'Timestamp': '2020-01-01T00:00:00'}
+
+        >>> WaitState("Wait!", seconds_path="$.numSeconds").compile()
+        {'Type': 'Wait', 'End': True, 'SecondsPath': '$.numSeconds'}
+
+        >>> WaitState("Wait!", timestamp_path="$.meta.timeToWait").compile()
+        {'Type': 'Wait', 'End': True, 'TimestampPath': '$.meta.timeToWait'}
 
         Returns:
             A dictionary representing the compiled state in Amazon States
@@ -166,6 +193,10 @@ class WaitState(AbstractNextOrEndState):
             compiled["Seconds"] = seconds
         if timestamp := self.timestamp:
             compiled["Timestamp"] = timestamp.isoformat()
+        if (seconds_path := self.seconds_path) is not None:
+            compiled["SecondsPath"] = str(seconds_path)
+        if (timestamp_path := self.timestamp_path) is not None:
+            compiled["TimestampPath"] = str(timestamp_path)
         return compiled
 
     def _run(self, state_input: Any, resource_to_mock_fn: ResourceToMockFn) -> Any:

@@ -132,13 +132,15 @@ def test_wait_state_later_timestamp(compile_state_machine):
 
 def test_both_seconds_and_timestamp():
     with pytest.raises(
-        ValueError, match="Seconds or timestamp must be specified, but not both"
+        ValueError,
+        match="Exactly one must be defined: seconds, timestamp, seconds_path, timestamp_path",
     ):
         WaitState("Wait", seconds=5, timestamp=datetime.now())
 
 
 def test_neither_seconds_and_timestamp():
     with pytest.raises(
-        ValueError, match="Seconds or timestamp must be specified, but not both"
+        ValueError,
+        match="Exactly one must be defined: seconds, timestamp, seconds_path, timestamp_path",
     ):
         WaitState("Wait", seconds=None, timestamp=None)
