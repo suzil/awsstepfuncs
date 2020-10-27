@@ -51,26 +51,26 @@ To create visualizations, you need to have [GraphViz](https://graphviz.org/) ins
 
 ### States compilation and simulation
 
-| State    | Compile Coverage                                                                                            | Simulation Coverage                                                                                         |
-| -------- | ----------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| Fail     | :heavy_check_mark:                                                                                          | :heavy_multiplication_x: Missing error handling                                                             |
-| Succeed  | :heavy_check_mark:                                                                                          | :heavy_multiplication_x: Should return its input instead of nothing                                         |
-| Choice   | :heavy_multiplication_x:                                                                                    | :heavy_multiplication_x:                                                                                    |
-| Wait     | :heavy_multiplication_x: Missing SecondsPath and TimestampPath                                              | :heavy_multiplication_x: Missing SecondsPath and TimestampPath                                              |
-| Pass     | :heavy_check_mark:                                                                                          | :heavy_check_mark:                                                                                          |
-| Map      | :heavy_check_mark:                                                                                          | :heavy_check_mark:                                                                                          |
-| Parallel | :heavy_multiplication_x:                                                                                    | :heavy_multiplication_x:                                                                                    |
-| Task     | :heavy_multiplication_x: Missing TimeoutSeconds, TimeoutSecondsPath, HeartbeatSeconds, HeartbeatSecondsPath | :heavy_multiplication_x: Missing TimeoutSeconds, TimeoutSecondsPath, HeartbeatSeconds, HeartbeatSecondsPath |
+| State        | Compile Coverage                                                                                            | Simulation Coverage                                                                                         |
+| ------------ | ----------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| **Fail**     | :heavy_check_mark:                                                                                          | :heavy_multiplication_x: Missing error handling                                                             |
+| **Succeed**  | :heavy_check_mark:                                                                                          | :heavy_multiplication_x: Should return its input instead of nothing                                         |
+| **Choice**   | :heavy_multiplication_x:                                                                                    | :heavy_multiplication_x:                                                                                    |
+| **Wait**     | :heavy_multiplication_x: Missing SecondsPath and TimestampPath                                              | :heavy_multiplication_x: Missing SecondsPath and TimestampPath                                              |
+| **Pass**     | :heavy_check_mark:                                                                                          | :heavy_check_mark:                                                                                          |
+| **Map**      | :heavy_check_mark:                                                                                          | :heavy_check_mark:                                                                                          |
+| **Parallel** | :heavy_multiplication_x:                                                                                    | :heavy_multiplication_x:                                                                                    |
+| **Task**     | :heavy_multiplication_x: Missing TimeoutSeconds, TimeoutSecondsPath, HeartbeatSeconds, HeartbeatSecondsPath | :heavy_multiplication_x: Missing TimeoutSeconds, TimeoutSecondsPath, HeartbeatSeconds, HeartbeatSecondsPath |
 
 ### Input and output processing
 
-| Field          | Support                  |
-| -------------- | ------------------------ |
-| InputPath      | :heavy_check_mark:       |
-| OutputPath     | :heavy_check_mark:       |
-| Parameters     | :heavy_multiplication_x: |
-| ResultSelector | :heavy_check_mark:       |
-| ResultPath     | :heavy_check_mark:       |
+| Field              | Support                  |
+| ------------------ | ------------------------ |
+| **InputPath**      | :heavy_check_mark:       |
+| **OutputPath**     | :heavy_check_mark:       |
+| **Parameters**     | :heavy_multiplication_x: |
+| **ResultSelector** | :heavy_check_mark:       |
+| **ResultPath**     | :heavy_check_mark:       |
 
 
 ### Errors
