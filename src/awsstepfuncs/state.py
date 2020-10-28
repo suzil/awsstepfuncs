@@ -120,7 +120,108 @@ class ChoiceState(TerminalStateMixin, AbstractInputPathOutputPathState):
 
 
 class WaitState(AbstractNextOrEndState):
-    """A Wait State causes the interpreter to delay the machine for a specified time."""
+    """A Wait State causes the interpreter to delay the machine for a specified time.
+
+    You can specify the number of seconds to wait.
+
+    >>> wait_state = WaitState("Wait!", seconds=1)
+    >>> state_machine = StateMachine(start_state=wait_state)
+    >>> state_output = state_machine.simulate()
+    Starting simulation of state machine
+    Running Wait!
+    State input: {}
+    State input after applying input path of "$": {}
+    Waiting 1 seconds
+    State output after applying output path of "$": {}
+    State output: {}
+    Terminating simulation of state machine
+
+    Seconds must be an integer greater than zero.
+
+    >>> WaitState("Wait!", seconds=-1)
+    Traceback (most recent call last):
+        ...
+    ValueError: seconds must be greater than zero
+
+    You can specify a timestamp to wait until. If the time has already past,
+    then there is no wait.
+
+    >>> from datetime import datetime, timedelta
+    >>> wait_state = WaitState("Wait!", timestamp=datetime(2020, 1, 1))
+    >>> state_machine = StateMachine(start_state=wait_state)
+    >>> state_output = state_machine.simulate()
+    Starting simulation of state machine
+    Running Wait!
+    State input: {}
+    State input after applying input path of "$": {}
+    State output after applying output path of "$": {}
+    State output: {}
+    Terminating simulation of state machine
+
+    Alternatively, you can use state input to specify the number of seconds wait
+    by specifying a Reference Path `seconds_path`.
+
+    >>> wait_state = WaitState("Wait!", seconds_path="$.numSeconds")
+    >>> state_machine = StateMachine(start_state=wait_state)
+    >>> state_output = state_machine.simulate(state_input={"numSeconds": 1})
+    Starting simulation of state machine
+    Running Wait!
+    State input: {'numSeconds': 1}
+    State input after applying input path of "$": {'numSeconds': 1}
+    Waiting 1 seconds
+    State output after applying output path of "$": {'numSeconds': 1}
+    State output: {'numSeconds': 1}
+    Terminating simulation of state machine
+
+    A `ValueError` will be thrown if `seconds_path` isn't a reference path to an
+    integer. This is considered a runtime exception and will be treated as an
+    error during the simulation.
+
+    >>> wait_state = WaitState("Wait!", seconds_path="$.numSeconds")
+    >>> state_machine = StateMachine(start_state=wait_state)
+    >>> state_output = state_machine.simulate(state_input={"numSeconds": "hello"})
+    Starting simulation of state machine
+    Running Wait!
+    State input: {'numSeconds': 'hello'}
+    State input after applying input path of "$": {'numSeconds': 'hello'}
+    Error encountered in state, checking for catchers
+    State output: {}
+    Terminating simulation of state machine
+
+    Similarily, you can use state input to specify the timestamp (in ISO 8601
+    format) to wait until.
+
+    >>> wait_state = WaitState("Wait!", timestamp_path="$.meta.timeToWait")
+    >>> state_machine = StateMachine(start_state=wait_state)
+    >>> state_output = state_machine.simulate(state_input={"meta": {"timeToWait": "2020-01-01T00:00:00"}})
+    Starting simulation of state machine
+    Running Wait!
+    State input: {'meta': {'timeToWait': '2020-01-01T00:00:00'}}
+    State input after applying input path of "$": {'meta': {'timeToWait': '2020-01-01T00:00:00'}}
+    Waiting until 2020-01-01T00:00:00
+    State output after applying output path of "$": {'meta': {'timeToWait': '2020-01-01T00:00:00'}}
+    State output: {'meta': {'timeToWait': '2020-01-01T00:00:00'}}
+    Terminating simulation of state machine
+
+    Exactly one must be defined: `seconds`, `timestamp`, `seconds_path`,
+    `timestamp_path`.
+
+    Multiple parameters set:
+
+    >>> WaitState("Wait", seconds=5, timestamp=datetime.now())
+    Traceback (most recent call last):
+        ...
+    ValueError: Exactly one must be defined: seconds, timestamp, seconds_path, timestamp_path
+
+    No parameters set:
+
+    >>> WaitState("Wait")
+    Traceback (most recent call last):
+        ...
+    ValueError: Exactly one must be defined: seconds, timestamp, seconds_path, timestamp_path
+
+    Refs: https://states-language.net/#wait-state
+    """
 
     state_type = "Wait"
 
@@ -134,12 +235,6 @@ class WaitState(AbstractNextOrEndState):
         **kwargs: Any,
     ):
         """Initialize a Wait State.
-
-        Either seconds or timestamp must be specified, and they cannot both be
-        specified. If timestamp is a datetime that has already passed, then
-        there is no wait.
-
-        Refs: https://states-language.net/#wait-state
 
         Args:
             args: Args to pass to parent classes.
@@ -162,6 +257,9 @@ class WaitState(AbstractNextOrEndState):
             raise ValueError(
                 "Exactly one must be defined: seconds, timestamp, seconds_path, timestamp_path"
             )
+
+        if seconds and not (seconds > 0):
+            raise ValueError("seconds must be greater than zero")
 
         self.seconds = seconds
         self.timestamp = timestamp
@@ -200,44 +298,6 @@ class WaitState(AbstractNextOrEndState):
 
     def _run(self, state_input: Any, resource_to_mock_fn: ResourceToMockFn) -> Any:
         """Run the Wait State.
-
-        >>> wait_state = WaitState("Wait!", seconds_path="$.numSeconds")
-        >>> state_machine = StateMachine(start_state=wait_state)
-        >>> state_output = state_machine.simulate(state_input={"numSeconds": 1})
-        Starting simulation of state machine
-        Running Wait!
-        State input: {'numSeconds': 1}
-        State input after applying input path of "$": {'numSeconds': 1}
-        Waiting 1 seconds
-        State output after applying output path of "$": {'numSeconds': 1}
-        State output: {'numSeconds': 1}
-        Terminating simulation of state machine
-
-        A ValueError will be thrown if `seconds_path` isn't a reference path to
-        an integer. This is considered a runtime exception and will be treated
-        as an error during the simulation.
-        >>> wait_state = WaitState("Wait!", seconds_path="$.numSeconds")
-        >>> state_machine = StateMachine(start_state=wait_state)
-        >>> state_output = state_machine.simulate(state_input={"numSeconds": "hello"})
-        Starting simulation of state machine
-        Running Wait!
-        State input: {'numSeconds': 'hello'}
-        State input after applying input path of "$": {'numSeconds': 'hello'}
-        Error encountered in state, checking for catchers
-        State output: {}
-        Terminating simulation of state machine
-
-        >>> wait_state = WaitState("Wait!", timestamp_path="$.meta.timeToWait")
-        >>> state_machine = StateMachine(start_state=wait_state)
-        >>> state_output = state_machine.simulate(state_input={"meta": {"timeToWait": "2020-01-01T00:00:00"}})
-        Starting simulation of state machine
-        Running Wait!
-        State input: {'meta': {'timeToWait': '2020-01-01T00:00:00'}}
-        State input after applying input path of "$": {'meta': {'timeToWait': '2020-01-01T00:00:00'}}
-        Waiting until 2020-01-01T00:00:00
-        State output after applying output path of "$": {'meta': {'timeToWait': '2020-01-01T00:00:00'}}
-        State output: {'meta': {'timeToWait': '2020-01-01T00:00:00'}}
-        Terminating simulation of state machine
 
         Args:
             state_input: The input state data.
