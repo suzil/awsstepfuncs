@@ -213,6 +213,20 @@ class WaitState(AbstractNextOrEndState):
         State output: {'numSeconds': 1}
         Terminating simulation of state machine
 
+        A ValueError will be thrown if `seconds_path` isn't a reference path to
+        an integer. This is considered a runtime exception and will be treated
+        as an error during the simulation.
+        >>> wait_state = WaitState("Wait!", seconds_path="$.numSeconds")
+        >>> state_machine = StateMachine(start_state=wait_state)
+        >>> state_output = state_machine.simulate(state_input={"numSeconds": "hello"})
+        Starting simulation of state machine
+        Running Wait!
+        State input: {'numSeconds': 'hello'}
+        State input after applying input path of "$": {'numSeconds': 'hello'}
+        Error encountered in state, checking for catchers
+        State output: {}
+        Terminating simulation of state machine
+
         >>> wait_state = WaitState("Wait!", timestamp_path="$.meta.timeToWait")
         >>> state_machine = StateMachine(start_state=wait_state)
         >>> state_output = state_machine.simulate(state_input={"meta": {"timeToWait": "2020-01-01T00:00:00"}})
@@ -244,7 +258,7 @@ class WaitState(AbstractNextOrEndState):
 
         elif (seconds_path := self.seconds_path) is not None:
             seconds = seconds_path.apply(state_input)
-            if not isinstance(seconds, int):  # pragma: no cover
+            if not isinstance(seconds, int):
                 raise ValueError("seconds_path should point to an integer")
             self._wait_seconds(seconds)
 
