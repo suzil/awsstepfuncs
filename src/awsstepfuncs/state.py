@@ -22,6 +22,7 @@ from abc import ABC
 from datetime import datetime
 from typing import Any, Dict, Optional
 
+import dateutil.parser
 import pause
 
 from awsstepfuncs.abstract_state import (
@@ -138,8 +139,6 @@ class WaitState(AbstractNextOrEndState):
         specified. If timestamp is a datetime that has already passed, then
         there is no wait.
 
-        TODO: Add support for SecondsPath and TimestampPath
-
         Refs: https://states-language.net/#wait-state
 
         Args:
@@ -202,21 +201,68 @@ class WaitState(AbstractNextOrEndState):
     def _run(self, state_input: Any, resource_to_mock_fn: ResourceToMockFn) -> Any:
         """Run the Wait State.
 
+        >>> wait_state = WaitState("Wait!", seconds_path="$.numSeconds")
+        >>> state_machine = StateMachine(start_state=wait_state)
+        >>> state_output = state_machine.simulate(state_input={"numSeconds": 1})
+        Starting simulation of state machine
+        Running Wait!
+        State input: {'numSeconds': 1}
+        State input after applying input path of "$": {'numSeconds': 1}
+        Waiting 1 seconds
+        State output after applying output path of "$": {'numSeconds': 1}
+        State output: {'numSeconds': 1}
+        Terminating simulation of state machine
+
+        >>> wait_state = WaitState("Wait!", timestamp_path="$.meta.timeToWait")
+        >>> state_machine = StateMachine(start_state=wait_state)
+        >>> state_output = state_machine.simulate(state_input={"meta": {"timeToWait": "2020-01-01T00:00:00"}})
+        Starting simulation of state machine
+        Running Wait!
+        State input: {'meta': {'timeToWait': '2020-01-01T00:00:00'}}
+        State input after applying input path of "$": {'meta': {'timeToWait': '2020-01-01T00:00:00'}}
+        Waiting until 2020-01-01T00:00:00
+        State output after applying output path of "$": {'meta': {'timeToWait': '2020-01-01T00:00:00'}}
+        State output: {'meta': {'timeToWait': '2020-01-01T00:00:00'}}
+        Terminating simulation of state machine
+
         Args:
             state_input: The input state data.
             resource_to_mock_fn: A mapping of resource URIs to mock functions to
                 use if the state performs a task.
 
+        Raises:
+            ValueError: Raised when seconds_path doesn't point to an integer.
+
         Returns:
             The output of the state, same as input for the Wait State.
         """
         if seconds := self.seconds:
-            print(f"Waiting {seconds} seconds")
-            time.sleep(seconds)
+            self._wait_seconds(seconds)
+
         elif self.timestamp and (datetime.now() < self.timestamp):
-            print(f"Waiting until {self.timestamp.isoformat()}")
-            pause.until(self.timestamp)
+            self._wait_for_timestamp(self.timestamp)
+
+        elif (seconds_path := self.seconds_path) is not None:
+            seconds = seconds_path.apply(state_input)
+            if not isinstance(seconds, int):  # pragma: no cover
+                raise ValueError("seconds_path should point to an integer")
+            self._wait_seconds(seconds)
+
+        elif (timestamp_path := self.timestamp_path) is not None:
+            timestamp = timestamp_path.apply(state_input)
+            dt = dateutil.parser.parse(timestamp)
+            self._wait_for_timestamp(dt)
+
         return state_input
+
+    def _wait_seconds(self, seconds: int) -> None:
+        """Wait for the specified number of seconds."""
+        print(f"Waiting {seconds} seconds")
+        time.sleep(seconds)
+
+    def _wait_for_timestamp(self, timestamp: datetime) -> None:
+        print(f"Waiting until {timestamp.isoformat()}")
+        pause.until(timestamp)
 
 
 class PassState(AbstractParametersState):
