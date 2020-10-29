@@ -21,7 +21,7 @@ def test_wait_state_later_timestamp():
     assert state_output == state_input
     assert stdout == [
         "Starting simulation of state machine",
-        "Running Wait",
+        "Running WaitState(name='Wait')",
         f"State input: {state_input}",
         f'State input after applying input path of "$": {state_input}',
         f"Waiting until {timestamp.isoformat()}",

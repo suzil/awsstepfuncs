@@ -72,7 +72,7 @@ class FailState(TerminalStateMixin, AbstractState):
     >>> state_machine = StateMachine(start_state=fail_state)
     >>> state_output = state_machine.simulate()
     Starting simulation of state machine
-    Running Failure
+    Running FailState(name='Failure')
     State input: {}
     State output: {}
     Terminating simulation of state machine
@@ -137,7 +137,7 @@ class WaitState(AbstractNextOrEndState):
     >>> state_machine = StateMachine(start_state=wait_state)
     >>> state_output = state_machine.simulate()
     Starting simulation of state machine
-    Running Wait!
+    Running WaitState(name='Wait!')
     State input: {}
     State input after applying input path of "$": {}
     Waiting 1 seconds
@@ -160,7 +160,7 @@ class WaitState(AbstractNextOrEndState):
     >>> state_machine = StateMachine(start_state=wait_state)
     >>> state_output = state_machine.simulate()
     Starting simulation of state machine
-    Running Wait!
+    Running WaitState(name='Wait!')
     State input: {}
     State input after applying input path of "$": {}
     State output after applying output path of "$": {}
@@ -174,7 +174,7 @@ class WaitState(AbstractNextOrEndState):
     >>> state_machine = StateMachine(start_state=wait_state)
     >>> state_output = state_machine.simulate(state_input={"numSeconds": 1})
     Starting simulation of state machine
-    Running Wait!
+    Running WaitState(name='Wait!')
     State input: {'numSeconds': 1}
     State input after applying input path of "$": {'numSeconds': 1}
     Waiting 1 seconds
@@ -190,7 +190,7 @@ class WaitState(AbstractNextOrEndState):
     >>> state_machine = StateMachine(start_state=wait_state)
     >>> state_output = state_machine.simulate(state_input={"numSeconds": "hello"})
     Starting simulation of state machine
-    Running Wait!
+    Running WaitState(name='Wait!')
     State input: {'numSeconds': 'hello'}
     State input after applying input path of "$": {'numSeconds': 'hello'}
     Error encountered in state, checking for catchers
@@ -204,7 +204,7 @@ class WaitState(AbstractNextOrEndState):
     >>> state_machine = StateMachine(start_state=wait_state)
     >>> state_output = state_machine.simulate(state_input={"meta": {"timeToWait": "2020-01-01T00:00:00"}})
     Starting simulation of state machine
-    Running Wait!
+    Running WaitState(name='Wait!')
     State input: {'meta': {'timeToWait': '2020-01-01T00:00:00'}}
     State input after applying input path of "$": {'meta': {'timeToWait': '2020-01-01T00:00:00'}}
     Waiting until 2020-01-01T00:00:00
@@ -358,7 +358,7 @@ class PassState(AbstractParametersState):
     >>> state_machine = StateMachine(start_state=pass_state)
     >>> state_output = state_machine.simulate()
     Starting simulation of state machine
-    Running Passing
+    Running PassState(name='Passing')
     State input: {}
     State input after applying input path of "$": {}
     Output from applying result path of "$": {'Hello': 'world!'}
@@ -375,7 +375,7 @@ class PassState(AbstractParametersState):
     >>> state_machine = StateMachine(start_state=pass_state)
     >>> _ = state_machine.simulate(state_input={"sum": 42})
     Starting simulation of state machine
-    Running Passing
+    Running PassState(name='Passing')
     State input: {'sum': 42}
     State input after applying input path of "$": {'sum': 42}
     Output from applying result path of "$.result": {'sum': 42, 'result': {'Hello': 'world!'}}
