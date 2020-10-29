@@ -12,6 +12,10 @@ class JSONPath:
     def __init__(self, json_path: str, /):
         """Initialize a JSONPath.
 
+        >>> json_path = JSONPath("$.detail.sum")
+        >>> json_path.apply({"show": True, "detail": {"mean": 10.4, "sum": 2000}})
+        2000
+
         Args:
             json_path: The JSONPath string to use.
 
@@ -24,8 +28,27 @@ class JSONPath:
         except ValueError:
             raise
 
+    def __repr__(self) -> str:
+        """Return the string representation of the class.
+
+        >>> JSONPath("$.detail.sum")
+        JSONPath('$.detail.sum')
+
+        Returns:
+            The string representation of the JSONPath.
+        """
+        return f"{self.__class__.__name__}({self.json_path!r})"
+
     def __str__(self) -> str:
-        """Return the JSONPath string."""
+        """Return the JSONPath string.
+
+        >>> json_path = JSONPath("$.detail.sum")
+        >>> print(json_path)
+        $.detail.sum
+
+        Returns:
+            The human-readable string representation of the JSONPath.
+        """
         return self.json_path
 
     def __bool__(self) -> bool:

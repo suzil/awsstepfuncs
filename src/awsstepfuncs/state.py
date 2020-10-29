@@ -145,7 +145,7 @@ class WaitState(AbstractNextOrEndState):
     >>> state_machine = StateMachine(start_state=wait_state)
     >>> state_output = state_machine.simulate()
     Starting simulation of state machine
-    Running WaitState('Wait!')
+    Running WaitState('Wait!', seconds=1)
     State input: {}
     State input after applying input path of "$": {}
     Waiting 1 seconds
@@ -168,7 +168,7 @@ class WaitState(AbstractNextOrEndState):
     >>> state_machine = StateMachine(start_state=wait_state)
     >>> state_output = state_machine.simulate()
     Starting simulation of state machine
-    Running WaitState('Wait!')
+    Running WaitState('Wait!', timestamp='2020-01-01T00:00:00')
     State input: {}
     State input after applying input path of "$": {}
     State output after applying output path of "$": {}
@@ -182,7 +182,7 @@ class WaitState(AbstractNextOrEndState):
     >>> state_machine = StateMachine(start_state=wait_state)
     >>> state_output = state_machine.simulate(state_input={"numSeconds": 1})
     Starting simulation of state machine
-    Running WaitState('Wait!')
+    Running WaitState('Wait!', seconds_path='$.numSeconds')
     State input: {'numSeconds': 1}
     State input after applying input path of "$": {'numSeconds': 1}
     Waiting 1 seconds
@@ -198,7 +198,7 @@ class WaitState(AbstractNextOrEndState):
     >>> state_machine = StateMachine(start_state=wait_state)
     >>> state_output = state_machine.simulate(state_input={"numSeconds": "hello"})
     Starting simulation of state machine
-    Running WaitState('Wait!')
+    Running WaitState('Wait!', seconds_path='$.numSeconds')
     State input: {'numSeconds': 'hello'}
     State input after applying input path of "$": {'numSeconds': 'hello'}
     Error encountered in state, checking for catchers
@@ -212,7 +212,7 @@ class WaitState(AbstractNextOrEndState):
     >>> state_machine = StateMachine(start_state=wait_state)
     >>> state_output = state_machine.simulate(state_input={"meta": {"timeToWait": "2020-01-01T00:00:00"}})
     Starting simulation of state machine
-    Running WaitState('Wait!')
+    Running WaitState('Wait!', timestamp_path='$.meta.timeToWait')
     State input: {'meta': {'timeToWait': '2020-01-01T00:00:00'}}
     State input after applying input path of "$": {'meta': {'timeToWait': '2020-01-01T00:00:00'}}
     Waiting until 2020-01-01T00:00:00
@@ -312,6 +312,23 @@ class WaitState(AbstractNextOrEndState):
         if (timestamp_path := self.timestamp_path) is not None:
             compiled["TimestampPath"] = str(timestamp_path)
         return compiled
+
+    def __str__(self) -> str:
+        """Create a human-readable string representation of a state.
+
+        Returns:
+            Human-readable string representation of a state.
+        """
+        output = f"{self.__class__.__name__}({self.name!r}"
+        if seconds := self.seconds:
+            output += f", seconds={seconds!r}"
+        if timestamp := self.timestamp:
+            output += f", timestamp={timestamp.isoformat()!r}"
+        if seconds_path := self.seconds_path:
+            output += f", seconds_path={str(seconds_path)!r}"
+        if timestamp_path := self.timestamp_path:
+            output += f", timestamp_path={str(timestamp_path)!r}"
+        return output + ")"
 
     def _run(self, state_input: Any, resource_to_mock_fn: ResourceToMockFn) -> Any:
         """Run the Wait State.
