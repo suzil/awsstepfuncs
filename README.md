@@ -1,12 +1,12 @@
 # AWS Step Functions SDK
 
-[![python](https://img.shields.io/static/v1?label=python&message=3.8%2B&color=informational&logo=python&logoColor=white)](https://github.com/suzil/aws-step-functions/releases/latest)
+[![python](https://img.shields.io/static/v1?label=python&message=3.8%2B&color=informational&logo=python&logoColor=white)](https://github.com/suzil/awsstepfuncs/releases/latest)
 [![black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/python/black)
-[![Actions Status](https://github.com/suzil/aws-step-functions/workflows/GH/badge.svg)](https://github.com/suzil/aws-step-functions/actions)
+[![Actions Status](https://github.com/suzil/awsstepfuncs/workflows/GH/badge.svg)](https://github.com/suzil/awsstepfuncs/actions)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
 [![Checked with mypy](http://www.mypy-lang.org/static/mypy_badge.svg)](http://mypy-lang.org/)
-[![codecov](https://codecov.io/gh/suzil/aws-step-functions/branch/master/graph/badge.svg?token=PF990VH0YU)](https://codecov.io/gh/suzil/aws-step-functions)
-[![Documentation Status](https://readthedocs.org/projects/aws-step-functions/badge/?version=latest)](https://aws-step-functions.readthedocs.io/en/latest/?badge=latest)
+[![codecov](https://codecov.io/gh/suzil/awsstepfuncs/branch/master/graph/badge.svg?token=PF990VH0YU)](https://codecov.io/gh/suzil/awsstepfuncs)
+[![Documentation Status](https://readthedocs.org/projects/awsstepfuncs/badge/?version=latest)](https://awsstepfuncs.readthedocs.io/en/latest/?badge=latest)
 
 WARNING: This project is still a work-in-progress. Buyer beware.
 
