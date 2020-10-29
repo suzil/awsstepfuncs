@@ -146,7 +146,7 @@ class StateMachine:
         print("Starting simulation of state machine")
 
         while current_state is not None:
-            print(f"Running {current_state.name}")
+            print(f"Running {current_state}")
             print("State input:", current_data)
             if visualization:
                 visualization.highlight_state(current_state)
@@ -212,8 +212,6 @@ class StateMachine:
         if isinstance(state, AbstractRetryCatchState):
             for catcher in state.catchers:
                 if "States.ALL" in catcher.error_equals:
-                    print(
-                        f'Found catcher, transitioning to "{catcher.next_state.name}"'
-                    )
+                    print(f"Found catcher, transitioning to {catcher.next_state}")
                     return catcher.next_state
         return None
