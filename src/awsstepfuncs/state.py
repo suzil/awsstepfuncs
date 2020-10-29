@@ -534,7 +534,87 @@ class ParallelState(AbstractRetryCatchState):
 
 
 class MapState(AbstractRetryCatchState):
-    """The Map State processes all the elements of an array."""
+    """The Map State processes all the elements of an array.
+
+    >>> resource = "<arn>"
+    >>> task_state = TaskState("Validate", resource=resource)
+    >>> iterator = StateMachine(start_state=task_state)
+    >>> map_state = MapState(
+    ...     "Validate-All",
+    ...     input_path="$.detail",
+    ...     items_path="$.shipped",
+    ...     max_concurrency=0,
+    ...     iterator=iterator,
+    ... )
+    >>> state_machine = StateMachine(start_state=map_state)
+
+    You can simulate a state machine with a Map State.
+
+    >>> state_input = {
+    ...    "ship-date": "2016-03-14T01:59:00Z",
+    ...    "detail": {
+    ...        "delivery-partner": "UQS",
+    ...        "shipped": [
+    ...            {"prod": "R31", "dest-code": 9511, "quantity": 1344},
+    ...            {"prod": "S39", "dest-code": 9511, "quantity": 40},
+    ...        ],
+    ...    },
+    ... }
+    >>> def mock_fn(state_input):
+    ...     state_input["quantity"] *= 2
+    ...     return state_input
+    >>> _ = state_machine.simulate(
+    ...     state_input=state_input,
+    ...     resource_to_mock_fn={resource: mock_fn},
+    ... )
+    Starting simulation of state machine
+    Running MapState('Validate-All')
+    State input: {'ship-date': '2016-03-14T01:59:00Z', 'detail': {'delivery-partner': 'UQS', 'shipped': [{'prod': 'R31', 'dest-code': 9511, 'quantity': 1344}, {'prod': 'S39', 'dest-code': 9511, 'quantity': 40}]}}
+    State input after applying input path of "$.detail": {'delivery-partner': 'UQS', 'shipped': [{'prod': 'R31', 'dest-code': 9511, 'quantity': 1344}, {'prod': 'S39', 'dest-code': 9511, 'quantity': 40}]}
+    Starting simulation of state machine
+    Running TaskState('Validate')
+    State input: {'prod': 'R31', 'dest-code': 9511, 'quantity': 1344}
+    State input after applying input path of "$": {'prod': 'R31', 'dest-code': 9511, 'quantity': 1344}
+    Output from applying result path of "$": {'prod': 'R31', 'dest-code': 9511, 'quantity': 2688}
+    State output after applying output path of "$": {'prod': 'R31', 'dest-code': 9511, 'quantity': 2688}
+    State output: {'prod': 'R31', 'dest-code': 9511, 'quantity': 2688}
+    Terminating simulation of state machine
+    Starting simulation of state machine
+    Running TaskState('Validate')
+    State input: {'prod': 'S39', 'dest-code': 9511, 'quantity': 40}
+    State input after applying input path of "$": {'prod': 'S39', 'dest-code': 9511, 'quantity': 40}
+    Output from applying result path of "$": {'prod': 'S39', 'dest-code': 9511, 'quantity': 80}
+    State output after applying output path of "$": {'prod': 'S39', 'dest-code': 9511, 'quantity': 80}
+    State output: {'prod': 'S39', 'dest-code': 9511, 'quantity': 80}
+    Terminating simulation of state machine
+    Output from applying result path of "$": [{'prod': 'R31', 'dest-code': 9511, 'quantity': 2688}, {'prod': 'S39', 'dest-code': 9511, 'quantity': 80}]
+    State output after applying output path of "$": [{'prod': 'R31', 'dest-code': 9511, 'quantity': 2688}, {'prod': 'S39', 'dest-code': 9511, 'quantity': 80}]
+    State output: [{'prod': 'R31', 'dest-code': 9511, 'quantity': 2688}, {'prod': 'S39', 'dest-code': 9511, 'quantity': 80}]
+    Terminating simulation of state machine
+
+    You can also compile a state machine with a Map State.
+
+    >>> output = state_machine.compile()
+    >>> expected_output = {
+    ...     "StartAt": "Validate-All",
+    ...     "States": {
+    ...         "Validate-All": {
+    ...             "Type": "Map",
+    ...             "InputPath": "$.detail",
+    ...             "End": True,
+    ...             "ItemsPath": "$.shipped",
+    ...             "MaxConcurrency": 0,
+    ...             "Iterator": {
+    ...                 "StartAt": "Validate",
+    ...                 "States": {
+    ...                     "Validate": {"Type": "Task", "End": True, "Resource": "<arn>"}
+    ...                 },
+    ...             },
+    ...         }
+    ...     },
+    ... }
+    >>> assert output == expected_output
+    """
 
     state_type = "Map"
 
