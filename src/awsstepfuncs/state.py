@@ -571,6 +571,7 @@ class MapState(AbstractRetryCatchState):
     Running MapState('Validate-All')
     State input: {'ship-date': '2016-03-14T01:59:00Z', 'detail': {'delivery-partner': 'UQS', 'shipped': [{'prod': 'R31', 'dest-code': 9511, 'quantity': 1344}, {'prod': 'S39', 'dest-code': 9511, 'quantity': 40}]}}
     State input after applying input path of "$.detail": {'delivery-partner': 'UQS', 'shipped': [{'prod': 'R31', 'dest-code': 9511, 'quantity': 1344}, {'prod': 'S39', 'dest-code': 9511, 'quantity': 40}]}
+    Items after applying items_path of $.shipped: [{'prod': 'R31', 'dest-code': 9511, 'quantity': 1344}, {'prod': 'S39', 'dest-code': 9511, 'quantity': 40}]
     Starting simulation of state machine
     Running TaskState('Validate')
     State input: {'prod': 'R31', 'dest-code': 9511, 'quantity': 1344}
@@ -614,6 +615,29 @@ class MapState(AbstractRetryCatchState):
     ...     },
     ... }
     >>> assert output == expected_output
+
+    Be careful that `items_path` Reference Path actually yields a list.
+
+    >>> map_state = MapState(
+    ...     "Validate-All",
+    ...     input_path="$.detail",
+    ...     items_path="$.delivery-partner",
+    ...     max_concurrency=0,
+    ...     iterator=iterator,
+    ... )
+    >>> state_machine = StateMachine(start_state=map_state)
+    >>> _ = state_machine.simulate(
+    ...     state_input=state_input,
+    ...     resource_to_mock_fn={resource: mock_fn},
+    ... )
+    Starting simulation of state machine
+    Running MapState('Validate-All')
+    State input: {'ship-date': '2016-03-14T01:59:00Z', 'detail': {'delivery-partner': 'UQS', 'shipped': [{'prod': 'R31', 'dest-code': 9511, 'quantity': 2688}, {'prod': 'S39', 'dest-code': 9511, 'quantity': 80}]}}
+    State input after applying input path of "$.detail": {'delivery-partner': 'UQS', 'shipped': [{'prod': 'R31', 'dest-code': 9511, 'quantity': 2688}, {'prod': 'S39', 'dest-code': 9511, 'quantity': 80}]}
+    Items after applying items_path of $.delivery-partner: UQS
+    Error encountered in state, checking for catchers
+    State output: {}
+    Terminating simulation of state machine
     """
 
     state_type = "Map"
@@ -672,6 +696,7 @@ class MapState(AbstractRetryCatchState):
             all items.
         """
         items = JSONPath(self.items_path).apply(state_input)
+        print(f"Items after applying items_path of {self.items_path}: {items}")
         if not isinstance(items, list):
             raise ValueError("items_path must yield a list")
 
