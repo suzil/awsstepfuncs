@@ -561,7 +561,6 @@ class MapState(AbstractRetryCatchState):
     ...    },
     ... }
     >>> def mock_fn(state_input):
-    ...     state_input = state_input.copy()
     ...     state_input["quantity"] *= 2
     ...     return state_input
     >>> _ = state_machine.simulate(
