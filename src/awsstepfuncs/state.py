@@ -68,9 +68,14 @@ class TerminalStateMixin(ABC):
 class FailState(TerminalStateMixin, AbstractState):
     """The Fail State terminates the machine and marks it as a failure.
 
-    >>> fail_state = FailState("FailState", error="ErrorA", cause="Kaiju attack")
-    >>> fail_state.compile()
-    {'Type': 'Fail', 'Error': 'ErrorA', 'Cause': 'Kaiju attack'}
+    >>> fail_state = FailState("Failure", error="IFailed", cause="I failed!")
+    >>> state_machine = StateMachine(start_state=fail_state)
+    >>> state_output = state_machine.simulate()
+    Starting simulation of state machine
+    Running Failure
+    State input: {}
+    State output: {}
+    Terminating simulation of state machine
     """
 
     state_type = "Fail"
@@ -90,6 +95,10 @@ class FailState(TerminalStateMixin, AbstractState):
 
     def compile(self) -> Dict[str, Any]:  # noqa: A003
         """Compile the state to Amazon States Language.
+
+        >>> fail_state = FailState("FailState", error="ErrorA", cause="Kaiju attack")
+        >>> fail_state.compile()
+        {'Type': 'Fail', 'Error': 'ErrorA', 'Cause': 'Kaiju attack'}
 
         Returns:
             A dictionary representing the compiled state in Amazon States
@@ -340,7 +349,40 @@ class WaitState(AbstractNextOrEndState):
 
 
 class PassState(AbstractParametersState):
-    """The Pass State by default passes its input to its output, performing no work."""
+    """The Pass State by default passes its input to its output, performing no work.
+
+    If `result` is passed, its value is treated as the output of a virtual task.
+
+    >>> result = {"Hello": "world!"}
+    >>> pass_state = PassState("Passing", result=result)
+    >>> state_machine = StateMachine(start_state=pass_state)
+    >>> state_output = state_machine.simulate()
+    Starting simulation of state machine
+    Running Passing
+    State input: {}
+    State input after applying input path of "$": {}
+    Output from applying result path of "$": {'Hello': 'world!'}
+    State output after applying output path of "$": {'Hello': 'world!'}
+    State output: {'Hello': 'world!'}
+    Terminating simulation of state machine
+    >>> assert state_output == result
+
+    If `result_path` is specified, the `result` will be placed on that Reference
+    Path.
+
+    >>> result = {"Hello": "world!"}
+    >>> pass_state = PassState("Passing", result=result, result_path="$.result")
+    >>> state_machine = StateMachine(start_state=pass_state)
+    >>> _ = state_machine.simulate(state_input={"sum": 42})
+    Starting simulation of state machine
+    Running Passing
+    State input: {'sum': 42}
+    State input after applying input path of "$": {'sum': 42}
+    Output from applying result path of "$.result": {'sum': 42, 'result': {'Hello': 'world!'}}
+    State output after applying output path of "$": {'sum': 42, 'result': {'Hello': 'world!'}}
+    State output: {'sum': 42, 'result': {'Hello': 'world!'}}
+    Terminating simulation of state machine
+    """
 
     state_type = "Pass"
 
@@ -358,6 +400,11 @@ class PassState(AbstractParametersState):
 
     def compile(self) -> Dict[str, Any]:  # noqa: A003
         """Compile the state to Amazon States Language.
+
+        >>> result = {"Hello": "world!"}
+        >>> pass_state = PassState("Passing", result=result)
+        >>> pass_state.compile()
+        {'Type': 'Pass', 'End': True, 'Result': {'Hello': 'world!'}}
 
         Returns:
             A dictionary representing the compiled state in Amazon States
