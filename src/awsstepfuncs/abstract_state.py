@@ -131,6 +131,14 @@ class AbstractState(ABC):
         state_repr += ")"
         return state_repr
 
+    def __str__(self) -> str:
+        """Create a human-readable string representation of a state.
+
+        Returns:
+            Human-readable string representation of a state.
+        """
+        return f"{self.__class__.__name__}({self.name!r})"
+
 
 class AbstractInputPathOutputPathState(AbstractState):
     """An Amazon States Language state including InputPath and OutputPath."""
