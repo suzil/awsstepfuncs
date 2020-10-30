@@ -20,7 +20,7 @@ from __future__ import annotations
 import time
 from abc import ABC
 from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 import dateutil.parser
 import pause
@@ -130,10 +130,147 @@ class SucceedState(TerminalStateMixin, AbstractInputPathOutputPathState):
     state_type = "Succeed"
 
 
+class Condition:
+    def __init__(
+        self,
+        variable: str,
+        *,
+        string_equals: Optional[str] = None,
+        is_present: Optional[bool] = None,
+        numeric_greater_than_equals: Optional[int] = None,
+        numeric_greater_than_path: Optional[str] = None,
+        numeric_less_than: Optional[int] = None,
+    ):
+        self.variable = JSONPath(variable)
+        self.string_equals = string_equals
+        self.is_present = is_present
+        self.numeric_greater_than_equals = numeric_greater_than_equals
+        self.numeric_greater_than_path = (
+            JSONPath(numeric_greater_than_path) if numeric_greater_than_path else None
+        )
+        self.numeric_less_than = numeric_less_than
+
+
+class AbstractChoice(ABC):
+    pass
+
+
+class NotChoice(AbstractChoice):
+    def __init__(
+        self,
+        variable: str,
+        *,
+        next_state: AbstractState,
+        string_equals: Optional[str] = None,
+        is_present: Optional[bool] = None,
+        numeric_greater_than_equals: Optional[int] = None,
+        numeric_greater_than_path: Optional[str] = None,
+        numeric_less_than: Optional[int] = None,
+    ):
+        self.condition = Condition(
+            variable,
+            string_equals=string_equals,
+            is_present=is_present,
+            numeric_greater_than_equals=numeric_greater_than_equals,
+            numeric_greater_than_path=numeric_greater_than_path,
+            numeric_less_than=numeric_less_than,
+        )
+        self.next_state = next_state
+
+
+class AndChoice(AbstractChoice):
+    def __init__(
+        self,
+        conditions: List[Condition],
+        *,
+        next_state: AbstractState,
+    ):
+        self.conditions = conditions
+        self.next_state = next_state
+
+
+class VariableChoice(AbstractChoice):
+    def __init__(
+        self,
+        variable: str,
+        *,
+        next_state: AbstractState,
+        string_equals: Optional[str] = None,
+        is_present: Optional[bool] = None,
+        numeric_greater_than_equals: Optional[int] = None,
+        numeric_greater_than_path: Optional[str] = None,
+        numeric_less_than: Optional[int] = None,
+    ):
+        self.condition = Condition(
+            variable,
+            string_equals=string_equals,
+            is_present=is_present,
+            numeric_greater_than_equals=numeric_greater_than_equals,
+            numeric_greater_than_path=numeric_greater_than_path,
+            numeric_less_than=numeric_less_than,
+        )
+        self.next_state = next_state
+
+
 class ChoiceState(TerminalStateMixin, AbstractInputPathOutputPathState):
-    """A Choice State adds branching logic to a state machine."""
+    """A Choice State adds branching logic to a state machine.
+
+    Define some states that can be conditionally transitioned to by the
+    Choice State.
+
+    >>> public_state = PassState("Public")
+    >>> value_in_twenties_state = PassState("ValueInTwenties")
+    >>> start_audit = PassState("StartAudit")
+
+    Now we can define a Choice State with branching logic based on
+    conditions.
+
+    >>> choice_state = ChoiceState("DispatchEvent", choices=[
+    ...     NotChoice(
+    ...         variable="$.type",
+    ...         string_equals="Private",
+    ...         next_state=public_state,
+    ...     ),
+    ...     AndChoice(
+    ...         [
+    ...             Condition(variable="$.value", is_present=True),
+    ...             Condition(variable="$.value", numeric_greater_than_equals=20),
+    ...             Condition(variable="$.value", numeric_less_than=30),
+    ...         ],
+    ...         next_state=value_in_twenties_state,
+    ...     ),
+    ...     VariableChoice(
+    ...         variable="$.rating",
+    ...         numeric_greater_than_path="$.auditThreshold",
+    ...         next_state=start_audit,
+    ...     )
+    ... ])
+    """
 
     state_type = "Choice"
+
+    def __init__(
+        self,
+        *args: Any,
+        choices: List[AbstractChoice],
+        **kwargs: Any,
+    ):
+        """Initialize a Choice State.
+
+        Args:
+            args: Args to pass to parent classes.
+            kwargs: Kwargs to pass to parent classes.
+        """
+        super().__init__(*args, **kwargs)
+        self.choices = choices
+
+    def compile(self) -> Dict[str, Any]:  # noqa: A003
+        """Compile the state to Amazon States Language.
+
+        Returns:
+            A dictionary representing the compiled state in Amazon States
+            Language.
+        """
 
 
 class WaitState(AbstractNextOrEndState):
