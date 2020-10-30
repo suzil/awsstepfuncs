@@ -20,7 +20,7 @@ from __future__ import annotations
 import time
 from abc import ABC
 from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 import dateutil.parser
 import pause
@@ -130,10 +130,276 @@ class SucceedState(TerminalStateMixin, AbstractInputPathOutputPathState):
     state_type = "Succeed"
 
 
+class Condition:
+    """Conditions are used in Choices.
+
+    A Condition evalulates to `True` or `False`.
+
+    >>> career_condition = Condition("$.career", string_equals="Pirate")
+    >>> career_condition.evaluate({"career": "Pirate", "salary": "10 guineas"})
+    True
+    >>> career_condition.evaluate({"career": "Sailor", "salary": "5 guineas"})
+    False
+
+    There can only be one "clause" per condition.
+
+    >>> Condition("$.career", string_equals="Pirate", is_present=True)
+    Traceback (most recent call last):
+        ...
+    ValueError: Exactly one must be defined: string_equals, is_present, numeric_greater_than_equals, numeric_greater_than_path, numeric_less_than
+    """
+
+    def __init__(
+        self,
+        variable: str,
+        *,
+        string_equals: Optional[str] = None,
+        is_present: Optional[bool] = None,
+        numeric_greater_than_equals: Optional[int] = None,
+        numeric_greater_than_path: Optional[str] = None,
+        numeric_less_than: Optional[int] = None,
+    ):
+        """Initialize a Condition.
+
+        Args:
+            variable: The Reference Path to a variable in the state input.
+            string_equals: If set, whether or not the variable equals the
+                string.
+            is_present: If set, whether the variable is present.
+            numeric_greater_than_equals: If set, whether the variable is greater
+                than or equal to the numeric value.
+            numeric_greater_than_path: If set, whether the variable is greater
+                than the value at the Reference Path.
+            numeric_less_than: If set, whether the variable is less than the
+                value.
+
+        Raises:
+            ValueError: Raised when there is not exactly one "clause" defined.
+        """
+        self.variable = JSONPath(variable)
+
+        if (
+            sum(
+                bool(variable)
+                for variable in [
+                    string_equals,
+                    is_present,
+                    numeric_greater_than_equals,
+                    numeric_greater_than_path,
+                    numeric_less_than,
+                ]
+            )
+            != 1
+        ):
+            raise ValueError(
+                "Exactly one must be defined: string_equals, is_present, numeric_greater_than_equals, numeric_greater_than_path, numeric_less_than"
+            )
+
+        self.string_equals = string_equals
+        self.is_present = is_present
+        self.numeric_greater_than_equals = numeric_greater_than_equals
+        self.numeric_greater_than_path = (
+            JSONPath(numeric_greater_than_path) if numeric_greater_than_path else None
+        )
+        self.numeric_less_than = numeric_less_than
+
+    def evaluate(self, data: Any) -> bool:
+        """Evaulate the condition on some given data.
+
+        Args:
+            data: Input data to evaluate.
+
+        Returns:
+            True or false based on the data and the Condition.
+        """
+        variable_value = self.variable.apply(data)
+        if string_equals := self.string_equals:
+            return variable_value == string_equals
+        assert False, "Not yet supported operation"  # noqa: PT015 pragma: no cover
+
+
+class AbstractChoice(ABC):
+    """Choices for Choice State."""
+
+    def __init__(self, next_state: AbstractState):
+        """Perform common initialization steps for all choices.
+
+        Args:
+            next_state: The state that the choice should transition to if true.
+        """
+        self.next_state = next_state
+
+
+class NotChoice(AbstractChoice):
+    """Not choice for the Choice State."""
+
+    def __init__(
+        self,
+        variable: str,
+        *,
+        next_state: AbstractState,
+        string_equals: Optional[str] = None,
+        is_present: Optional[bool] = None,
+        numeric_greater_than_equals: Optional[int] = None,
+        numeric_greater_than_path: Optional[str] = None,
+        numeric_less_than: Optional[int] = None,
+    ):
+        """Initialize a NotChoice.
+
+        Args:
+            variable: The Reference Path to a variable in the state input.
+            next_state: The state to transition to if evaluated to true.
+            string_equals: If set, whether or not the variable equals the
+                string.
+            is_present: If set, whether the variable is present.
+            numeric_greater_than_equals: If set, whether the variable is greater
+                than or equal to the numeric value.
+            numeric_greater_than_path: If set, whether the variable is greater
+                than the value at the Reference Path.
+            numeric_less_than: If set, whether the variable is less than the
+                value.
+        """
+        super().__init__(next_state)
+        self.condition = Condition(
+            variable,
+            string_equals=string_equals,
+            is_present=is_present,
+            numeric_greater_than_equals=numeric_greater_than_equals,
+            numeric_greater_than_path=numeric_greater_than_path,
+            numeric_less_than=numeric_less_than,
+        )
+
+
+class AndChoice(AbstractChoice):
+    """And Choice for the Choice State."""
+
+    def __init__(
+        self,
+        conditions: List[Condition],
+        *,
+        next_state: AbstractState,
+    ):
+        """Initialize an AndChoice.
+
+        Args:
+            conditions: A list of conditions which must ALL evaluate to true.
+            next_state: The state to transition to if true.
+        """
+        super().__init__(next_state)
+        self.conditions = conditions
+
+
+class VariableChoice(AbstractChoice):
+    """Variable Choice for the Choice State."""
+
+    def __init__(
+        self,
+        variable: str,
+        *,
+        next_state: AbstractState,
+        string_equals: Optional[str] = None,
+        is_present: Optional[bool] = None,
+        numeric_greater_than_equals: Optional[int] = None,
+        numeric_greater_than_path: Optional[str] = None,
+        numeric_less_than: Optional[int] = None,
+    ):
+        """Initialize a VariableChoice.
+
+        Args:
+            variable: The Reference Path to a variable in the state input.
+            next_state: The state to transition to if evaluated to true.
+            string_equals: If set, whether or not the variable equals the
+                string.
+            is_present: If set, whether the variable is present.
+            numeric_greater_than_equals: If set, whether the variable is greater
+                than or equal to the numeric value.
+            numeric_greater_than_path: If set, whether the variable is greater
+                than the value at the Reference Path.
+            numeric_less_than: If set, whether the variable is less than the
+                value.
+        """
+        super().__init__(next_state)
+        self.condition = Condition(
+            variable,
+            string_equals=string_equals,
+            is_present=is_present,
+            numeric_greater_than_equals=numeric_greater_than_equals,
+            numeric_greater_than_path=numeric_greater_than_path,
+            numeric_less_than=numeric_less_than,
+        )
+
+
 class ChoiceState(TerminalStateMixin, AbstractInputPathOutputPathState):
-    """A Choice State adds branching logic to a state machine."""
+    """A Choice State adds branching logic to a state machine.
+
+    Define some states that can be conditionally transitioned to by the
+    Choice State.
+
+    >>> public_state = PassState("Public")
+    >>> value_in_twenties_state = PassState("ValueInTwenties")
+    >>> start_audit_state = PassState("StartAudit")
+    >>> record_event_state = PassState("RecordEvent")
+
+    Now we can define a Choice State with branching logic based on
+    conditions.
+
+    >>> choice_state = ChoiceState(
+    ...     "DispatchEvent",
+    ...     choices=[
+    ...         NotChoice(
+    ...             variable="$.type",
+    ...             string_equals="Private",
+    ...             next_state=public_state,
+    ...         ),
+    ...         AndChoice(
+    ...             [
+    ...                 Condition(variable="$.value", is_present=True),
+    ...                 Condition(variable="$.value", numeric_greater_than_equals=20),
+    ...                 Condition(variable="$.value", numeric_less_than=30),
+    ...             ],
+    ...             next_state=value_in_twenties_state,
+    ...         ),
+    ...         VariableChoice(
+    ...             variable="$.rating",
+    ...             numeric_greater_than_path="$.auditThreshold",
+    ...             next_state=start_audit_state,
+    ...         )
+    ...     ],
+    ...     default=record_event_state,
+    ... )
+    """
 
     state_type = "Choice"
+
+    def __init__(
+        self,
+        *args: Any,
+        choices: List[AbstractChoice],
+        default: Optional[AbstractState] = None,
+        **kwargs: Any,
+    ):
+        """Initialize a Choice State.
+
+        Args:
+            args: Args to pass to parent classes.
+            choices: The branches of the Choice State.
+            default: The default state to transition to if none of the choices
+                evaluate to true.
+            kwargs: Kwargs to pass to parent classes.
+        """
+        super().__init__(*args, **kwargs)
+        self.choices = choices
+        self.default = default
+
+    def compile(self) -> Dict[str, Any]:  # noqa: A003
+        """Compile the state to Amazon States Language.
+
+        Returns:
+            A dictionary representing the compiled state in Amazon States
+            Language.
+        """
+        # TODO
+        return {}  # pragma: no cover
 
 
 class WaitState(AbstractNextOrEndState):
@@ -268,7 +534,10 @@ class WaitState(AbstractNextOrEndState):
         super().__init__(*args, **kwargs)
 
         if (
-            sum(bool(a) for a in [seconds, timestamp, seconds_path, timestamp_path])
+            sum(
+                bool(variable)
+                for variable in [seconds, timestamp, seconds_path, timestamp_path]
+            )
             != 1
         ):
             raise ValueError(
