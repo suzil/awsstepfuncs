@@ -9,7 +9,7 @@ from abc import ABC
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Union
 
-from awsstepfuncs.json_path import ReferencePath
+from awsstepfuncs.reference_path import ReferencePath
 from awsstepfuncs.types import ResourceToMockFn
 
 MAX_STATE_NAME_LENGTH = 128
@@ -373,11 +373,11 @@ class AbstractResultSelectorState(AbstractParametersState):
             ValueError: Raised when a key doesn't end with ".$".
             ValueError: Raised when a ReferencePath is invalid.
         """
-        for key, json_path in result_selector.items():
+        for key, reference_path in result_selector.items():
             if not key[-2:] == ".$":
                 raise ValueError("All resource selector keys must end with .$")
 
-            ReferencePath(json_path)
+            ReferencePath(reference_path)
 
     def compile(self) -> Dict[str, Any]:  # noqa: A003
         """Compile the state to Amazon States Language.
@@ -423,9 +423,9 @@ class AbstractResultSelectorState(AbstractParametersState):
             The filtered state output.
         """
         new_state_output = {}
-        for key, json_path in self.result_selector.items():  # type: ignore
+        for key, reference_path in self.result_selector.items():  # type: ignore
             key = key[:-2]  # Strip ".$"
-            if extracted := ReferencePath(json_path).apply(state_output):
+            if extracted := ReferencePath(reference_path).apply(state_output):
                 new_state_output[key] = extracted
 
         return new_state_output

@@ -32,7 +32,7 @@ from awsstepfuncs.abstract_state import (
     AbstractRetryCatchState,
     AbstractState,
 )
-from awsstepfuncs.json_path import ReferencePath
+from awsstepfuncs.reference_path import ReferencePath
 from awsstepfuncs.state_machine import StateMachine
 from awsstepfuncs.types import ResourceToMockFn
 

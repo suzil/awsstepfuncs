@@ -9,20 +9,20 @@ class ReferencePath:
     See: https://github.com/json-path/JsonPath
     """
 
-    def __init__(self, json_path: str, /):
+    def __init__(self, reference_path: str, /):
         """Initialize a ReferencePath.
 
-        >>> json_path = ReferencePath("$.detail.sum")
-        >>> json_path.apply({"show": True, "detail": {"mean": 10.4, "sum": 2000}})
+        >>> reference_path = ReferencePath("$.detail.sum")
+        >>> reference_path.apply({"show": True, "detail": {"mean": 10.4, "sum": 2000}})
         2000
 
         Args:
-            json_path: The ReferencePath string to use.
+            reference_path: The ReferencePath string to use.
 
         Raises:
             ValueError: Raised when the ReferencePath is malformed.
         """
-        self.json_path = json_path or "$"
+        self.reference_path = reference_path or "$"
         try:
             self._validate()
         except ValueError:
@@ -37,23 +37,23 @@ class ReferencePath:
         Returns:
             The string representation of the ReferencePath.
         """
-        return f"{self.__class__.__name__}({self.json_path!r})"
+        return f"{self.__class__.__name__}({self.reference_path!r})"
 
     def __str__(self) -> str:
         """Return the ReferencePath string.
 
-        >>> json_path = ReferencePath("$.detail.sum")
-        >>> print(json_path)
+        >>> reference_path = ReferencePath("$.detail.sum")
+        >>> print(reference_path)
         $.detail.sum
 
         Returns:
             The human-readable string representation of the ReferencePath.
         """
-        return self.json_path
+        return self.reference_path
 
     def __bool__(self) -> bool:
         """Whether the ReferencePath has something besides $ (default)."""
-        return self.json_path != "$"
+        return self.reference_path != "$"
 
     def _validate(self) -> None:
         """Validate a ReferencePath for Amazon States Language.
@@ -64,12 +64,12 @@ class ReferencePath:
             ValueError: Raised when the ReferencePath has an unsupported operator (an
                 operator that Amazon States Language does not support).
         """
-        if not self.json_path or str(self.json_path)[0] != "$":
+        if not self.reference_path or str(self.reference_path)[0] != "$":
             raise ValueError('ReferencePath must begin with "$"')
 
         unsupported_operators = {"@", "..", ",", ":", "?", "*"}
         for operator in unsupported_operators:
-            if operator in str(self.json_path):
+            if operator in str(self.reference_path):
                 raise ValueError(f'Unsupported ReferencePath operator: "{operator}"')
 
     def apply(self, data: dict) -> Any:
@@ -81,7 +81,7 @@ class ReferencePath:
         Returns:
             The queried data.
         """
-        parsed_json_path = parse_jsonpath(self.json_path)
-        if matches := [match.value for match in parsed_json_path.find(data)]:
+        parsed_reference_path = parse_jsonpath(self.reference_path)
+        if matches := [match.value for match in parsed_reference_path.find(data)]:
             assert len(matches) == 1, "There should only be one match possible"
             return matches[0]
