@@ -9,20 +9,20 @@ from abc import ABC
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Union
 
-from awsstepfuncs.json_path import JSONPath
+from awsstepfuncs.json_path import ReferencePath
 from awsstepfuncs.types import ResourceToMockFn
 
 MAX_STATE_NAME_LENGTH = 128
 
 
-def apply_input_path(input_path: JSONPath, state_input: Any) -> Any:
+def apply_input_path(input_path: ReferencePath, state_input: Any) -> Any:
     """Apply input path to some state input."""
     state_input = input_path.apply(state_input)
     print(f'State input after applying input path of "{input_path}":', state_input)
     return state_input
 
 
-def apply_output_path(output_path: JSONPath, state_output: Any) -> Any:
+def apply_output_path(output_path: ReferencePath, state_output: Any) -> Any:
     """Apply output path to some state output."""
     state_output = output_path.apply(state_output)
     print(f'State output after applying output path of "{output_path}":', state_output)
@@ -157,8 +157,8 @@ class AbstractInputPathOutputPathState(AbstractState):
             kwargs: Kwargs to pass to parent classes.
         """
         super().__init__(*args, **kwargs)
-        self.input_path = JSONPath(input_path)
-        self.output_path = JSONPath(output_path)
+        self.input_path = ReferencePath(input_path)
+        self.output_path = ReferencePath(output_path)
 
     def simulate(self, state_input: Any, resource_to_mock_fn: ResourceToMockFn) -> Any:
         """Simulate the state including input and output processing.
@@ -223,7 +223,7 @@ class AbstractResultPathState(AbstractNextOrEndState):
             kwargs: Kwargs to pass to parent classes.
         """
         super().__init__(*args, **kwargs)
-        self.result_path = JSONPath(result_path) if result_path else None
+        self.result_path = ReferencePath(result_path) if result_path else None
 
     def compile(self) -> Dict[str, Any]:  # noqa: A003
         """Compile the state to Amazon States Language.
@@ -359,25 +359,25 @@ class AbstractResultSelectorState(AbstractParametersState):
             ...
         ValueError: All resource selector keys must end with .$
 
-        Values must be valid JSONPaths.
+        Values must be valid ReferencePaths.
 
         >>> AbstractResultSelectorState._validate_result_selector({"ClusterId.$": "something invalid"})
         Traceback (most recent call last):
             ...
-        ValueError: JSONPath must begin with "$"
+        ValueError: ReferencePath must begin with "$"
 
         Args:
             result_selector: The result selector to validate.
 
         Raises:
             ValueError: Raised when a key doesn't end with ".$".
-            ValueError: Raised when a JSONPath is invalid.
+            ValueError: Raised when a ReferencePath is invalid.
         """
         for key, json_path in result_selector.items():
             if not key[-2:] == ".$":
                 raise ValueError("All resource selector keys must end with .$")
 
-            JSONPath(json_path)
+            ReferencePath(json_path)
 
     def compile(self) -> Dict[str, Any]:  # noqa: A003
         """Compile the state to Amazon States Language.
@@ -425,7 +425,7 @@ class AbstractResultSelectorState(AbstractParametersState):
         new_state_output = {}
         for key, json_path in self.result_selector.items():  # type: ignore
             key = key[:-2]  # Strip ".$"
-            if extracted := JSONPath(json_path).apply(state_output):
+            if extracted := ReferencePath(json_path).apply(state_output):
                 new_state_output[key] = extracted
 
         return new_state_output

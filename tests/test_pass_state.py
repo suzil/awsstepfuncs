@@ -110,7 +110,7 @@ def test_input_path_output_path(compile_state_machine):
 
 def test_state_has_invalid_input_path():
     invalid_input_path = "$.dataset*"
-    with pytest.raises(ValueError, match='Unsupported JSONPath operator: "*"'):
+    with pytest.raises(ValueError, match='Unsupported ReferencePath operator: "*"'):
         PassState("Pass 1", input_path=invalid_input_path)
 
 
