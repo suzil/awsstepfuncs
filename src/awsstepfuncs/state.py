@@ -32,7 +32,7 @@ from awsstepfuncs.abstract_state import (
     AbstractRetryCatchState,
     AbstractState,
 )
-from awsstepfuncs.json_path import JSONPath
+from awsstepfuncs.reference_path import ReferencePath
 from awsstepfuncs.state_machine import StateMachine
 from awsstepfuncs.types import ResourceToMockFn
 
@@ -176,7 +176,7 @@ class Condition:
         Raises:
             ValueError: Raised when there is not exactly one "clause" defined.
         """
-        self.variable = JSONPath(variable)
+        self.variable = ReferencePath(variable)
 
         if (
             sum(
@@ -199,7 +199,9 @@ class Condition:
         self.is_present = is_present
         self.numeric_greater_than_equals = numeric_greater_than_equals
         self.numeric_greater_than_path = (
-            JSONPath(numeric_greater_than_path) if numeric_greater_than_path else None
+            ReferencePath(numeric_greater_than_path)
+            if numeric_greater_than_path
+            else None
         )
         self.numeric_less_than = numeric_less_than
 
@@ -740,8 +742,8 @@ class WaitState(AbstractNextOrEndState):
 
         self.seconds = seconds
         self.timestamp = timestamp
-        self.seconds_path = JSONPath(seconds_path) if seconds_path else None
-        self.timestamp_path = JSONPath(timestamp_path) if timestamp_path else None
+        self.seconds_path = ReferencePath(seconds_path) if seconds_path else None
+        self.timestamp_path = ReferencePath(timestamp_path) if timestamp_path else None
 
     def compile(self) -> Dict[str, Any]:  # noqa: A003
         """Compile the state to Amazon States Language.
@@ -1155,7 +1157,7 @@ class MapState(AbstractRetryCatchState):
             The output of the state by running the iterator state machine for
             all items.
         """
-        items = JSONPath(self.items_path).apply(state_input)
+        items = ReferencePath(self.items_path).apply(state_input)
         print(f"Items after applying items_path of {self.items_path}: {items}")
         if not isinstance(items, list):
             raise ValueError("items_path must yield a list")
