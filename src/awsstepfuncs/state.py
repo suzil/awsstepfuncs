@@ -203,18 +203,82 @@ class Condition:
         )
         self.numeric_less_than = numeric_less_than
 
-    def evaluate(self, data: Any) -> bool:
+    def __repr__(self) -> str:
+        """Return a string representation of the Condition.
+
+        >>> Condition("$.career", string_equals="Pirate")
+        Condition(string_equals='Pirate')
+
+        >>> Condition("$.career", is_present=True)
+        Condition(is_present=True)
+
+        >>> Condition("$.rating", numeric_greater_than_equals=42)
+        Condition(numeric_greater_than_equals=42)
+
+        >>> Condition("$.rating", numeric_greater_than_path="$.threshold")
+        Condition(numeric_greater_than_path='$.threshold')
+
+        >>> Condition("$.rating", numeric_less_than=30)
+        Condition(numeric_less_than=30)
+
+        Returns:
+            A string representing the Condition.
+        """
+        output = f"{self.__class__.__name__}("
+        if string_equals := self.string_equals:
+            output += f"string_equals={string_equals!r}"
+        if is_present := self.is_present:
+            output += f"is_present={is_present!r}"
+        if numeric_greater_than_equals := self.numeric_greater_than_equals:
+            output += f"numeric_greater_than_equals={numeric_greater_than_equals!r}"
+        if numeric_greater_than_path := self.numeric_greater_than_path:
+            output += f"numeric_greater_than_path={str(numeric_greater_than_path)!r}"
+        if numeric_less_than := self.numeric_less_than:
+            output += f"numeric_less_than={numeric_less_than!r}"
+        return output + ")"
+
+    def evaluate(self, data: Any) -> bool:  # noqa: CCR001
         """Evaulate the condition on some given data.
 
         Args:
             data: Input data to evaluate.
 
+        Raises:
+            ValueError: Raised when variable doesn't evaluate to any value.
+            ValueError: Raised when numeric_greater_than_path doesn't evaluate
+                to a numeric value.
+
         Returns:
             True or false based on the data and the Condition.
         """
         variable_value = self.variable.apply(data)
+
+        if self.is_present:
+            return variable_value is not None
+
+        if variable_value is None:
+            raise ValueError("Could not get a value for variable Reference Path")
+
+        if numeric_greater_than_equals := self.numeric_greater_than_equals:
+            return variable_value >= numeric_greater_than_equals
+
+        if numeric_greater_than_path := self.numeric_greater_than_path:
+            numeric_greater_than = numeric_greater_than_path.apply(data)
+            if not (
+                isinstance(numeric_greater_than, int)
+                or isinstance(numeric_greater_than, float)
+            ):
+                raise ValueError(
+                    "numeric_greater_than_path must evaluate to a numeric value"
+                )
+            return variable_value > numeric_greater_than
+
+        if numeric_less_than := self.numeric_less_than:
+            return variable_value < numeric_less_than
+
         if string_equals := self.string_equals:
             return variable_value == string_equals
+
         assert False, "Not yet supported operation"  # noqa: PT015 pragma: no cover
 
 
@@ -229,9 +293,40 @@ class AbstractChoice(ABC):
         """
         self.next_state = next_state
 
+    def evaluate(self, data: Any) -> bool:
+        """Evaulate the choice on some given data.
+
+        Args:
+            data: Input data to evaluate.
+
+        Raises:
+            NotImplementedError: Raised if not implemented in child classes.
+        """
+        raise NotImplementedError
+
 
 class NotChoice(AbstractChoice):
-    """Not choice for the Choice State."""
+    """Not choice for the Choice State.
+
+    >>> next_state = PassState("Passing")
+    >>> not_choice = NotChoice(
+    ...     variable="$.type",
+    ...     string_equals="Private",
+    ...     next_state=next_state,
+    ... )
+
+    The Not Choice can be evaluated based on input data to true or false based
+    on whether the condition is false.
+
+    >>> not_choice.evaluate({"type": "Public"})
+    True
+    >>> not_choice.evaluate({"type": "Private"})
+    False
+    >>> not_choice.evaluate({"sex": "Male"})
+    Traceback (most recent call last):
+        ...
+    ValueError: Could not get a value for variable Reference Path
+    """
 
     def __init__(
         self,
@@ -269,9 +364,45 @@ class NotChoice(AbstractChoice):
             numeric_less_than=numeric_less_than,
         )
 
+    def evaluate(self, data: Any) -> bool:
+        """Evaulate the Not Choice on some given data.
+
+        Args:
+            data: Input data to evaluate.
+
+        Returns:
+            Whether the choice evaluates to true based on the input data.
+        """
+        return not self.condition.evaluate(data)
+
 
 class AndChoice(AbstractChoice):
-    """And Choice for the Choice State."""
+    """And Choice for the Choice State.
+
+    >>> next_state = PassState("Passing")
+    >>> and_choice = AndChoice(
+    ...     [
+    ...         Condition(variable="$.value", is_present=True),
+    ...         Condition(variable="$.value", numeric_greater_than_equals=20),
+    ...         Condition(variable="$.value", numeric_less_than=30),
+    ...     ],
+    ...     next_state=next_state,
+    ... )
+
+    The And Choice can be evaluated based on input data to true or false based
+    on whether all conditions are true.
+
+    >>> and_choice.evaluate({"setting": "on", "value": 20})
+    True
+    >>> and_choice.evaluate({"setting": "on", "value": 25})
+    True
+    >>> and_choice.evaluate({"setting": "on", "value": 30})
+    False
+    >>> and_choice.evaluate({"setting": "on"})
+    False
+    >>> and_choice.evaluate({"setting": "on", "value": 50})
+    False
+    """
 
     def __init__(
         self,
@@ -288,9 +419,58 @@ class AndChoice(AbstractChoice):
         super().__init__(next_state)
         self.conditions = conditions
 
+    def evaluate(self, data: Any) -> bool:
+        """Evaulate the And Choice on some given data.
+
+        Args:
+            data: Input data to evaluate.
+
+        Returns:
+            Whether the choice evaluates to true based on the input data.
+        """
+        return all(condition.evaluate(data) for condition in self.conditions)
+
 
 class VariableChoice(AbstractChoice):
-    """Variable Choice for the Choice State."""
+    """Variable Choice for the Choice State.
+
+    >>> next_state = PassState("Passing")
+    >>> variable_choice = VariableChoice(
+    ...     variable="$.type",
+    ...     string_equals="Private",
+    ...     next_state=next_state,
+    ... )
+
+    The Variable Choice can be evaluated based on input data to true or false
+    based on whether the condition is true.
+
+    >>> variable_choice.evaluate({"type": "Public"})
+    False
+    >>> variable_choice.evaluate({"type": "Private"})
+    True
+
+    Here's another example:
+
+    >>> variable_choice = VariableChoice(
+    ...     variable="$.rating",
+    ...     numeric_greater_than_path="$.auditThreshold",
+    ...     next_state=next_state,
+    ... )
+    >>> variable_choice.evaluate({"rating": 53, "auditThreshold": 60})
+    False
+    >>> variable_choice.evaluate({"rating": 53, "auditThreshold": 50})
+    True
+    >>> variable_choice.evaluate({"rating": 53, "auditThreshold": 53})
+    False
+
+    Be careful if you use `numeric_greater_than_path` that the Reference Path
+    evaluates to a numeric value.
+
+    >>> variable_choice.evaluate({"rating": 53, "auditThreshold": "50"})
+    Traceback (most recent call last):
+        ...
+    ValueError: numeric_greater_than_path must evaluate to a numeric value
+    """
 
     def __init__(
         self,
@@ -327,6 +507,17 @@ class VariableChoice(AbstractChoice):
             numeric_greater_than_path=numeric_greater_than_path,
             numeric_less_than=numeric_less_than,
         )
+
+    def evaluate(self, data: Any) -> bool:
+        """Evaulate the Variable Choice on some given data.
+
+        Args:
+            data: Input data to evaluate.
+
+        Returns:
+            Whether the choice evaluates to true based on the input data.
+        """
+        return self.condition.evaluate(data)
 
 
 class ChoiceState(TerminalStateMixin, AbstractInputPathOutputPathState):
