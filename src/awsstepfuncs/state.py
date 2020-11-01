@@ -239,16 +239,11 @@ class Condition:
             output += f"numeric_less_than={numeric_less_than!r}"
         return output + ")"
 
-    def evaluate(self, data: Any) -> bool:  # noqa: CCR001
+    def evaluate(self, data: Any) -> bool:
         """Evaulate the condition on some given data.
 
         Args:
             data: Input data to evaluate.
-
-        Raises:
-            ValueError: Raised when variable doesn't evaluate to any value.
-            ValueError: Raised when numeric_greater_than_path doesn't evaluate
-                to a numeric value.
 
         Returns:
             True or false based on the data and the Condition.
@@ -256,32 +251,47 @@ class Condition:
         variable_value = self.variable.apply(data)
 
         if self.is_present:
-            return variable_value is not None
+            return self._is_present(variable_value)
 
         if variable_value is None:
-            raise ValueError("Could not get a value for variable Reference Path")
+            return False
 
-        if numeric_greater_than_equals := self.numeric_greater_than_equals:
-            return variable_value >= numeric_greater_than_equals
+        if self.numeric_greater_than_equals:
+            return self._numeric_greater_than_equals(variable_value)
 
-        if numeric_greater_than_path := self.numeric_greater_than_path:
-            numeric_greater_than = numeric_greater_than_path.apply(data)
-            if not (
-                isinstance(numeric_greater_than, int)
-                or isinstance(numeric_greater_than, float)
-            ):
-                raise ValueError(
-                    "numeric_greater_than_path must evaluate to a numeric value"
-                )
-            return variable_value > numeric_greater_than
+        if self.numeric_greater_than_path:
+            return self._numeric_greater_than_path(data, variable_value)
 
-        if numeric_less_than := self.numeric_less_than:
-            return variable_value < numeric_less_than
+        if self.numeric_less_than:
+            return self._numeric_less_than(variable_value)
 
-        if string_equals := self.string_equals:
-            return variable_value == string_equals
+        if self.string_equals:
+            return self._string_equals(variable_value)
 
         assert False, "Not yet supported operation"  # noqa: PT015 pragma: no cover
+
+    def _is_present(self, variable_value: Any) -> bool:
+        return variable_value is not None
+
+    def _numeric_greater_than_equals(self, variable_value: Any) -> bool:
+        return variable_value >= self.numeric_greater_than_equals
+
+    def _numeric_greater_than_path(self, data: Any, variable_value: Any) -> bool:
+        numeric_greater_than = self.numeric_greater_than_path.apply(data)  # type: ignore
+        if not (
+            isinstance(numeric_greater_than, int)
+            or isinstance(numeric_greater_than, float)
+        ):
+            raise ValueError(
+                "numeric_greater_than_path must evaluate to a numeric value"
+            )
+        return variable_value > numeric_greater_than
+
+    def _numeric_less_than(self, variable_value: Any) -> bool:
+        return variable_value < self.numeric_less_than
+
+    def _string_equals(self, variable_value: Any) -> bool:
+        return variable_value == self.string_equals
 
 
 class AbstractChoice(ABC):
@@ -325,9 +335,7 @@ class NotChoice(AbstractChoice):
     >>> not_choice.evaluate({"type": "Private"})
     False
     >>> not_choice.evaluate({"sex": "Male"})
-    Traceback (most recent call last):
-        ...
-    ValueError: Could not get a value for variable Reference Path
+    True
     """
 
     def __init__(
@@ -560,6 +568,85 @@ class ChoiceState(TerminalStateMixin, AbstractInputPathOutputPathState):
     ...     ],
     ...     default=record_event_state,
     ... )
+    >>> state_machine = StateMachine(start_state=choice_state)
+    >>> _ = state_machine.simulate(state_input={"type": "Private", "value": 22})
+    Starting simulation of state machine
+    Running ChoiceState('DispatchEvent')
+    State input: {'type': 'Private', 'value': 22}
+    State input after applying input path of "$": {'type': 'Private', 'value': 22}
+    State output after applying output path of "$": {'type': 'Private', 'value': 22}
+    State output: {'type': 'Private', 'value': 22}
+    Running PassState('ValueInTwenties')
+    State input: {'type': 'Private', 'value': 22}
+    State input after applying input path of "$": {'type': 'Private', 'value': 22}
+    Output from applying result path of "$": {'type': 'Private', 'value': 22}
+    State output after applying output path of "$": {'type': 'Private', 'value': 22}
+    State output: {'type': 'Private', 'value': 22}
+    Terminating simulation of state machine
+
+    If no choice evaluates to true, then the default will be chosen.
+
+    >>> _ = state_machine.simulate(state_input={
+    ...     "type": "Private",
+    ...     "value": 102,
+    ...     "auditThreshold": 150,
+    ... })
+    Starting simulation of state machine
+    Running ChoiceState('DispatchEvent')
+    State input: {'type': 'Private', 'value': 102, 'auditThreshold': 150}
+    State input after applying input path of "$": {'type': 'Private', 'value': 102, 'auditThreshold': 150}
+    No choice evaluated to true
+    Choosing next state by the default set
+    State output after applying output path of "$": {}
+    State output: {}
+    Running PassState('RecordEvent')
+    State input: {}
+    State input after applying input path of "$": {}
+    Output from applying result path of "$": {}
+    State output after applying output path of "$": {}
+    State output: {}
+    Terminating simulation of state machine
+
+    If no choice evaluates to true and no default is set, then there will be an
+    error.
+
+    >>> choice_state = ChoiceState(
+    ...     "DispatchEvent",
+    ...     choices=[
+    ...         NotChoice(
+    ...             variable="$.type",
+    ...             string_equals="Private",
+    ...             next_state=public_state,
+    ...         ),
+    ...         AndChoice(
+    ...             [
+    ...                 Condition(variable="$.value", is_present=True),
+    ...                 Condition(variable="$.value", numeric_greater_than_equals=20),
+    ...                 Condition(variable="$.value", numeric_less_than=30),
+    ...             ],
+    ...             next_state=value_in_twenties_state,
+    ...         ),
+    ...         VariableChoice(
+    ...             variable="$.rating",
+    ...             numeric_greater_than_path="$.auditThreshold",
+    ...             next_state=start_audit_state,
+    ...         )
+    ...     ],
+    ... )
+    >>> state_machine = StateMachine(start_state=choice_state)
+    >>> _ = state_machine.simulate(state_input={
+    ...     "type": "Private",
+    ...     "value": 102,
+    ...     "auditThreshold": 150,
+    ... })
+    Starting simulation of state machine
+    Running ChoiceState('DispatchEvent')
+    State input: {'type': 'Private', 'value': 102, 'auditThreshold': 150}
+    State input after applying input path of "$": {'type': 'Private', 'value': 102, 'auditThreshold': 150}
+    No choice evaluated to true
+    Error encountered in state, checking for catchers
+    State output: {}
+    Terminating simulation of state machine
     """
 
     state_type = "Choice"
@@ -584,7 +671,7 @@ class ChoiceState(TerminalStateMixin, AbstractInputPathOutputPathState):
         self.choices = choices
         self.default = default
 
-    def compile(self) -> Dict[str, Any]:  # noqa: A003
+    def compile(self) -> Dict[str, Any]:  # noqa: A003 pragma: no cover
         """Compile the state to Amazon States Language.
 
         Returns:
@@ -592,7 +679,37 @@ class ChoiceState(TerminalStateMixin, AbstractInputPathOutputPathState):
             Language.
         """
         # TODO
-        return {}  # pragma: no cover
+        compiled = super().compile()
+        compiled.pop("End")  # Not correct for Choice State
+        return compiled  # pragma: no cover
+
+    def _run(self, state_input: Any, resource_to_mock_fn: ResourceToMockFn) -> Any:
+        """Run the Choice State.
+
+        Sets the next state.
+
+        Args:
+            state_input: The input state data.
+            resource_to_mock_fn: A mapping of resource URIs to mock functions to
+                use if the state performs a task.
+
+        Raises:
+            ValueError: Raised when no choice is true and no default is set.
+
+        Returns:
+            The output of the state.
+        """
+        for choice in self.choices:
+            if choice.evaluate(state_input):
+                self.next_state = choice.next_state
+                return state_input
+        else:
+            print("No choice evaluated to true")
+            if self.default:
+                print("Choosing next state by the default set")
+                self.next_state = self.default
+            else:
+                raise ValueError("No choice is true and no default set")
 
 
 class WaitState(AbstractNextOrEndState):
