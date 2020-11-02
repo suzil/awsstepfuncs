@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 from typing import Any, Dict, Optional, Set, Tuple, Union
 
-from awsstepfuncs.state import AbstractRetryCatchState, AbstractState
+from awsstepfuncs.abstract_state import AbstractRetryCatchState, AbstractState
 from awsstepfuncs.types import ResourceToMockFn
 from awsstepfuncs.visualization import Visualization
 
