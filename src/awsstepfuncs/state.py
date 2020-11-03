@@ -200,7 +200,7 @@ class Condition:
 
         if (
             sum(
-                bool(variable is not None)
+                variable is not None
                 for variable in [
                     string_equals,
                     string_equals_path,
