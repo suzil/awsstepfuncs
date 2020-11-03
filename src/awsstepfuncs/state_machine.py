@@ -214,4 +214,6 @@ class StateMachine:
                 if "States.ALL" in catcher.error_equals:
                     print(f"Found catcher, transitioning to {catcher.next_state}")
                     return catcher.next_state
+            else:
+                print("No catchers were matched")
         return None

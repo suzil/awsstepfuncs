@@ -1317,6 +1317,7 @@ class MapState(AbstractRetryCatchState):
     State input after applying input path of "$.detail": {'delivery-partner': 'UQS', 'shipped': [{'prod': 'R31', 'dest-code': 9511, 'quantity': 2688}, {'prod': 'S39', 'dest-code': 9511, 'quantity': 80}]}
     Items after applying items_path of $.delivery-partner: UQS
     Error encountered in state, checking for catchers
+    No catchers were matched
     State output: {}
     Terminating simulation of state machine
     """
