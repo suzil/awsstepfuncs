@@ -7,12 +7,12 @@ from awsstepfuncs.abstract_state import AbstractState
 from awsstepfuncs.reference_path import ReferencePath
 
 
-class Condition:
-    """Conditions are used in Choices.
+class ChoiceRule:
+    """ChoiceRules are used in Choices.
 
-    A Condition evalulates to `True` or `False`.
+    A ChoiceRule evalulates to `True` or `False`.
 
-    >>> career_condition = Condition("$.career", string_equals="Pirate")
+    >>> career_condition = ChoiceRule("$.career", string_equals="Pirate")
     >>> career_condition.evaluate({"career": "Pirate", "salary": "10 guineas"})
     True
     >>> career_condition.evaluate({"career": "Sailor", "salary": "5 guineas"})
@@ -20,7 +20,7 @@ class Condition:
 
     A Reference Path can be given too.
 
-    >>> career_condition = Condition("$.career", string_equals_path="$.expectedCareer")
+    >>> career_condition = ChoiceRule("$.career", string_equals_path="$.expectedCareer")
     >>> career_condition.evaluate({"career": "Pirate", "expectedCareer": "Pirate"})
     True
     >>> career_condition.evaluate({"career": "Pirate", "expectedCareer": "Doctor"})
@@ -28,7 +28,7 @@ class Condition:
 
     There can only be one "clause" per condition.
 
-    >>> Condition("$.career", string_equals="Pirate", is_present=True)
+    >>> ChoiceRule("$.career", string_equals="Pirate", is_present=True)
     Traceback (most recent call last):
         ...
     ValueError: Exactly one "clause" must be defined
@@ -36,7 +36,7 @@ class Condition:
     Be careful that if you specify a Reference Path that it evaluates to a value
     with the expected type.
 
-    >>> salary_condition = Condition("$.salary", string_equals_path="$.expectedSalary")
+    >>> salary_condition = ChoiceRule("$.salary", string_equals_path="$.expectedSalary")
     >>> salary_condition.evaluate({"salary": "100_000", "expectedSalary": 100_000})
     Traceback (most recent call last):
         ...
@@ -54,7 +54,7 @@ class Condition:
         numeric_greater_than_path: Optional[str] = None,
         numeric_less_than: Optional[int] = None,
     ):
-        """Initialize a Condition.
+        """Initialize a ChoiceRule.
 
         Args:
             variable: The Reference Path to a variable in the state input.
@@ -105,28 +105,28 @@ class Condition:
         self.numeric_less_than = numeric_less_than
 
     def __repr__(self) -> str:
-        """Return a string representation of the Condition.
+        """Return a string representation of the ChoiceRule.
 
-        >>> Condition("$.career", string_equals="Pirate")
-        Condition('$.career', string_equals='Pirate')
+        >>> ChoiceRule("$.career", string_equals="Pirate")
+        ChoiceRule('$.career', string_equals='Pirate')
 
-        >>> Condition("$.career", string_equals_path="$.expectedCareer")
-        Condition('$.career', string_equals_path='$.expectedCareer')
+        >>> ChoiceRule("$.career", string_equals_path="$.expectedCareer")
+        ChoiceRule('$.career', string_equals_path='$.expectedCareer')
 
-        >>> Condition("$.career", is_present=True)
-        Condition('$.career', is_present=True)
+        >>> ChoiceRule("$.career", is_present=True)
+        ChoiceRule('$.career', is_present=True)
 
-        >>> Condition("$.rating", numeric_greater_than_equals=42)
-        Condition('$.rating', numeric_greater_than_equals=42)
+        >>> ChoiceRule("$.rating", numeric_greater_than_equals=42)
+        ChoiceRule('$.rating', numeric_greater_than_equals=42)
 
-        >>> Condition("$.rating", numeric_greater_than_path="$.threshold")
-        Condition('$.rating', numeric_greater_than_path='$.threshold')
+        >>> ChoiceRule("$.rating", numeric_greater_than_path="$.threshold")
+        ChoiceRule('$.rating', numeric_greater_than_path='$.threshold')
 
-        >>> Condition("$.rating", numeric_less_than=30)
-        Condition('$.rating', numeric_less_than=30)
+        >>> ChoiceRule("$.rating", numeric_less_than=30)
+        ChoiceRule('$.rating', numeric_less_than=30)
 
         Returns:
-            A string representing the Condition.
+            A string representing the ChoiceRule.
         """
         clauses = self.__dict__.copy()
         variable = clauses.pop("variable")
@@ -142,7 +142,7 @@ class Condition:
             data: Input data to evaluate.
 
         Returns:
-            True or false based on the data and the Condition.
+            True or false based on the data and the ChoiceRule.
         """
         variable_value = self.variable.apply(data)
 
@@ -274,7 +274,7 @@ class NotChoice(AbstractChoice):
                 value.
         """
         super().__init__(next_state)
-        self.condition = Condition(
+        self.condition = ChoiceRule(
             variable,
             string_equals=string_equals,
             string_equals_path=string_equals_path,
@@ -303,9 +303,9 @@ class AndChoice(AbstractChoice):
     >>> next_state = PassState("Passing")
     >>> and_choice = AndChoice(
     ...     [
-    ...         Condition(variable="$.value", is_present=True),
-    ...         Condition(variable="$.value", numeric_greater_than_equals=20),
-    ...         Condition(variable="$.value", numeric_less_than=30),
+    ...         ChoiceRule(variable="$.value", is_present=True),
+    ...         ChoiceRule(variable="$.value", numeric_greater_than_equals=20),
+    ...         ChoiceRule(variable="$.value", numeric_less_than=30),
     ...     ],
     ...     next_state=next_state,
     ... )
@@ -327,7 +327,7 @@ class AndChoice(AbstractChoice):
 
     def __init__(
         self,
-        conditions: List[Condition],
+        conditions: List[ChoiceRule],
         *,
         next_state: AbstractState,
     ):
@@ -424,7 +424,7 @@ class VariableChoice(AbstractChoice):
                 value.
         """
         super().__init__(next_state)
-        self.condition = Condition(
+        self.condition = ChoiceRule(
             variable,
             string_equals=string_equals,
             string_equals_path=string_equals_path,

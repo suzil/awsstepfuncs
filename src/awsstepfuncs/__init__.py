@@ -4,7 +4,7 @@
 from awsstepfuncs._repo_version import version as __version__  # noqa:F401
 from awsstepfuncs.choice import (  # noqa: F401
     AndChoice,
-    Condition,
+    ChoiceRule,
     NotChoice,
     VariableChoice,
 )
