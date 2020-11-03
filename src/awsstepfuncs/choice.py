@@ -7,37 +7,37 @@ from awsstepfuncs.abstract_state import AbstractState
 from awsstepfuncs.reference_path import ReferencePath
 
 
-class Condition:
-    """Conditions are used in Choices.
+class ChoiceRule:
+    """Choice Rules are used in Choices.
 
-    A Condition evalulates to `True` or `False`.
+    A Choice Rule evalulates to `True` or `False`.
 
-    >>> career_condition = Condition("$.career", string_equals="Pirate")
-    >>> career_condition.evaluate({"career": "Pirate", "salary": "10 guineas"})
+    >>> career_rule = ChoiceRule("$.career", string_equals="Pirate")
+    >>> career_rule.evaluate({"career": "Pirate", "salary": "10 guineas"})
     True
-    >>> career_condition.evaluate({"career": "Sailor", "salary": "5 guineas"})
+    >>> career_rule.evaluate({"career": "Sailor", "salary": "5 guineas"})
     False
 
     A Reference Path can be given too.
 
-    >>> career_condition = Condition("$.career", string_equals_path="$.expectedCareer")
-    >>> career_condition.evaluate({"career": "Pirate", "expectedCareer": "Pirate"})
+    >>> career_rule = ChoiceRule("$.career", string_equals_path="$.expectedCareer")
+    >>> career_rule.evaluate({"career": "Pirate", "expectedCareer": "Pirate"})
     True
-    >>> career_condition.evaluate({"career": "Pirate", "expectedCareer": "Doctor"})
+    >>> career_rule.evaluate({"career": "Pirate", "expectedCareer": "Doctor"})
     False
 
-    There can only be one "clause" per condition.
+    There can only be one data-test expression per Choice Rule.
 
-    >>> Condition("$.career", string_equals="Pirate", is_present=True)
+    >>> ChoiceRule("$.career", string_equals="Pirate", is_present=True)
     Traceback (most recent call last):
         ...
-    ValueError: Exactly one "clause" must be defined
+    ValueError: Exactly one data-test expression must be defined
 
     Be careful that if you specify a Reference Path that it evaluates to a value
     with the expected type.
 
-    >>> salary_condition = Condition("$.salary", string_equals_path="$.expectedSalary")
-    >>> salary_condition.evaluate({"salary": "100_000", "expectedSalary": 100_000})
+    >>> salary_rule = ChoiceRule("$.salary", string_equals_path="$.expectedSalary")
+    >>> salary_rule.evaluate({"salary": "100_000", "expectedSalary": 100_000})
     Traceback (most recent call last):
         ...
     ValueError: string_equals_path must evaluate to a string value
@@ -54,7 +54,7 @@ class Condition:
         numeric_greater_than_path: Optional[str] = None,
         numeric_less_than: Optional[int] = None,
     ):
-        """Initialize a Condition.
+        """Initialize a Choice Rule.
 
         Args:
             variable: The Reference Path to a variable in the state input.
@@ -71,7 +71,8 @@ class Condition:
                 value.
 
         Raises:
-            ValueError: Raised when there is not exactly one "clause" defined.
+            ValueError: Raised when there is not exactly one data-test
+                expression defined.
         """
         self.variable = ReferencePath(variable)
 
@@ -89,7 +90,7 @@ class Condition:
             )
             != 1
         ):
-            raise ValueError('Exactly one "clause" must be defined')
+            raise ValueError("Exactly one data-test expression must be defined")
 
         self.string_equals = string_equals
         self.string_equals_path = (
@@ -105,28 +106,28 @@ class Condition:
         self.numeric_less_than = numeric_less_than
 
     def __repr__(self) -> str:
-        """Return a string representation of the Condition.
+        """Return a string representation of the Choice Rule.
 
-        >>> Condition("$.career", string_equals="Pirate")
-        Condition('$.career', string_equals='Pirate')
+        >>> ChoiceRule("$.career", string_equals="Pirate")
+        ChoiceRule('$.career', string_equals='Pirate')
 
-        >>> Condition("$.career", string_equals_path="$.expectedCareer")
-        Condition('$.career', string_equals_path='$.expectedCareer')
+        >>> ChoiceRule("$.career", string_equals_path="$.expectedCareer")
+        ChoiceRule('$.career', string_equals_path='$.expectedCareer')
 
-        >>> Condition("$.career", is_present=True)
-        Condition('$.career', is_present=True)
+        >>> ChoiceRule("$.career", is_present=True)
+        ChoiceRule('$.career', is_present=True)
 
-        >>> Condition("$.rating", numeric_greater_than_equals=42)
-        Condition('$.rating', numeric_greater_than_equals=42)
+        >>> ChoiceRule("$.rating", numeric_greater_than_equals=42)
+        ChoiceRule('$.rating', numeric_greater_than_equals=42)
 
-        >>> Condition("$.rating", numeric_greater_than_path="$.threshold")
-        Condition('$.rating', numeric_greater_than_path='$.threshold')
+        >>> ChoiceRule("$.rating", numeric_greater_than_path="$.threshold")
+        ChoiceRule('$.rating', numeric_greater_than_path='$.threshold')
 
-        >>> Condition("$.rating", numeric_less_than=30)
-        Condition('$.rating', numeric_less_than=30)
+        >>> ChoiceRule("$.rating", numeric_less_than=30)
+        ChoiceRule('$.rating', numeric_less_than=30)
 
         Returns:
-            A string representing the Condition.
+            A string representing the Choice Rule.
         """
         clauses = self.__dict__.copy()
         variable = clauses.pop("variable")
@@ -136,13 +137,13 @@ class Condition:
         return f"{self.__class__.__name__}({variable!r}, {clauses_formatted})"
 
     def evaluate(self, data: Any) -> bool:
-        """Evaulate the condition on some given data.
+        """Evaulate the Choice Rule on some given data.
 
         Args:
             data: Input data to evaluate.
 
         Returns:
-            True or false based on the data and the Condition.
+            True or false based on the data and the Choice Rule.
         """
         variable_value = self.variable.apply(data)
 
@@ -234,7 +235,7 @@ class NotChoice(AbstractChoice):
     ... )
 
     The Not Choice can be evaluated based on input data to true or false based
-    on whether the condition is false.
+    on whether the Choice Rule is false.
 
     >>> not_choice.evaluate({"type": "Public"})
     True
@@ -274,7 +275,7 @@ class NotChoice(AbstractChoice):
                 value.
         """
         super().__init__(next_state)
-        self.condition = Condition(
+        self.choice_rule = ChoiceRule(
             variable,
             string_equals=string_equals,
             string_equals_path=string_equals_path,
@@ -293,7 +294,7 @@ class NotChoice(AbstractChoice):
         Returns:
             Whether the choice evaluates to true based on the input data.
         """
-        return not self.condition.evaluate(data)
+        return not self.choice_rule.evaluate(data)
 
 
 class AndChoice(AbstractChoice):
@@ -303,15 +304,15 @@ class AndChoice(AbstractChoice):
     >>> next_state = PassState("Passing")
     >>> and_choice = AndChoice(
     ...     [
-    ...         Condition(variable="$.value", is_present=True),
-    ...         Condition(variable="$.value", numeric_greater_than_equals=20),
-    ...         Condition(variable="$.value", numeric_less_than=30),
+    ...         ChoiceRule(variable="$.value", is_present=True),
+    ...         ChoiceRule(variable="$.value", numeric_greater_than_equals=20),
+    ...         ChoiceRule(variable="$.value", numeric_less_than=30),
     ...     ],
     ...     next_state=next_state,
     ... )
 
     The And Choice can be evaluated based on input data to true or false based
-    on whether all conditions are true.
+    on whether all Choice Rules are true.
 
     >>> and_choice.evaluate({"setting": "on", "value": 20})
     True
@@ -327,18 +328,18 @@ class AndChoice(AbstractChoice):
 
     def __init__(
         self,
-        conditions: List[Condition],
+        choice_rules: List[ChoiceRule],
         *,
         next_state: AbstractState,
     ):
         """Initialize an AndChoice.
 
         Args:
-            conditions: A list of conditions which must ALL evaluate to true.
+            choice_rules: A list of Choice Rules which must ALL evaluate to true.
             next_state: The state to transition to if true.
         """
         super().__init__(next_state)
-        self.conditions = conditions
+        self.choice_rules = choice_rules
 
     def evaluate(self, data: Any) -> bool:
         """Evaulate the And Choice on some given data.
@@ -349,7 +350,7 @@ class AndChoice(AbstractChoice):
         Returns:
             Whether the choice evaluates to true based on the input data.
         """
-        return all(condition.evaluate(data) for condition in self.conditions)
+        return all(choice_rule.evaluate(data) for choice_rule in self.choice_rules)
 
 
 class VariableChoice(AbstractChoice):
@@ -364,7 +365,7 @@ class VariableChoice(AbstractChoice):
     ... )
 
     The Variable Choice can be evaluated based on input data to true or false
-    based on whether the condition is true.
+    based on whether the Choice Rule is true.
 
     >>> variable_choice.evaluate({"type": "Public"})
     False
@@ -424,7 +425,7 @@ class VariableChoice(AbstractChoice):
                 value.
         """
         super().__init__(next_state)
-        self.condition = Condition(
+        self.choice_rule = ChoiceRule(
             variable,
             string_equals=string_equals,
             string_equals_path=string_equals_path,
@@ -443,4 +444,4 @@ class VariableChoice(AbstractChoice):
         Returns:
             Whether the choice evaluates to true based on the input data.
         """
-        return self.condition.evaluate(data)
+        return self.choice_rule.evaluate(data)

@@ -69,9 +69,9 @@ class Visualization:
     ...         ),
     ...         AndChoice(
     ...             [
-    ...                 Condition(variable="$.value", is_present=True),
-    ...                 Condition(variable="$.value", numeric_greater_than_equals=20),
-    ...                 Condition(variable="$.value", numeric_less_than=30),
+    ...                 ChoiceRule(variable="$.value", is_present=True),
+    ...                 ChoiceRule(variable="$.value", numeric_greater_than_equals=20),
+    ...                 ChoiceRule(variable="$.value", numeric_less_than=30),
     ...             ],
     ...             next_state=value_in_twenties_state,
     ...         ),
@@ -121,9 +121,9 @@ class Visualization:
     ...         ),
     ...         AndChoice(
     ...             [
-    ...                 Condition(variable="$.value", is_present=True),
-    ...                 Condition(variable="$.value", numeric_greater_than_equals=20),
-    ...                 Condition(variable="$.value", numeric_less_than=30),
+    ...                 ChoiceRule(variable="$.value", is_present=True),
+    ...                 ChoiceRule(variable="$.value", numeric_greater_than_equals=20),
+    ...                 ChoiceRule(variable="$.value", numeric_less_than=30),
     ...             ],
     ...             next_state=value_in_twenties_state,
     ...         ),
