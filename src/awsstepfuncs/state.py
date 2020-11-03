@@ -506,9 +506,9 @@ class WaitState(AbstractNextOrEndState):
         if timestamp := self.timestamp:
             output += f", timestamp={timestamp.isoformat()!r}"
         if seconds_path := self.seconds_path:
-            output += f", seconds_path={str(seconds_path)!r}"
+            output += f", seconds_path={seconds_path!r}"
         if timestamp_path := self.timestamp_path:
-            output += f", timestamp_path={str(timestamp_path)!r}"
+            output += f", timestamp_path={timestamp_path!r}"
         return output + ")"
 
     def _run(self, state_input: Any, resource_to_mock_fn: ResourceToMockFn) -> Any:
