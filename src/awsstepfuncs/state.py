@@ -999,6 +999,57 @@ class WaitState(AbstractNextOrEndState):
 class PassState(AbstractParametersState):
     """The Pass State by default passes its input to its output, performing no work.
 
+    >>> pass_state1 = PassState("Pass 1", comment="The starting state")
+    >>> pass_state2 = PassState("Pass 2")
+    >>> pass_state3 = PassState("Pass 3")
+
+    Define the state machine.
+
+    >>> _ = pass_state1 >> pass_state2 >> pass_state3
+    >>> state_machine = StateMachine(start_state=pass_state1)
+
+    Make sure that the workflow is correctly specified.
+
+    >>> [state.name for state in state_machine.start_state]
+    ['Pass 1', 'Pass 2', 'Pass 3']
+
+    Check that it compiles correctly.
+
+    >>> compiled = state_machine.compile()
+    >>> expected = {
+    ...     "StartAt": "Pass 1",
+    ...     "States": {
+    ...         "Pass 2": {"Type": "Pass", "Next": "Pass 3"},
+    ...         "Pass 1": {"Type": "Pass", "Comment": "The starting state", "Next": "Pass 2"},
+    ...         "Pass 3": {"Type": "Pass", "End": True},
+    ...     },
+    ... }
+    >>> assert compiled == expected
+
+    Then you can run a simulation to debug it.
+
+    >>> _ = state_machine.simulate()
+    Starting simulation of state machine
+    Running PassState('Pass 1')
+    State input: {}
+    State input after applying input path of "$": {}
+    Output from applying result path of "$": {}
+    State output after applying output path of "$": {}
+    State output: {}
+    Running PassState('Pass 2')
+    State input: {}
+    State input after applying input path of "$": {}
+    Output from applying result path of "$": {}
+    State output after applying output path of "$": {}
+    State output: {}
+    Running PassState('Pass 3')
+    State input: {}
+    State input after applying input path of "$": {}
+    Output from applying result path of "$": {}
+    State output after applying output path of "$": {}
+    State output: {}
+    Terminating simulation of state machine
+
     If `result` is passed, its value is treated as the output of a virtual task.
 
     >>> result = {"Hello": "world!"}
@@ -1030,6 +1081,13 @@ class PassState(AbstractParametersState):
     State output after applying output path of "$": {'sum': 42, 'result': {'Hello': 'world!'}}
     State output: {'sum': 42, 'result': {'Hello': 'world!'}}
     Terminating simulation of state machine
+
+    Be careful! The state name has a maximum length of 128 characters.
+
+    >>> PassState("a" * 129)
+    Traceback (most recent call last):
+        ...
+    ValueError: State name cannot exceed 128 characters
     """
 
     state_type = "Pass"
