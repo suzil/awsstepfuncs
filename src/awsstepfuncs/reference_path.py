@@ -32,12 +32,12 @@ class ReferencePath:
         """Return the string representation of the class.
 
         >>> ReferencePath("$.detail.sum")
-        ReferencePath('$.detail.sum')
+        '$.detail.sum'
 
         Returns:
             The string representation of the ReferencePath.
         """
-        return f"{self.__class__.__name__}({self.reference_path!r})"
+        return repr(self.reference_path)
 
     def __str__(self) -> str:
         """Return the ReferencePath string.
