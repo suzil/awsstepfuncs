@@ -141,12 +141,29 @@ class Condition:
     >>> career_condition.evaluate({"career": "Sailor", "salary": "5 guineas"})
     False
 
+    A Reference Path can be given too.
+
+    >>> career_condition = Condition("$.career", string_equals_path="$.expectedCareer")
+    >>> career_condition.evaluate({"career": "Pirate", "expectedCareer": "Pirate"})
+    True
+    >>> career_condition.evaluate({"career": "Pirate", "expectedCareer": "Doctor"})
+    False
+
     There can only be one "clause" per condition.
 
     >>> Condition("$.career", string_equals="Pirate", is_present=True)
     Traceback (most recent call last):
         ...
-    ValueError: Exactly one must be defined: string_equals, is_present, numeric_greater_than_equals, numeric_greater_than_path, numeric_less_than
+    ValueError: Exactly one "clause" must be defined
+
+    Be careful that if you specify a Reference Path that it evaluates to a value
+    with the expected type.
+
+    >>> salary_condition = Condition("$.salary", string_equals_path="$.expectedSalary")
+    >>> salary_condition.evaluate({"salary": "100_000", "expectedSalary": 100_000})
+    Traceback (most recent call last):
+        ...
+    ValueError: string_equals_path must evaluate to a string value
     """
 
     def __init__(
@@ -154,6 +171,7 @@ class Condition:
         variable: str,
         *,
         string_equals: Optional[str] = None,
+        string_equals_path: Optional[str] = None,
         is_present: Optional[bool] = None,
         numeric_greater_than_equals: Optional[int] = None,
         numeric_greater_than_path: Optional[str] = None,
@@ -165,6 +183,8 @@ class Condition:
             variable: The Reference Path to a variable in the state input.
             string_equals: If set, whether or not the variable equals the
                 string.
+            string_equals_path: If set, whether or not the variable equals the
+                string at the Reference Path.
             is_present: If set, whether the variable is present.
             numeric_greater_than_equals: If set, whether the variable is greater
                 than or equal to the numeric value.
@@ -180,9 +200,10 @@ class Condition:
 
         if (
             sum(
-                bool(variable)
+                variable is not None
                 for variable in [
                     string_equals,
+                    string_equals_path,
                     is_present,
                     numeric_greater_than_equals,
                     numeric_greater_than_path,
@@ -191,11 +212,12 @@ class Condition:
             )
             != 1
         ):
-            raise ValueError(
-                "Exactly one must be defined: string_equals, is_present, numeric_greater_than_equals, numeric_greater_than_path, numeric_less_than"
-            )
+            raise ValueError('Exactly one "clause" must be defined')
 
         self.string_equals = string_equals
+        self.string_equals_path = (
+            ReferencePath(string_equals_path) if string_equals_path else None
+        )
         self.is_present = is_present
         self.numeric_greater_than_equals = numeric_greater_than_equals
         self.numeric_greater_than_path = (
@@ -210,6 +232,9 @@ class Condition:
 
         >>> Condition("$.career", string_equals="Pirate")
         Condition(string_equals='Pirate')
+
+        >>> Condition("$.career", string_equals_path="$.expectedCareer")
+        Condition(string_equals_path='$.expectedCareer')
 
         >>> Condition("$.career", is_present=True)
         Condition(is_present=True)
@@ -229,6 +254,8 @@ class Condition:
         output = f"{self.__class__.__name__}("
         if string_equals := self.string_equals:
             output += f"string_equals={string_equals!r}"
+        if string_equals_path := self.string_equals_path:
+            output += f"string_equals_path={str(string_equals_path)!r}"
         if is_present := self.is_present:
             output += f"is_present={is_present!r}"
         if numeric_greater_than_equals := self.numeric_greater_than_equals:
@@ -256,6 +283,12 @@ class Condition:
         if variable_value is None:
             return False
 
+        if self.string_equals:
+            return self._string_equals(variable_value)
+
+        if self.string_equals_path:
+            return self._string_equals_path(data, variable_value)
+
         if self.numeric_greater_than_equals:
             return self._numeric_greater_than_equals(variable_value)
 
@@ -265,13 +298,19 @@ class Condition:
         if self.numeric_less_than:
             return self._numeric_less_than(variable_value)
 
-        if self.string_equals:
-            return self._string_equals(variable_value)
-
         assert False, "Not yet supported operation"  # noqa: PT015 pragma: no cover
 
     def _is_present(self, variable_value: Any) -> bool:
         return variable_value is not None
+
+    def _string_equals(self, variable_value: Any) -> bool:
+        return variable_value == self.string_equals
+
+    def _string_equals_path(self, data: Any, variable_value: Any) -> bool:
+        string_equals = self.string_equals_path.apply(data)  # type: ignore
+        if not (isinstance(string_equals, str)):
+            raise ValueError("string_equals_path must evaluate to a string value")
+        return variable_value == string_equals
 
     def _numeric_greater_than_equals(self, variable_value: Any) -> bool:
         return variable_value >= self.numeric_greater_than_equals
@@ -289,9 +328,6 @@ class Condition:
 
     def _numeric_less_than(self, variable_value: Any) -> bool:
         return variable_value < self.numeric_less_than
-
-    def _string_equals(self, variable_value: Any) -> bool:
-        return variable_value == self.string_equals
 
 
 class AbstractChoice(ABC):
@@ -344,6 +380,7 @@ class NotChoice(AbstractChoice):
         *,
         next_state: AbstractState,
         string_equals: Optional[str] = None,
+        string_equals_path: Optional[str] = None,
         is_present: Optional[bool] = None,
         numeric_greater_than_equals: Optional[int] = None,
         numeric_greater_than_path: Optional[str] = None,
@@ -356,6 +393,8 @@ class NotChoice(AbstractChoice):
             next_state: The state to transition to if evaluated to true.
             string_equals: If set, whether or not the variable equals the
                 string.
+            string_equals_path: If set, whether or not the variable equals the
+                string at the Reference Path.
             is_present: If set, whether the variable is present.
             numeric_greater_than_equals: If set, whether the variable is greater
                 than or equal to the numeric value.
@@ -368,6 +407,7 @@ class NotChoice(AbstractChoice):
         self.condition = Condition(
             variable,
             string_equals=string_equals,
+            string_equals_path=string_equals_path,
             is_present=is_present,
             numeric_greater_than_equals=numeric_greater_than_equals,
             numeric_greater_than_path=numeric_greater_than_path,
@@ -473,8 +513,8 @@ class VariableChoice(AbstractChoice):
     >>> variable_choice.evaluate({"rating": 53, "auditThreshold": 53})
     False
 
-    Be careful if you use `numeric_greater_than_path` that the Reference Path
-    evaluates to a numeric value.
+    Be careful if you use a Reference Path that it evaluates to the correct
+    type.
 
     >>> variable_choice.evaluate({"rating": 53, "auditThreshold": "50"})
     Traceback (most recent call last):
@@ -488,6 +528,7 @@ class VariableChoice(AbstractChoice):
         *,
         next_state: AbstractState,
         string_equals: Optional[str] = None,
+        string_equals_path: Optional[str] = None,
         is_present: Optional[bool] = None,
         numeric_greater_than_equals: Optional[int] = None,
         numeric_greater_than_path: Optional[str] = None,
@@ -500,6 +541,8 @@ class VariableChoice(AbstractChoice):
             next_state: The state to transition to if evaluated to true.
             string_equals: If set, whether or not the variable equals the
                 string.
+            string_equals_path: If set, whether or not the variable equals the
+                string at the Reference Path.
             is_present: If set, whether the variable is present.
             numeric_greater_than_equals: If set, whether the variable is greater
                 than or equal to the numeric value.
@@ -512,6 +555,7 @@ class VariableChoice(AbstractChoice):
         self.condition = Condition(
             variable,
             string_equals=string_equals,
+            string_equals_path=string_equals_path,
             is_present=is_present,
             numeric_greater_than_equals=numeric_greater_than_equals,
             numeric_greater_than_path=numeric_greater_than_path,
