@@ -8,9 +8,9 @@ from awsstepfuncs.reference_path import ReferencePath
 
 
 class ChoiceRule:
-    """ChoiceRules are used in Choices.
+    """Choice Rules are used in Choices.
 
-    A ChoiceRule evalulates to `True` or `False`.
+    A Choice Rule evalulates to `True` or `False`.
 
     >>> career_rule = ChoiceRule("$.career", string_equals="Pirate")
     >>> career_rule.evaluate({"career": "Pirate", "salary": "10 guineas"})
@@ -26,7 +26,7 @@ class ChoiceRule:
     >>> career_rule.evaluate({"career": "Pirate", "expectedCareer": "Doctor"})
     False
 
-    There can only be one data-test expression per choice rule.
+    There can only be one data-test expression per Choice Rule.
 
     >>> ChoiceRule("$.career", string_equals="Pirate", is_present=True)
     Traceback (most recent call last):
@@ -54,7 +54,7 @@ class ChoiceRule:
         numeric_greater_than_path: Optional[str] = None,
         numeric_less_than: Optional[int] = None,
     ):
-        """Initialize a ChoiceRule.
+        """Initialize a Choice Rule.
 
         Args:
             variable: The Reference Path to a variable in the state input.
@@ -106,7 +106,7 @@ class ChoiceRule:
         self.numeric_less_than = numeric_less_than
 
     def __repr__(self) -> str:
-        """Return a string representation of the ChoiceRule.
+        """Return a string representation of the Choice Rule.
 
         >>> ChoiceRule("$.career", string_equals="Pirate")
         ChoiceRule('$.career', string_equals='Pirate')
@@ -127,7 +127,7 @@ class ChoiceRule:
         ChoiceRule('$.rating', numeric_less_than=30)
 
         Returns:
-            A string representing the ChoiceRule.
+            A string representing the Choice Rule.
         """
         clauses = self.__dict__.copy()
         variable = clauses.pop("variable")
@@ -137,13 +137,13 @@ class ChoiceRule:
         return f"{self.__class__.__name__}({variable!r}, {clauses_formatted})"
 
     def evaluate(self, data: Any) -> bool:
-        """Evaulate the choice rule on some given data.
+        """Evaulate the Choice Rule on some given data.
 
         Args:
             data: Input data to evaluate.
 
         Returns:
-            True or false based on the data and the choice rule.
+            True or false based on the data and the Choice Rule.
         """
         variable_value = self.variable.apply(data)
 
@@ -235,7 +235,7 @@ class NotChoice(AbstractChoice):
     ... )
 
     The Not Choice can be evaluated based on input data to true or false based
-    on whether the choice rule is false.
+    on whether the Choice Rule is false.
 
     >>> not_choice.evaluate({"type": "Public"})
     True
@@ -312,7 +312,7 @@ class AndChoice(AbstractChoice):
     ... )
 
     The And Choice can be evaluated based on input data to true or false based
-    on whether all choice rules are true.
+    on whether all Choice Rules are true.
 
     >>> and_choice.evaluate({"setting": "on", "value": 20})
     True
@@ -335,7 +335,7 @@ class AndChoice(AbstractChoice):
         """Initialize an AndChoice.
 
         Args:
-            choice_rules: A list of choice rules which must ALL evaluate to true.
+            choice_rules: A list of Choice Rules which must ALL evaluate to true.
             next_state: The state to transition to if true.
         """
         super().__init__(next_state)
@@ -365,7 +365,7 @@ class VariableChoice(AbstractChoice):
     ... )
 
     The Variable Choice can be evaluated based on input data to true or false
-    based on whether the choice rule is true.
+    based on whether the Choice Rule is true.
 
     >>> variable_choice.evaluate({"type": "Public"})
     False

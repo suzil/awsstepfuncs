@@ -144,7 +144,7 @@ class ChoiceState(TerminalStateMixin, AbstractInputPathOutputPathState):
     >>> record_event_state = PassState("RecordEvent")
 
     Now we can define a Choice State with branching logic based on
-    choice rules.
+    Choice Rules.
 
     >>> choice_state = ChoiceState(
     ...     "DispatchEvent",
