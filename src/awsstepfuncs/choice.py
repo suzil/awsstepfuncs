@@ -108,40 +108,32 @@ class Condition:
         """Return a string representation of the Condition.
 
         >>> Condition("$.career", string_equals="Pirate")
-        Condition(string_equals='Pirate')
+        Condition('$.career', string_equals='Pirate')
 
         >>> Condition("$.career", string_equals_path="$.expectedCareer")
-        Condition(string_equals_path='$.expectedCareer')
+        Condition('$.career', string_equals_path='$.expectedCareer')
 
         >>> Condition("$.career", is_present=True)
-        Condition(is_present=True)
+        Condition('$.career', is_present=True)
 
         >>> Condition("$.rating", numeric_greater_than_equals=42)
-        Condition(numeric_greater_than_equals=42)
+        Condition('$.rating', numeric_greater_than_equals=42)
 
         >>> Condition("$.rating", numeric_greater_than_path="$.threshold")
-        Condition(numeric_greater_than_path='$.threshold')
+        Condition('$.rating', numeric_greater_than_path='$.threshold')
 
         >>> Condition("$.rating", numeric_less_than=30)
-        Condition(numeric_less_than=30)
+        Condition('$.rating', numeric_less_than=30)
 
         Returns:
             A string representing the Condition.
         """
-        output = f"{self.__class__.__name__}("
-        if string_equals := self.string_equals:
-            output += f"string_equals={string_equals!r}"
-        if string_equals_path := self.string_equals_path:
-            output += f"string_equals_path={str(string_equals_path)!r}"
-        if is_present := self.is_present:
-            output += f"is_present={is_present!r}"
-        if numeric_greater_than_equals := self.numeric_greater_than_equals:
-            output += f"numeric_greater_than_equals={numeric_greater_than_equals!r}"
-        if numeric_greater_than_path := self.numeric_greater_than_path:
-            output += f"numeric_greater_than_path={str(numeric_greater_than_path)!r}"
-        if numeric_less_than := self.numeric_less_than:
-            output += f"numeric_less_than={numeric_less_than!r}"
-        return output + ")"
+        clauses = self.__dict__.copy()
+        variable = clauses.pop("variable")
+        clauses_formatted = ", ".join(
+            f"{name}={value!r}" for name, value in clauses.items() if value is not None
+        )
+        return f"{self.__class__.__name__}({variable!r}, {clauses_formatted})"
 
     def evaluate(self, data: Any) -> bool:
         """Evaulate the condition on some given data.

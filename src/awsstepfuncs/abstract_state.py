@@ -18,14 +18,14 @@ MAX_STATE_NAME_LENGTH = 128
 def apply_input_path(input_path: ReferencePath, state_input: Any) -> Any:
     """Apply input path to some state input."""
     state_input = input_path.apply(state_input)
-    print(f'State input after applying input path of "{input_path}":', state_input)
+    print(f"State input after applying input path of {input_path}:", state_input)
     return state_input
 
 
 def apply_output_path(output_path: ReferencePath, state_output: Any) -> Any:
     """Apply output path to some state output."""
     state_output = output_path.apply(state_output)
-    print(f'State output after applying output path of "{output_path}":', state_output)
+    print(f"State output after applying output path of {output_path}:", state_output)
     return state_output
 
 
@@ -161,9 +161,9 @@ class AbstractInputPathOutputPathState(AbstractState):
     Starting simulation of state machine
     Running PassState('Pass 1')
     State input: {'comment': 'Example for InputPath.', 'dataset1': {'val1': 1, 'val2': 2, 'val3': 3}, 'dataset2': {'val1': 'a', 'val2': 'b', 'val3': 'c'}}
-    State input after applying input path of "$.dataset2": {'val1': 'a', 'val2': 'b', 'val3': 'c'}
-    Output from applying result path of "$": {'val1': 'a', 'val2': 'b', 'val3': 'c'}
-    State output after applying output path of "$.val1": a
+    State input after applying input path of $.dataset2: {'val1': 'a', 'val2': 'b', 'val3': 'c'}
+    Output from applying result path of $: {'val1': 'a', 'val2': 'b', 'val3': 'c'}
+    State output after applying output path of $.val1: a
     State output: a
     Terminating simulation of state machine
 
@@ -331,7 +331,7 @@ class AbstractResultPathState(AbstractNextOrEndState):
         else:  # pragma: no cover
             assert False, "Should never happen"  # noqa: PT015
 
-        print(f'Output from applying result path of "{self.result_path}":', output)
+        print(f"Output from applying result path of {self.result_path}:", output)
         return output
 
 
@@ -657,15 +657,15 @@ class AbstractRetryCatchState(AbstractResultSelectorState):
         Starting simulation of state machine
         Running TaskState('Task')
         State input: {}
-        State input after applying input path of "$": {}
+        State input after applying input path of $: {}
         Error encountered in state, checking for catchers
         Found catcher, transitioning to PassState('Pass')
         State output: {}
         Running PassState('Pass')
         State input: {}
-        State input after applying input path of "$": {}
-        Output from applying result path of "$": {}
-        State output after applying output path of "$": {}
+        State input after applying input path of $: {}
+        Output from applying result path of $: {}
+        State output after applying output path of $: {}
         State output: {}
         Running FailState('Failure', error='IFailed', cause='I failed!')
         State input: {}
@@ -680,7 +680,7 @@ class AbstractRetryCatchState(AbstractResultSelectorState):
         Starting simulation of state machine
         Running TaskState('Task')
         State input: {}
-        State input after applying input path of "$": {}
+        State input after applying input path of $: {}
         Error encountered in state, checking for catchers
         No catchers were matched
         State output: {}

@@ -175,14 +175,14 @@ class ChoiceState(TerminalStateMixin, AbstractInputPathOutputPathState):
     Starting simulation of state machine
     Running ChoiceState('DispatchEvent')
     State input: {'type': 'Private', 'value': 22}
-    State input after applying input path of "$": {'type': 'Private', 'value': 22}
-    State output after applying output path of "$": {'type': 'Private', 'value': 22}
+    State input after applying input path of $: {'type': 'Private', 'value': 22}
+    State output after applying output path of $: {'type': 'Private', 'value': 22}
     State output: {'type': 'Private', 'value': 22}
     Running PassState('ValueInTwenties')
     State input: {'type': 'Private', 'value': 22}
-    State input after applying input path of "$": {'type': 'Private', 'value': 22}
-    Output from applying result path of "$": {'type': 'Private', 'value': 22}
-    State output after applying output path of "$": {'type': 'Private', 'value': 22}
+    State input after applying input path of $: {'type': 'Private', 'value': 22}
+    Output from applying result path of $: {'type': 'Private', 'value': 22}
+    State output after applying output path of $: {'type': 'Private', 'value': 22}
     State output: {'type': 'Private', 'value': 22}
     Terminating simulation of state machine
 
@@ -196,16 +196,16 @@ class ChoiceState(TerminalStateMixin, AbstractInputPathOutputPathState):
     Starting simulation of state machine
     Running ChoiceState('DispatchEvent')
     State input: {'type': 'Private', 'value': 102, 'auditThreshold': 150}
-    State input after applying input path of "$": {'type': 'Private', 'value': 102, 'auditThreshold': 150}
+    State input after applying input path of $: {'type': 'Private', 'value': 102, 'auditThreshold': 150}
     No choice evaluated to true
     Choosing next state by the default set
-    State output after applying output path of "$": {}
+    State output after applying output path of $: {}
     State output: {}
     Running PassState('RecordEvent')
     State input: {}
-    State input after applying input path of "$": {}
-    Output from applying result path of "$": {}
-    State output after applying output path of "$": {}
+    State input after applying input path of $: {}
+    Output from applying result path of $: {}
+    State output after applying output path of $: {}
     State output: {}
     Terminating simulation of state machine
 
@@ -244,7 +244,7 @@ class ChoiceState(TerminalStateMixin, AbstractInputPathOutputPathState):
     Starting simulation of state machine
     Running ChoiceState('DispatchEvent')
     State input: {'type': 'Private', 'value': 102, 'auditThreshold': 150}
-    State input after applying input path of "$": {'type': 'Private', 'value': 102, 'auditThreshold': 150}
+    State input after applying input path of $: {'type': 'Private', 'value': 102, 'auditThreshold': 150}
     No choice evaluated to true
     Error encountered in state, checking for catchers
     State output: {}
@@ -325,9 +325,9 @@ class WaitState(AbstractNextOrEndState):
     Starting simulation of state machine
     Running WaitState('Wait!', seconds=1)
     State input: {}
-    State input after applying input path of "$": {}
+    State input after applying input path of $: {}
     Waiting 1 seconds
-    State output after applying output path of "$": {}
+    State output after applying output path of $: {}
     State output: {}
     Terminating simulation of state machine
 
@@ -348,8 +348,8 @@ class WaitState(AbstractNextOrEndState):
     Starting simulation of state machine
     Running WaitState('Wait!', timestamp='2020-01-01T00:00:00')
     State input: {}
-    State input after applying input path of "$": {}
-    State output after applying output path of "$": {}
+    State input after applying input path of $: {}
+    State output after applying output path of $: {}
     State output: {}
     Terminating simulation of state machine
 
@@ -362,9 +362,9 @@ class WaitState(AbstractNextOrEndState):
     Starting simulation of state machine
     Running WaitState('Wait!', seconds_path='$.numSeconds')
     State input: {'numSeconds': 1}
-    State input after applying input path of "$": {'numSeconds': 1}
+    State input after applying input path of $: {'numSeconds': 1}
     Waiting 1 seconds
-    State output after applying output path of "$": {'numSeconds': 1}
+    State output after applying output path of $: {'numSeconds': 1}
     State output: {'numSeconds': 1}
     Terminating simulation of state machine
 
@@ -378,7 +378,7 @@ class WaitState(AbstractNextOrEndState):
     Starting simulation of state machine
     Running WaitState('Wait!', seconds_path='$.numSeconds')
     State input: {'numSeconds': 'hello'}
-    State input after applying input path of "$": {'numSeconds': 'hello'}
+    State input after applying input path of $: {'numSeconds': 'hello'}
     Error encountered in state, checking for catchers
     State output: {}
     Terminating simulation of state machine
@@ -392,9 +392,9 @@ class WaitState(AbstractNextOrEndState):
     Starting simulation of state machine
     Running WaitState('Wait!', timestamp_path='$.meta.timeToWait')
     State input: {'meta': {'timeToWait': '2020-01-01T00:00:00'}}
-    State input after applying input path of "$": {'meta': {'timeToWait': '2020-01-01T00:00:00'}}
+    State input after applying input path of $: {'meta': {'timeToWait': '2020-01-01T00:00:00'}}
     Waiting until 2020-01-01T00:00:00
-    State output after applying output path of "$": {'meta': {'timeToWait': '2020-01-01T00:00:00'}}
+    State output after applying output path of $: {'meta': {'timeToWait': '2020-01-01T00:00:00'}}
     State output: {'meta': {'timeToWait': '2020-01-01T00:00:00'}}
     Terminating simulation of state machine
 
@@ -506,9 +506,9 @@ class WaitState(AbstractNextOrEndState):
         if timestamp := self.timestamp:
             output += f", timestamp={timestamp.isoformat()!r}"
         if seconds_path := self.seconds_path:
-            output += f", seconds_path={str(seconds_path)!r}"
+            output += f", seconds_path={seconds_path!r}"
         if timestamp_path := self.timestamp_path:
-            output += f", timestamp_path={str(timestamp_path)!r}"
+            output += f", timestamp_path={timestamp_path!r}"
         return output + ")"
 
     def _run(self, state_input: Any, resource_to_mock_fn: ResourceToMockFn) -> Any:
@@ -590,21 +590,21 @@ class PassState(AbstractParametersState):
     Starting simulation of state machine
     Running PassState('Pass 1')
     State input: {}
-    State input after applying input path of "$": {}
-    Output from applying result path of "$": {}
-    State output after applying output path of "$": {}
+    State input after applying input path of $: {}
+    Output from applying result path of $: {}
+    State output after applying output path of $: {}
     State output: {}
     Running PassState('Pass 2')
     State input: {}
-    State input after applying input path of "$": {}
-    Output from applying result path of "$": {}
-    State output after applying output path of "$": {}
+    State input after applying input path of $: {}
+    Output from applying result path of $: {}
+    State output after applying output path of $: {}
     State output: {}
     Running PassState('Pass 3')
     State input: {}
-    State input after applying input path of "$": {}
-    Output from applying result path of "$": {}
-    State output after applying output path of "$": {}
+    State input after applying input path of $: {}
+    Output from applying result path of $: {}
+    State output after applying output path of $: {}
     State output: {}
     Terminating simulation of state machine
 
@@ -617,9 +617,9 @@ class PassState(AbstractParametersState):
     Starting simulation of state machine
     Running PassState('Passing')
     State input: {}
-    State input after applying input path of "$": {}
-    Output from applying result path of "$": {'Hello': 'world!'}
-    State output after applying output path of "$": {'Hello': 'world!'}
+    State input after applying input path of $: {}
+    Output from applying result path of $: {'Hello': 'world!'}
+    State output after applying output path of $: {'Hello': 'world!'}
     State output: {'Hello': 'world!'}
     Terminating simulation of state machine
     >>> assert state_output == result
@@ -634,9 +634,9 @@ class PassState(AbstractParametersState):
     Starting simulation of state machine
     Running PassState('Passing')
     State input: {'sum': 42}
-    State input after applying input path of "$": {'sum': 42}
-    Output from applying result path of "$.result": {'sum': 42, 'result': {'Hello': 'world!'}}
-    State output after applying output path of "$": {'sum': 42, 'result': {'Hello': 'world!'}}
+    State input after applying input path of $: {'sum': 42}
+    Output from applying result path of $.result: {'sum': 42, 'result': {'Hello': 'world!'}}
+    State output after applying output path of $: {'sum': 42, 'result': {'Hello': 'world!'}}
     State output: {'sum': 42, 'result': {'Hello': 'world!'}}
     Terminating simulation of state machine
 
@@ -809,26 +809,26 @@ class MapState(AbstractRetryCatchState):
     Starting simulation of state machine
     Running MapState('Validate-All')
     State input: {'ship-date': '2016-03-14T01:59:00Z', 'detail': {'delivery-partner': 'UQS', 'shipped': [{'prod': 'R31', 'dest-code': 9511, 'quantity': 1344}, {'prod': 'S39', 'dest-code': 9511, 'quantity': 40}]}}
-    State input after applying input path of "$.detail": {'delivery-partner': 'UQS', 'shipped': [{'prod': 'R31', 'dest-code': 9511, 'quantity': 1344}, {'prod': 'S39', 'dest-code': 9511, 'quantity': 40}]}
+    State input after applying input path of $.detail: {'delivery-partner': 'UQS', 'shipped': [{'prod': 'R31', 'dest-code': 9511, 'quantity': 1344}, {'prod': 'S39', 'dest-code': 9511, 'quantity': 40}]}
     Items after applying items_path of $.shipped: [{'prod': 'R31', 'dest-code': 9511, 'quantity': 1344}, {'prod': 'S39', 'dest-code': 9511, 'quantity': 40}]
     Starting simulation of state machine
     Running TaskState('Validate')
     State input: {'prod': 'R31', 'dest-code': 9511, 'quantity': 1344}
-    State input after applying input path of "$": {'prod': 'R31', 'dest-code': 9511, 'quantity': 1344}
-    Output from applying result path of "$": {'prod': 'R31', 'dest-code': 9511, 'quantity': 2688}
-    State output after applying output path of "$": {'prod': 'R31', 'dest-code': 9511, 'quantity': 2688}
+    State input after applying input path of $: {'prod': 'R31', 'dest-code': 9511, 'quantity': 1344}
+    Output from applying result path of $: {'prod': 'R31', 'dest-code': 9511, 'quantity': 2688}
+    State output after applying output path of $: {'prod': 'R31', 'dest-code': 9511, 'quantity': 2688}
     State output: {'prod': 'R31', 'dest-code': 9511, 'quantity': 2688}
     Terminating simulation of state machine
     Starting simulation of state machine
     Running TaskState('Validate')
     State input: {'prod': 'S39', 'dest-code': 9511, 'quantity': 40}
-    State input after applying input path of "$": {'prod': 'S39', 'dest-code': 9511, 'quantity': 40}
-    Output from applying result path of "$": {'prod': 'S39', 'dest-code': 9511, 'quantity': 80}
-    State output after applying output path of "$": {'prod': 'S39', 'dest-code': 9511, 'quantity': 80}
+    State input after applying input path of $: {'prod': 'S39', 'dest-code': 9511, 'quantity': 40}
+    Output from applying result path of $: {'prod': 'S39', 'dest-code': 9511, 'quantity': 80}
+    State output after applying output path of $: {'prod': 'S39', 'dest-code': 9511, 'quantity': 80}
     State output: {'prod': 'S39', 'dest-code': 9511, 'quantity': 80}
     Terminating simulation of state machine
-    Output from applying result path of "$": [{'prod': 'R31', 'dest-code': 9511, 'quantity': 2688}, {'prod': 'S39', 'dest-code': 9511, 'quantity': 80}]
-    State output after applying output path of "$": [{'prod': 'R31', 'dest-code': 9511, 'quantity': 2688}, {'prod': 'S39', 'dest-code': 9511, 'quantity': 80}]
+    Output from applying result path of $: [{'prod': 'R31', 'dest-code': 9511, 'quantity': 2688}, {'prod': 'S39', 'dest-code': 9511, 'quantity': 80}]
+    State output after applying output path of $: [{'prod': 'R31', 'dest-code': 9511, 'quantity': 2688}, {'prod': 'S39', 'dest-code': 9511, 'quantity': 80}]
     State output: [{'prod': 'R31', 'dest-code': 9511, 'quantity': 2688}, {'prod': 'S39', 'dest-code': 9511, 'quantity': 80}]
     Terminating simulation of state machine
 
@@ -872,7 +872,7 @@ class MapState(AbstractRetryCatchState):
     Starting simulation of state machine
     Running MapState('Validate-All')
     State input: {'ship-date': '2016-03-14T01:59:00Z', 'detail': {'delivery-partner': 'UQS', 'shipped': [{'prod': 'R31', 'dest-code': 9511, 'quantity': 2688}, {'prod': 'S39', 'dest-code': 9511, 'quantity': 80}]}}
-    State input after applying input path of "$.detail": {'delivery-partner': 'UQS', 'shipped': [{'prod': 'R31', 'dest-code': 9511, 'quantity': 2688}, {'prod': 'S39', 'dest-code': 9511, 'quantity': 80}]}
+    State input after applying input path of $.detail: {'delivery-partner': 'UQS', 'shipped': [{'prod': 'R31', 'dest-code': 9511, 'quantity': 2688}, {'prod': 'S39', 'dest-code': 9511, 'quantity': 80}]}
     Items after applying items_path of $.delivery-partner: UQS
     Error encountered in state, checking for catchers
     No catchers were matched
