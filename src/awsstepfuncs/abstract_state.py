@@ -45,7 +45,7 @@ class AbstractState(ABC):
         """
         if len(name) > MAX_STATE_NAME_LENGTH:
             raise ValueError(
-                f'State name "{name}" must be less than {MAX_STATE_NAME_LENGTH} characters'
+                f"State name cannot exceed {MAX_STATE_NAME_LENGTH} characters"
             )
 
         self.name = name
