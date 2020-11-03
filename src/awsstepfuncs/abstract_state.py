@@ -566,6 +566,41 @@ class AbstractRetryCatchState(AbstractResultSelectorState):
         have failed to resolve the error, the interpreter will try to find a
         relevant Catcher which determines which state to transition to.
 
+        `"States.ALL"` is the catch-all error message; that is, any error will
+        be caught with `"States.ALL"`. Right now it's the only error code
+        supported when simulating.
+
+        >>> from awsstepfuncs import *
+        >>> resource = "123"
+        >>> task_state = TaskState("Task", resource=resource)
+        >>> succeed_state = SucceedState("Success")
+        >>> pass_state = PassState("Pass")
+        >>> fail_state = FailState("Failure", error="IFailed", cause="I failed!")
+        >>> _ = task_state >> succeed_state
+        >>> _ = pass_state >> fail_state
+        >>> _ = task_state.add_catcher(["States.ALL"], next_state=pass_state)
+        >>> state_machine = StateMachine(start_state=task_state)
+        >>> def failure_mock_fn(_):
+        ...     assert False
+        >>> _ = state_machine.simulate(resource_to_mock_fn={resource: failure_mock_fn})
+        Starting simulation of state machine
+        Running TaskState('Task')
+        State input: {}
+        State input after applying input path of "$": {}
+        Error encountered in state, checking for catchers
+        Found catcher, transitioning to PassState('Pass')
+        State output: {}
+        Running PassState('Pass')
+        State input: {}
+        State input after applying input path of "$": {}
+        Output from applying result path of "$": {}
+        State output after applying output path of "$": {}
+        State output: {}
+        Running FailState('Failure', error='IFailed', cause='I failed!')
+        State input: {}
+        State output: {}
+        Terminating simulation of state machine
+
         Args:
             error_equals: A list of error names.
             next_state: The name of the next state.
