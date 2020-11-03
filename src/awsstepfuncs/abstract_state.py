@@ -212,9 +212,7 @@ class AbstractInputPathOutputPathState(AbstractState):
         """Compile the state to Amazon States Language.
 
         >>> from awsstepfuncs import *
-        >>> input_path = "$.dataset2"
-        >>> output_path = "$.val1"
-        >>> pass_state = PassState("Pass 1", input_path=input_path, output_path=output_path)
+        >>> pass_state = PassState("Pass 1", input_path="$.dataset2", output_path="$.val1")
         >>> state_machine = StateMachine(start_state=pass_state)
         >>> output = state_machine.compile()
         >>> expected = {
