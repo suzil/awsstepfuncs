@@ -672,6 +672,20 @@ class AbstractRetryCatchState(AbstractResultSelectorState):
         State output: {}
         Terminating simulation of state machine
 
+        If no catcher can be applied, then the state machine will terminate.
+
+        >>> _ = task_state.catchers.pop()  # Remove States.ALL catcher
+        >>> _ = task_state.add_catcher(["Timeout"], next_state=pass_state)
+        >>> _ = state_machine.simulate(resource_to_mock_fn={resource: failure_mock_fn})
+        Starting simulation of state machine
+        Running TaskState('Task')
+        State input: {}
+        State input after applying input path of "$": {}
+        Error encountered in state, checking for catchers
+        No catchers were matched
+        State output: {}
+        Terminating simulation of state machine
+
         Args:
             error_equals: A list of error names.
             next_state: The name of the next state.
