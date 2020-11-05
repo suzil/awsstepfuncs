@@ -41,6 +41,14 @@ class ChoiceRule:
     Traceback (most recent call last):
         ...
     ValueError: string_equals_path must evaluate to a string value
+
+    There are many different data-test expressions to choose from.
+
+    >>> rule = ChoiceRule("$.letter", string_less_than="B")
+    >>> rule.evaluate({"letter": "A"})
+    True
+    >>> rule.evaluate({"letter": "C"})
+    False
     """
 
     def __init__(
@@ -49,6 +57,7 @@ class ChoiceRule:
         *,
         string_equals: Optional[str] = None,
         string_equals_path: Optional[str] = None,
+        string_less_than: Optional[str] = None,
         is_present: Optional[bool] = None,
         numeric_greater_than_equals: Optional[int] = None,
         numeric_greater_than_path: Optional[str] = None,
@@ -62,6 +71,8 @@ class ChoiceRule:
                 string.
             string_equals_path: If set, whether or not the variable equals the
                 string at the Reference Path.
+            string_less_than: If set, whether or not the variable is less than
+                the string.
             is_present: If set, whether the variable is present.
             numeric_greater_than_equals: If set, whether the variable is greater
                 than or equal to the numeric value.
@@ -82,6 +93,7 @@ class ChoiceRule:
                 for variable in [
                     string_equals,
                     string_equals_path,
+                    string_less_than,
                     is_present,
                     numeric_greater_than_equals,
                     numeric_greater_than_path,
@@ -96,6 +108,7 @@ class ChoiceRule:
         self.string_equals_path = (
             ReferencePath(string_equals_path) if string_equals_path else None
         )
+        self.string_less_than = string_less_than
         self.is_present = is_present
         self.numeric_greater_than_equals = numeric_greater_than_equals
         self.numeric_greater_than_path = (
@@ -147,28 +160,30 @@ class ChoiceRule:
         """
         variable_value = self.variable.apply(data)
 
-        if self.is_present:
-            return self._is_present(variable_value)
+        switcher = {
+            self.is_present: self._is_present,
+            self.string_equals: self._string_equals,
+            self.string_less_than: self._string_less_than,
+            self.numeric_greater_than_equals: self._numeric_greater_than_equals,
+            self.numeric_less_than: self._numeric_less_than,
+        }
+        path_switcher = {
+            self.string_equals_path: self._string_equals_path,
+            self.numeric_greater_than_path: self._numeric_greater_than_path,
+        }
 
         if variable_value is None:
             return False
 
-        if self.string_equals:
-            return self._string_equals(variable_value)
+        for data_test_expression, fn in switcher.items():
+            if data_test_expression is not None:
+                return fn(variable_value)
 
-        if self.string_equals_path:
-            return self._string_equals_path(data, variable_value)
+        for data_test_expression, fn in path_switcher.items():
+            if data_test_expression is not None:
+                return fn(data, variable_value)
 
-        if self.numeric_greater_than_equals:
-            return self._numeric_greater_than_equals(variable_value)
-
-        if self.numeric_greater_than_path:
-            return self._numeric_greater_than_path(data, variable_value)
-
-        if self.numeric_less_than:
-            return self._numeric_less_than(variable_value)
-
-        assert False, "Not yet supported operation"  # noqa: PT015 pragma: no cover
+        assert False, "Should not be reachable"  # noqa: PT015 pragma: no cover
 
     def _is_present(self, variable_value: Any) -> bool:
         return variable_value is not None
@@ -181,6 +196,9 @@ class ChoiceRule:
         if not (isinstance(string_equals, str)):
             raise ValueError("string_equals_path must evaluate to a string value")
         return variable_value == string_equals
+
+    def _string_less_than(self, variable_value: Any) -> bool:
+        return variable_value < self.string_less_than
 
     def _numeric_greater_than_equals(self, variable_value: Any) -> bool:
         return variable_value >= self.numeric_greater_than_equals
@@ -252,6 +270,7 @@ class NotChoice(AbstractChoice):
         next_state: AbstractState,
         string_equals: Optional[str] = None,
         string_equals_path: Optional[str] = None,
+        string_less_than: Optional[str] = None,
         is_present: Optional[bool] = None,
         numeric_greater_than_equals: Optional[int] = None,
         numeric_greater_than_path: Optional[str] = None,
@@ -266,6 +285,8 @@ class NotChoice(AbstractChoice):
                 string.
             string_equals_path: If set, whether or not the variable equals the
                 string at the Reference Path.
+            string_less_than: If set, whether or not the variable is less than
+                the string.
             is_present: If set, whether the variable is present.
             numeric_greater_than_equals: If set, whether the variable is greater
                 than or equal to the numeric value.
@@ -279,6 +300,7 @@ class NotChoice(AbstractChoice):
             variable,
             string_equals=string_equals,
             string_equals_path=string_equals_path,
+            string_less_than=string_less_than,
             is_present=is_present,
             numeric_greater_than_equals=numeric_greater_than_equals,
             numeric_greater_than_path=numeric_greater_than_path,
@@ -402,6 +424,7 @@ class VariableChoice(AbstractChoice):
         next_state: AbstractState,
         string_equals: Optional[str] = None,
         string_equals_path: Optional[str] = None,
+        string_less_than: Optional[str] = None,
         is_present: Optional[bool] = None,
         numeric_greater_than_equals: Optional[int] = None,
         numeric_greater_than_path: Optional[str] = None,
@@ -416,6 +439,8 @@ class VariableChoice(AbstractChoice):
                 string.
             string_equals_path: If set, whether or not the variable equals the
                 string at the Reference Path.
+            string_less_than: If set, whether or not the variable is less than
+                the string.
             is_present: If set, whether the variable is present.
             numeric_greater_than_equals: If set, whether the variable is greater
                 than or equal to the numeric value.
@@ -429,6 +454,7 @@ class VariableChoice(AbstractChoice):
             variable,
             string_equals=string_equals,
             string_equals_path=string_equals_path,
+            string_less_than=string_less_than,
             is_present=is_present,
             numeric_greater_than_equals=numeric_greater_than_equals,
             numeric_greater_than_path=numeric_greater_than_path,
