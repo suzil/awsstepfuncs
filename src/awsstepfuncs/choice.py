@@ -10,7 +10,9 @@ from awsstepfuncs.reference_path import ReferencePath
 class ChoiceRule:
     """Choice Rules are used in Choices.
 
-    A Choice Rule evalulates to `True` or `False`.
+    When initializing a Choice Rule, a data test expression must be provided. A
+    Choice Rule evalulates to `True` or `False` based on the data-test
+    expression on some data.
 
     >>> career_rule = ChoiceRule("$.career", string_equals="Pirate")
     >>> career_rule.evaluate({"career": "Pirate", "salary": "10 guineas"})
