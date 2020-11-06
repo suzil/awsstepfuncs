@@ -150,7 +150,7 @@ class ChoiceRule:
         return f"{self.__class__.__name__}({variable!r}, {clauses_formatted})"
 
     def evaluate(self, data: Any) -> bool:
-        """Evaulate the Choice Rule on some given data.
+        """Evaulate the Choice Rule with a data-test expression on some data.
 
         Args:
             data: Input data to evaluate.
