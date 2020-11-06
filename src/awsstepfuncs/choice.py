@@ -72,11 +72,7 @@ class DataTestExpression:
         """
         # NOTE: The enum is just used for validation
         self.type = DataTestExpressionType(type).value
-        self.expression = (
-            ReferencePath(expression)
-            if isinstance(expression, str) and expression[:2] == "$."
-            else expression
-        )
+        self.expression = ReferencePath(expression) if "path" in type else expression
 
     def __repr__(self) -> str:
         """A string representation of a data-test expression."""
