@@ -1,10 +1,82 @@
 from __future__ import annotations
 
 from abc import ABC
-from typing import Any, List, Optional
+from enum import Enum
+from typing import Any, List, Union
 
 from awsstepfuncs.abstract_state import AbstractState
 from awsstepfuncs.reference_path import ReferencePath
+
+
+class DataTestExpressionType(Enum):
+    """All the different types of data-test expressions.
+
+    Check section "Data-test expression" for a full list:
+    https://states-language.net/#choice-state
+    """
+
+    STRING_EQUALS = "string_equals"
+    STRING_EQUALS_PATH = "string_equals_path"
+    STRING_LESS_THAN = "string_less_than"
+    STRING_LESS_THAN_PATH = "string_less_than_path"
+    STRING_GREATER_THAN = "string_greater_than"
+    STRING_GREATER_THAN_PATH = "string_greater_than_path"
+    STRING_LESS_THAN_EQUALS = "string_less_than_equals"
+    STRING_LESS_THAN_EQUALS_PATH = "string_less_than_equals_path"
+    STRING_GREATER_THAN_EQUALS = "string_greater_than_equals"
+    STRING_GREATER_THAN_EQUALS_PATH = "string_greater_than_equals_path"
+    STRING_MATCHES = "string_matches"
+    NUMERIC_EQUALS = "numeric_equals"
+    NUMERIC_EQUALS_PATH = "numeric_equals_path"
+    NUMERIC_LESS_THAN = "numeric_less_than"
+    NUMERIC_LESS_THAN_PATH = "numeric_less_than_path"
+    NUMERIC_GREATER_THAN = "numeric_greater_than"
+    NUMERIC_GREATER_THAN_PATH = "numeric_greater_than_path"
+    NUMERIC_LESS_THAN_EQUALS = "numeric_less_than_equals"
+    NUMERIC_LESS_THAN_EQUALS_PATH = "numeric_less_than_equals_path"
+    NUMERIC_GREATER_THAN_EQUALS = "numeric_greater_than_equals"
+    NUMERIC_GREATER_THAN_EQUALS_PATH = "numeric_greater_than_equals_path"
+    BOOLEAN_EQUALS = "boolean_equals"
+    BOOLEAN_EQUALS_PATH = "boolean_equals_path"
+    TIMESTAMP_EQUALS = "timestamp_equals"
+    TIMESTAMP_EQUALS_PATH = "timestamp_equals_path"
+    TIMESTAMP_LESS_THAN = "timestamp_less_than"
+    TIMESTAMP_LESS_THAN_PATH = "timestamp_less_than_path"
+    TIMESTAMP_GREATER_THAN = "timestamp_greater_than"
+    TIMESTAMP_GREATER_THAN_PATH = "timestamp_greater_than_path"
+    TIMESTAMP_LESS_THAN_EQUALS = "timestamp_less_than_equals"
+    TIMESTAMP_LESS_THAN_EQUALS_PATH = "timestamp_less_than_equals_path"
+    TIMESTAMP_GREATER_THAN_EQUALS = "timestamp_greater_than_equals"
+    TIMESTAMP_GREATER_THAN_EQUALS_PATH = "timestamp_greater_than_equals_path"
+    IS_NULL = "is_null"
+    IS_PRESENT = "is_present"
+    IS_NUMERIC = "is_numeric"
+    IS_STRING = "is_string"
+    IS_BOOLEAN = "is_boolean"
+    IS_TIMESTAMP = "is_timestamp"
+
+
+class DataTestExpression:
+    """A data-test expression.
+
+    >>> DataTestExpression("string_equals", "Hello")
+    DataTestExpression(string_equals='Hello')
+    """
+
+    def __init__(self, type: str, expression: Any):  # noqa: A002
+        """Initialize a data-test expression.
+
+        Args:
+            type: The type of data-test expression, such as string_equals.
+            expression: The expression to use when evaluating based on the type.
+        """
+        # NOTE: The enum is just used for validation
+        self.type = DataTestExpressionType(type).value
+        self.expression = ReferencePath(expression) if "path" in type else expression
+
+    def __repr__(self) -> str:
+        """A string representation of a data-test expression."""
+        return f"{self.__class__.__name__}({self.type}={self.expression!r})"
 
 
 class ChoiceRule:
@@ -53,35 +125,12 @@ class ChoiceRule:
     False
     """
 
-    def __init__(
-        self,
-        variable: str,
-        *,
-        string_equals: Optional[str] = None,
-        string_equals_path: Optional[str] = None,
-        string_less_than: Optional[str] = None,
-        is_present: Optional[bool] = None,
-        numeric_greater_than_equals: Optional[int] = None,
-        numeric_greater_than_path: Optional[str] = None,
-        numeric_less_than: Optional[int] = None,
-    ):
+    def __init__(self, variable: str, **data_test_expression: Any):
         """Initialize a Choice Rule.
 
         Args:
             variable: The Reference Path to a variable in the state input.
-            string_equals: If set, whether or not the variable equals the
-                string.
-            string_equals_path: If set, whether or not the variable equals the
-                string at the Reference Path.
-            string_less_than: If set, whether or not the variable is less than
-                the string.
-            is_present: If set, whether the variable is present.
-            numeric_greater_than_equals: If set, whether the variable is greater
-                than or equal to the numeric value.
-            numeric_greater_than_path: If set, whether the variable is greater
-                than the value at the Reference Path.
-            numeric_less_than: If set, whether the variable is less than the
-                value.
+            data_test_expression: The data-test expression to use.
 
         Raises:
             ValueError: Raised when there is not exactly one data-test
@@ -89,36 +138,12 @@ class ChoiceRule:
         """
         self.variable = ReferencePath(variable)
 
-        if (
-            sum(
-                variable is not None
-                for variable in [
-                    string_equals,
-                    string_equals_path,
-                    string_less_than,
-                    is_present,
-                    numeric_greater_than_equals,
-                    numeric_greater_than_path,
-                    numeric_less_than,
-                ]
-            )
-            != 1
-        ):
+        if len(data_test_expression) != 1:
             raise ValueError("Exactly one data-test expression must be defined")
 
-        self.string_equals = string_equals
-        self.string_equals_path = (
-            ReferencePath(string_equals_path) if string_equals_path else None
+        self.data_test_expression = DataTestExpression(
+            *list(data_test_expression.items())[0]
         )
-        self.string_less_than = string_less_than
-        self.is_present = is_present
-        self.numeric_greater_than_equals = numeric_greater_than_equals
-        self.numeric_greater_than_path = (
-            ReferencePath(numeric_greater_than_path)
-            if numeric_greater_than_path
-            else None
-        )
-        self.numeric_less_than = numeric_less_than
 
     def __repr__(self) -> str:
         """Return a string representation of the Choice Rule.
@@ -144,12 +169,7 @@ class ChoiceRule:
         Returns:
             A string representing the Choice Rule.
         """
-        clauses = self.__dict__.copy()
-        variable = clauses.pop("variable")
-        clauses_formatted = ", ".join(
-            f"{name}={value!r}" for name, value in clauses.items() if value is not None
-        )
-        return f"{self.__class__.__name__}({variable!r}, {clauses_formatted})"
+        return f"{self.__class__.__name__}({self.variable!r}, {self.data_test_expression.type}={self.data_test_expression.expression!r})"
 
     def evaluate(self, data: Any) -> bool:
         """Evaulate the Choice Rule with a data-test expression on some data.
@@ -162,51 +182,36 @@ class ChoiceRule:
         """
         variable_value = self.variable.apply(data)
 
-        switcher = {
-            self.is_present: self._is_present,
-            self.string_equals: self._string_equals,
-            self.string_less_than: self._string_less_than,
-            self.numeric_greater_than_equals: self._numeric_greater_than_equals,
-            self.numeric_less_than: self._numeric_less_than,
-        }
-        path_switcher = {
-            self.string_equals_path: self._string_equals_path,
-            self.numeric_greater_than_path: self._numeric_greater_than_path,
-        }
-
         if variable_value is None:
             return False
 
-        for data_test_expression, fn in switcher.items():
-            if data_test_expression is not None:
-                return fn(variable_value)
-
-        for data_test_expression, fn in path_switcher.items():
-            if data_test_expression is not None:
-                return fn(data, variable_value)
-
-        assert False, "Should not be reachable"  # noqa: PT015 pragma: no cover
+        if "path" in self.data_test_expression.type:
+            return eval(f"self._{self.data_test_expression.type}(data, variable_value)")
+        else:
+            return eval(f"self._{self.data_test_expression.type}(variable_value)")
 
     def _is_present(self, variable_value: Any) -> bool:
         return variable_value is not None
 
-    def _string_equals(self, variable_value: Any) -> bool:
-        return variable_value == self.string_equals
+    def _string_equals(self, variable_value: str) -> bool:
+        return variable_value == self.data_test_expression.expression
 
-    def _string_equals_path(self, data: Any, variable_value: Any) -> bool:
-        string_equals = self.string_equals_path.apply(data)  # type: ignore
+    def _string_equals_path(self, data: Any, variable_value: str) -> bool:
+        string_equals = self.data_test_expression.expression.apply(data)  # type: ignore
         if not (isinstance(string_equals, str)):
             raise ValueError("string_equals_path must evaluate to a string value")
         return variable_value == string_equals
 
-    def _string_less_than(self, variable_value: Any) -> bool:
-        return variable_value < self.string_less_than
+    def _string_less_than(self, variable_value: str) -> bool:
+        return variable_value < self.data_test_expression.expression  # type: ignore
 
-    def _numeric_greater_than_equals(self, variable_value: Any) -> bool:
-        return variable_value >= self.numeric_greater_than_equals
+    def _numeric_greater_than_equals(self, variable_value: Union[float, int]) -> bool:
+        return variable_value >= self.data_test_expression.expression  # type: ignore
 
-    def _numeric_greater_than_path(self, data: Any, variable_value: Any) -> bool:
-        numeric_greater_than = self.numeric_greater_than_path.apply(data)  # type: ignore
+    def _numeric_greater_than_path(
+        self, data: Any, variable_value: Union[float, int]
+    ) -> bool:
+        numeric_greater_than = self.data_test_expression.expression.apply(data)  # type: ignore
         if not (
             isinstance(numeric_greater_than, int)
             or isinstance(numeric_greater_than, float)
@@ -216,8 +221,8 @@ class ChoiceRule:
             )
         return variable_value > numeric_greater_than
 
-    def _numeric_less_than(self, variable_value: Any) -> bool:
-        return variable_value < self.numeric_less_than
+    def _numeric_less_than(self, variable_value: Union[float, int]) -> bool:
+        return variable_value < self.data_test_expression.expression  # type: ignore
 
 
 class AbstractChoice(ABC):
@@ -270,43 +275,19 @@ class NotChoice(AbstractChoice):
         variable: str,
         *,
         next_state: AbstractState,
-        string_equals: Optional[str] = None,
-        string_equals_path: Optional[str] = None,
-        string_less_than: Optional[str] = None,
-        is_present: Optional[bool] = None,
-        numeric_greater_than_equals: Optional[int] = None,
-        numeric_greater_than_path: Optional[str] = None,
-        numeric_less_than: Optional[int] = None,
+        **data_test_expression: Any,
     ):
         """Initialize a NotChoice.
 
         Args:
             variable: The Reference Path to a variable in the state input.
             next_state: The state to transition to if evaluated to true.
-            string_equals: If set, whether or not the variable equals the
-                string.
-            string_equals_path: If set, whether or not the variable equals the
-                string at the Reference Path.
-            string_less_than: If set, whether or not the variable is less than
-                the string.
-            is_present: If set, whether the variable is present.
-            numeric_greater_than_equals: If set, whether the variable is greater
-                than or equal to the numeric value.
-            numeric_greater_than_path: If set, whether the variable is greater
-                than the value at the Reference Path.
-            numeric_less_than: If set, whether the variable is less than the
-                value.
+            data_test_expression: The data-test expression to use.
         """
         super().__init__(next_state)
         self.choice_rule = ChoiceRule(
             variable,
-            string_equals=string_equals,
-            string_equals_path=string_equals_path,
-            string_less_than=string_less_than,
-            is_present=is_present,
-            numeric_greater_than_equals=numeric_greater_than_equals,
-            numeric_greater_than_path=numeric_greater_than_path,
-            numeric_less_than=numeric_less_than,
+            **data_test_expression,
         )
 
     def evaluate(self, data: Any) -> bool:
@@ -424,43 +405,19 @@ class VariableChoice(AbstractChoice):
         variable: str,
         *,
         next_state: AbstractState,
-        string_equals: Optional[str] = None,
-        string_equals_path: Optional[str] = None,
-        string_less_than: Optional[str] = None,
-        is_present: Optional[bool] = None,
-        numeric_greater_than_equals: Optional[int] = None,
-        numeric_greater_than_path: Optional[str] = None,
-        numeric_less_than: Optional[int] = None,
+        **data_test_expression: Any,
     ):
         """Initialize a VariableChoice.
 
         Args:
             variable: The Reference Path to a variable in the state input.
             next_state: The state to transition to if evaluated to true.
-            string_equals: If set, whether or not the variable equals the
-                string.
-            string_equals_path: If set, whether or not the variable equals the
-                string at the Reference Path.
-            string_less_than: If set, whether or not the variable is less than
-                the string.
-            is_present: If set, whether the variable is present.
-            numeric_greater_than_equals: If set, whether the variable is greater
-                than or equal to the numeric value.
-            numeric_greater_than_path: If set, whether the variable is greater
-                than the value at the Reference Path.
-            numeric_less_than: If set, whether the variable is less than the
-                value.
+            data_test_expression: The data-test expression to use.
         """
         super().__init__(next_state)
         self.choice_rule = ChoiceRule(
             variable,
-            string_equals=string_equals,
-            string_equals_path=string_equals_path,
-            string_less_than=string_less_than,
-            is_present=is_present,
-            numeric_greater_than_equals=numeric_greater_than_equals,
-            numeric_greater_than_path=numeric_greater_than_path,
-            numeric_less_than=numeric_less_than,
+            **data_test_expression,
         )
 
     def evaluate(self, data: Any) -> bool:
