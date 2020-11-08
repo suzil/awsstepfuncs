@@ -157,6 +157,14 @@ class ChoiceRule:
     True
     >>> rule.evaluate({"letter": "C"})
     False
+
+    **string_less_than_path**
+
+    >>> rule = ChoiceRule("$.letter", string_less_than_path="$.compareLetter")
+    >>> rule.evaluate({"letter": "A", "compareLetter": "B"})
+    True
+    >>> rule.evaluate({"letter": "C", "compareLetter": "B"})
+    False
     """
 
     def __init__(self, variable: str, **data_test_expression: Any):
@@ -247,6 +255,12 @@ class ChoiceRule:
 
     def _string_less_than(self, variable_value: str) -> bool:
         return variable_value < self.data_test_expression.expression  # type: ignore
+
+    def _string_less_than_path(self, data: Any, variable_value: str) -> bool:
+        string_less_than = self.data_test_expression.expression.apply(data)  # type: ignore
+        if not (isinstance(string_less_than, str)):  # pragma: no cover
+            raise ValueError("string_less_than_path must evaluate to a string value")
+        return variable_value < string_less_than
 
     def _numeric_greater_than_equals(self, variable_value: Union[float, int]) -> bool:
         return variable_value >= self.data_test_expression.expression  # type: ignore
