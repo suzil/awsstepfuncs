@@ -165,6 +165,26 @@ class ChoiceRule:
     True
     >>> rule.evaluate({"letter": "C", "compareLetter": "B"})
     False
+
+    **string_greater_than_equals**
+
+    >>> rule = ChoiceRule("$.letter", string_greater_than_equals="B")
+    >>> rule.evaluate({"letter": "A"})
+    False
+    >>> rule.evaluate({"letter": "B"})
+    True
+    >>> rule.evaluate({"letter": "C"})
+    True
+
+    **string_greater_than_equals_path**
+
+    >>> rule = ChoiceRule("$.letter", string_greater_than_equals_path="$.compareLetter")
+    >>> rule.evaluate({"letter": "A", "compareLetter": "B"})
+    False
+    >>> rule.evaluate({"letter": "B", "compareLetter": "B"})
+    True
+    >>> rule.evaluate({"letter": "C", "compareLetter": "B"})
+    True
     """
 
     def __init__(self, variable: str, **data_test_expression: Any):
@@ -261,6 +281,17 @@ class ChoiceRule:
         if not (isinstance(string_less_than, str)):  # pragma: no cover
             raise ValueError("string_less_than_path must evaluate to a string value")
         return variable_value < string_less_than
+
+    def _string_greater_than_equals(self, variable_value: str) -> bool:
+        return variable_value >= self.data_test_expression.expression  # type: ignore
+
+    def _string_greater_than_equals_path(self, data: Any, variable_value: str) -> bool:
+        string_greater_than_equals = self.data_test_expression.expression.apply(data)  # type: ignore
+        if not (isinstance(string_greater_than_equals, str)):  # pragma: no cover
+            raise ValueError(
+                "string_greater_than_equals_path must evaluate to a string value"
+            )
+        return variable_value >= string_greater_than_equals
 
     def _numeric_greater_than_equals(self, variable_value: Union[float, int]) -> bool:
         return variable_value >= self.data_test_expression.expression  # type: ignore
