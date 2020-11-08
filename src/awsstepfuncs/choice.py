@@ -185,6 +185,26 @@ class ChoiceRule:
     True
     >>> rule.evaluate({"letter": "C", "compareLetter": "B"})
     True
+
+    **string_less_than_equals**
+
+    >>> rule = ChoiceRule("$.letter", string_less_than_equals="B")
+    >>> rule.evaluate({"letter": "A"})
+    True
+    >>> rule.evaluate({"letter": "B"})
+    True
+    >>> rule.evaluate({"letter": "C"})
+    False
+
+    **string_less_than_equals_path**
+
+    >>> rule = ChoiceRule("$.letter", string_less_than_equals_path="$.compareLetter")
+    >>> rule.evaluate({"letter": "A", "compareLetter": "B"})
+    True
+    >>> rule.evaluate({"letter": "B", "compareLetter": "B"})
+    True
+    >>> rule.evaluate({"letter": "C", "compareLetter": "B"})
+    False
     """
 
     def __init__(self, variable: str, **data_test_expression: Any):
@@ -212,21 +232,6 @@ class ChoiceRule:
 
         >>> ChoiceRule("$.career", string_equals="Pirate")
         ChoiceRule('$.career', string_equals='Pirate')
-
-        >>> ChoiceRule("$.career", string_equals_path="$.expectedCareer")
-        ChoiceRule('$.career', string_equals_path='$.expectedCareer')
-
-        >>> ChoiceRule("$.career", is_present=True)
-        ChoiceRule('$.career', is_present=True)
-
-        >>> ChoiceRule("$.rating", numeric_greater_than_equals=42)
-        ChoiceRule('$.rating', numeric_greater_than_equals=42)
-
-        >>> ChoiceRule("$.rating", numeric_greater_than_path="$.threshold")
-        ChoiceRule('$.rating', numeric_greater_than_path='$.threshold')
-
-        >>> ChoiceRule("$.rating", numeric_less_than=30)
-        ChoiceRule('$.rating', numeric_less_than=30)
 
         Returns:
             A string representing the Choice Rule.
@@ -292,6 +297,17 @@ class ChoiceRule:
                 "string_greater_than_equals_path must evaluate to a string value"
             )
         return variable_value >= string_greater_than_equals
+
+    def _string_less_than_equals(self, variable_value: str) -> bool:
+        return variable_value <= self.data_test_expression.expression  # type: ignore
+
+    def _string_less_than_equals_path(self, data: Any, variable_value: str) -> bool:
+        string_less_than_equals = self.data_test_expression.expression.apply(data)  # type: ignore
+        if not (isinstance(string_less_than_equals, str)):  # pragma: no cover
+            raise ValueError(
+                "string_less_than_equals_path must evaluate to a string value"
+            )
+        return variable_value <= string_less_than_equals
 
     def _numeric_greater_than_equals(self, variable_value: Union[float, int]) -> bool:
         return variable_value >= self.data_test_expression.expression  # type: ignore
