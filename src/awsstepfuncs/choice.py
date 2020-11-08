@@ -116,7 +116,41 @@ class ChoiceRule:
         ...
     ValueError: string_equals_path must evaluate to a string value
 
-    There are many different data-test expressions to choose from.
+    There are many different data-test expressions to choose from:
+
+    **string_equals**
+
+    >>> rule = ChoiceRule("$.letter", string_equals="B")
+    >>> rule.evaluate({"letter": "A"})
+    False
+    >>> rule.evaluate({"letter": "B"})
+    True
+
+    **string_equals_path**
+
+    >>> rule = ChoiceRule("$.letter", string_equals_path="$.compareLetter")
+    >>> rule.evaluate({"letter": "A", "compareLetter": "A"})
+    True
+    >>> rule.evaluate({"letter": "B", "compareLetter": "A"})
+    False
+
+    **string_greater_than**
+
+    >>> rule = ChoiceRule("$.letter", string_greater_than="B")
+    >>> rule.evaluate({"letter": "A"})
+    False
+    >>> rule.evaluate({"letter": "C"})
+    True
+
+    **string_greater_than_path**
+
+    >>> rule = ChoiceRule("$.letter", string_greater_than_path="$.compareLetter")
+    >>> rule.evaluate({"letter": "A", "compareLetter": "B"})
+    False
+    >>> rule.evaluate({"letter": "C", "compareLetter": "B"})
+    True
+
+    **string_less_than**
 
     >>> rule = ChoiceRule("$.letter", string_less_than="B")
     >>> rule.evaluate({"letter": "A"})
@@ -201,6 +235,15 @@ class ChoiceRule:
         if not (isinstance(string_equals, str)):
             raise ValueError("string_equals_path must evaluate to a string value")
         return variable_value == string_equals
+
+    def _string_greater_than(self, variable_value: str) -> bool:
+        return variable_value > self.data_test_expression.expression  # type: ignore
+
+    def _string_greater_than_path(self, data: Any, variable_value: str) -> bool:
+        string_greater_than = self.data_test_expression.expression.apply(data)  # type: ignore
+        if not (isinstance(string_greater_than, str)):  # pragma: no cover
+            raise ValueError("string_greater_than_path must evaluate to a string value")
+        return variable_value > string_greater_than
 
     def _string_less_than(self, variable_value: str) -> bool:
         return variable_value < self.data_test_expression.expression  # type: ignore
