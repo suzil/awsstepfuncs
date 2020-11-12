@@ -173,7 +173,7 @@ class AbstractInputPathOutputPathState(AbstractState):
     >>> PassState("Pass 1", input_path="$.dataset*")
     Traceback (most recent call last):
             ...
-    ValueError: Unsupported ReferencePath operator: "*"
+    ValueError: Unsupported Reference Path operator: "*"
     """
 
     def __init__(
@@ -435,7 +435,7 @@ class AbstractResultSelectorState(AbstractParametersState):
         >>> AbstractResultSelectorState._validate_result_selector({"ClusterId.$": "something invalid"})
         Traceback (most recent call last):
             ...
-        ValueError: ReferencePath must begin with "$"
+        ValueError: Reference Path must begin with "$"
 
         Args:
             result_selector: The result selector to validate.

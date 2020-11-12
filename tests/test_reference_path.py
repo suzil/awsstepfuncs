@@ -25,13 +25,13 @@ def test_apply_reference_path(reference_path, match, sample_data):
 
 
 def test_reference_path_unsupported_operator():
-    with pytest.raises(ValueError, match='Unsupported ReferencePath operator: "*"'):
+    with pytest.raises(ValueError, match='Unsupported Reference Path operator: "*"'):
         ReferencePath("$foo[*].baz")
 
 
 def test_reference_path_must_begin_with_dollar():
     with pytest.raises(
-        ValueError, match=re.escape('ReferencePath must begin with "$"')
+        ValueError, match=re.escape('Reference Path must begin with "$"')
     ):
         ReferencePath("foo[*].baz")
 
