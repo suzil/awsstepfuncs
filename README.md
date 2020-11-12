@@ -47,41 +47,6 @@ $ pip install awsstepfuncs
 
 To create visualizations, you need to have [GraphViz](https://graphviz.org/) installed on your system.
 
-## API coverage
-
-### States compilation and simulation
-
-| State        | Compile Coverage                                                                                            | Simulation Coverage                                                                                         |
-| ------------ | ----------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| **Fail**     | :heavy_check_mark:                                                                                          | :heavy_multiplication_x: Missing error handling                                                             |
-| **Succeed**  | :heavy_check_mark:                                                                                          | :heavy_multiplication_x: Should return its input instead of nothing                                         |
-| **Choice**   | :heavy_multiplication_x:                                                                                    | :heavy_multiplication_x:                                                                                    |
-| **Wait**     | :heavy_check_mark:                                                                                          | :heavy_check_mark:                                                                                          |
-| **Pass**     | :heavy_check_mark:                                                                                          | :heavy_check_mark:                                                                                          |
-| **Map**      | :heavy_check_mark:                                                                                          | :heavy_check_mark:                                                                                          |
-| **Parallel** | :heavy_multiplication_x:                                                                                    | :heavy_multiplication_x:                                                                                    |
-| **Task**     | :heavy_multiplication_x: Missing TimeoutSeconds, TimeoutSecondsPath, HeartbeatSeconds, HeartbeatSecondsPath | :heavy_multiplication_x: Missing TimeoutSeconds, TimeoutSecondsPath, HeartbeatSeconds, HeartbeatSecondsPath |
-
-### Input and output processing
-
-| Field              | Support                  |
-| ------------------ | ------------------------ |
-| **InputPath**      | :heavy_check_mark:       |
-| **OutputPath**     | :heavy_check_mark:       |
-| **Parameters**     | :heavy_multiplication_x: |
-| **ResultSelector** | :heavy_check_mark:       |
-| **ResultPath**     | :heavy_check_mark:       |
-
-
-### Errors
-
-TODO
-
-
-### Extra fields
-
-Currently lacking support for Context Objects, Payload Templates, and Parameters. When reporting coverage for states above, these fields are ignored.
-
 
 ## Usage
 
@@ -184,6 +149,42 @@ Terminating simulation of state machine
 ```
 
 As you can see from the standard output, each state is executed and data flows between the states ending with some final state output.
+
+
+## API coverage
+
+### States compilation and simulation
+
+| State        | Compile Coverage                                                                                            | Simulation Coverage                                                                                         |
+| ------------ | ----------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| **Fail**     | :heavy_check_mark:                                                                                          | :heavy_multiplication_x: Missing error handling                                                             |
+| **Succeed**  | :heavy_check_mark:                                                                                          | :heavy_multiplication_x: Should return its input instead of nothing                                         |
+| **Choice**   | :heavy_multiplication_x:                                                                                    | :heavy_multiplication_x:                                                                                    |
+| **Wait**     | :heavy_check_mark:                                                                                          | :heavy_check_mark:                                                                                          |
+| **Pass**     | :heavy_check_mark:                                                                                          | :heavy_check_mark:                                                                                          |
+| **Map**      | :heavy_check_mark:                                                                                          | :heavy_check_mark:                                                                                          |
+| **Parallel** | :heavy_multiplication_x:                                                                                    | :heavy_multiplication_x:                                                                                    |
+| **Task**     | :heavy_multiplication_x: Missing TimeoutSeconds, TimeoutSecondsPath, HeartbeatSeconds, HeartbeatSecondsPath | :heavy_multiplication_x: Missing TimeoutSeconds, TimeoutSecondsPath, HeartbeatSeconds, HeartbeatSecondsPath |
+
+### Input and output processing
+
+| Field              | Support                  |
+| ------------------ | ------------------------ |
+| **InputPath**      | :heavy_check_mark:       |
+| **OutputPath**     | :heavy_check_mark:       |
+| **Parameters**     | :heavy_multiplication_x: |
+| **ResultSelector** | :heavy_check_mark:       |
+| **ResultPath**     | :heavy_check_mark:       |
+
+
+### Errors
+
+TODO
+
+
+### Extra fields
+
+Currently lacking support for Context Objects, Payload Templates, and Parameters. When reporting coverage for states above, these fields are ignored.
 
 
 ## Development
