@@ -122,13 +122,34 @@ class FailState(TerminalStateMixin, AbstractState):
 class SucceedState(TerminalStateMixin, AbstractInputPathOutputPathState):
     """The Succeed State terminates with a mark of success.
 
-    The branch can either be:
-        - The entire state machine
-        - A branch of a Parallel State
-        - An iteration of a Map State
+    The Succeed State's output is the same as its input.
+
+    >>> succeed_state = SucceedState("Success!")
+    >>> state_machine = StateMachine(start_state=succeed_state)
+    >>> _ = state_machine.simulate(state_input={"Hello": "world!"})
+    Starting simulation of state machine
+    Running SucceedState('Success!')
+    State input: {'Hello': 'world!'}
+    State input after applying input path of $: {'Hello': 'world!'}
+    State output after applying output path of $: {'Hello': 'world!'}
+    State output: {'Hello': 'world!'}
+    Terminating simulation of state machine
     """
 
     state_type = "Succeed"
+
+    def _run(self, state_input: Any, resource_to_mock_fn: ResourceToMockFn) -> Any:
+        """Run the Succeed State.
+
+        Args:
+            state_input: The input state data.
+            resource_to_mock_fn: A mapping of resource URIs to mock functions to
+                use if the state performs a task.
+
+        Returns:
+            The output of the state, the same as its input.
+        """
+        return state_input
 
 
 class ChoiceState(TerminalStateMixin, AbstractInputPathOutputPathState):

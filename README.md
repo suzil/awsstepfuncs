@@ -37,6 +37,7 @@ state_machine.simulate(
   <img src="assets/state_machine.gif">
 </p>
 
+
 ## Installation
 
 ~~This package is available on PyPI:~~
@@ -92,6 +93,7 @@ The first use case is to compile the state machine to [Amazon States Language](h
 ```py
 state_machine.to_json("state_machine.json")
 ```
+
 ```json
 {
     "StartAt": "My Pass",
@@ -121,7 +123,6 @@ def mock_times_two(data):
     data["foo"] *= 2
     return data
 
-
 state_output = state_machine.simulate(
     state_input={"foo": 5, "bar": 1},
     resource_to_mock_fn={
@@ -131,6 +132,7 @@ state_output = state_machine.simulate(
 
 assert state_output == {"foo": 10, "bar": 1}
 ```
+
 ```
 Starting simulation of state machine
 Running PassState('My Pass')
@@ -153,18 +155,20 @@ As you can see from the standard output, each state is executed and data flows b
 
 ## API coverage
 
+
 ### States compilation and simulation
 
 | State        | Compile Coverage                                                                                            | Simulation Coverage                                                                                         |
 | ------------ | ----------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
 | **Fail**     | :heavy_check_mark:                                                                                          | :heavy_multiplication_x: Missing error handling                                                             |
-| **Succeed**  | :heavy_check_mark:                                                                                          | :heavy_multiplication_x: Should return its input instead of nothing                                         |
+| **Succeed**  | :heavy_check_mark:                                                                                          | :heavy_check_mark:                                                                                          |
 | **Choice**   | :heavy_multiplication_x:                                                                                    | :heavy_multiplication_x:                                                                                    |
 | **Wait**     | :heavy_check_mark:                                                                                          | :heavy_check_mark:                                                                                          |
 | **Pass**     | :heavy_check_mark:                                                                                          | :heavy_check_mark:                                                                                          |
 | **Map**      | :heavy_check_mark:                                                                                          | :heavy_check_mark:                                                                                          |
 | **Parallel** | :heavy_multiplication_x:                                                                                    | :heavy_multiplication_x:                                                                                    |
 | **Task**     | :heavy_multiplication_x: Missing TimeoutSeconds, TimeoutSecondsPath, HeartbeatSeconds, HeartbeatSecondsPath | :heavy_multiplication_x: Missing TimeoutSeconds, TimeoutSecondsPath, HeartbeatSeconds, HeartbeatSecondsPath |
+
 
 ### Input and output processing
 
