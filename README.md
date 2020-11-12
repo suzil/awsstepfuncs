@@ -85,32 +85,51 @@ Currently lacking support for Context Objects, Payload Templates, and Parameters
 
 ## Usage
 
-TODO: Add a better tutorial
+Everything you need in this library can be imported like so:
 
 ```py
-from awsstepfuncs import TaskState, PassState, StateMachine
+from awsstepfuncs import *
+```
 
-# Define some states
+Now you can define some [states](https://states-language.net/#states-fieldshttps://docs.aws.amazon.com/step-functions/latest/dg/concepts-states.html).
+
+```py
 pass_state = PassState(
     "My Pass", comment="Passes its input to its output without performing work"
 )
-times_two_resource = "arn:aws:lambda:ap-southeast-2:710187714096:function:DivideNumbers"
+times_two_resource = "arn:aws:lambda:ap-southeast-2:710187714096:function:TimesTwo"
 task_state = TaskState(
     "My Task",
     comment="Times two task",
     resource=times_two_resource,
 )
+```
 
-# Define a state machine that orchestrates the states
+Next, define how the states should transition to one another. You can use the `>>` operator to declare that one state transitions to another state.
+
+```py
 pass_state >> task_state
+```
+
+Now you can define the state machine by declaring the starting state.
+
+```py
 state_machine = StateMachine(start_state=pass_state)
+```
 
-# Compile the state machine to Amazon States Language
-state_machine.to_json("state_machine.json")
-
-# Simulate the state machine by executing it, use mock functions for tasks
+There are two complementary use cases for using `awsstepfuncs`.
 
 
+### Compiling to Amazon States Language
+
+The first use case is to compile the state machine to [Amazon States Language](https://docs.aws.amazon.com/step-functions/latest/dg/concepts-amazon-states-language.html) to a JSON output that can be for a real AWS Step Functions application.
+
+
+### Simulation
+
+The second use case is to simulate the state machine by defining mock functions for any resource and passing in some input data. The simulation of the state machine allows you to easily debug what's going on and if your state machine works as expected.
+
+```py
 def mock_times_two(data):
     data["foo"] *= 2
     return data
@@ -125,6 +144,24 @@ state_output = state_machine.simulate(
 
 assert state_output == {"foo": 10, "bar": 1}
 ```
+```
+Starting simulation of state machine
+Running PassState('My Pass')
+State input: {'foo': 5, 'bar': 1}
+State input after applying input path of $: {'foo': 5, 'bar': 1}
+Output from applying result path of $: {'foo': 5, 'bar': 1}
+State output after applying output path of $: {'foo': 5, 'bar': 1}
+State output: {'foo': 5, 'bar': 1}
+Running TaskState('My Task')
+State input: {'foo': 5, 'bar': 1}
+State input after applying input path of $: {'foo': 5, 'bar': 1}
+Output from applying result path of $: {'foo': 10, 'bar': 1}
+State output after applying output path of $: {'foo': 10, 'bar': 1}
+State output: {'foo': 10, 'bar': 1}
+Terminating simulation of state machine
+```
+
+As you can see from the standard output, each state is executed and data flows between the states ending with some final state output.
 
 
 ## Development
