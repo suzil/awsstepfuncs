@@ -124,6 +124,28 @@ There are two complementary use cases for using `awsstepfuncs`.
 
 The first use case is to compile the state machine to [Amazon States Language](https://docs.aws.amazon.com/step-functions/latest/dg/concepts-amazon-states-language.html) to a JSON output that can be for a real AWS Step Functions application.
 
+```py
+state_machine.to_json("state_machine.json")
+```
+```json
+{
+    "StartAt": "My Pass",
+    "States": {
+        "My Pass": {
+            "Type": "Pass",
+            "Comment": "Passes its input to its output without performing work",
+            "Next": "My Task"
+        },
+        "My Task": {
+            "Type": "Task",
+            "Comment": "Times two task",
+            "End": true,
+            "Resource": "arn:aws:lambda:ap-southeast-2:710187714096:function:TimesTwo"
+        }
+    }
+}
+```
+
 
 ### Simulation
 
