@@ -113,8 +113,9 @@ class StateMachine:
 
     def simulate(  # noqa: CCR001
         self,
-        *,
         state_input: dict = None,
+        /,
+        *,
         resource_to_mock_fn: ResourceToMockFn = None,
         show_visualization: bool = False,
     ) -> Any:

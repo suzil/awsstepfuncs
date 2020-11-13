@@ -47,7 +47,7 @@ def test_task_state(compile_state_machine, dummy_resource):
     with contextlib.closing(StringIO()) as fp:
         with redirect_stdout(fp):
             state_output = state_machine.simulate(
-                state_input={"foo": 5, "bar": 1},
+                {"foo": 5, "bar": 1},
                 resource_to_mock_fn={dummy_resource: mock_fn},
             )
         stdout = [line for line in fp.getvalue().split("\n") if line]
@@ -157,7 +157,7 @@ def test_result_path_only_state_output(compile_state_machine, dummy_resource):
         return output_text
 
     state_output = state_machine.simulate(
-        state_input=state_input,
+        state_input,
         resource_to_mock_fn={dummy_resource: mock_fn},
     )
 
@@ -194,7 +194,7 @@ def test_result_path_only_state_input(compile_state_machine, dummy_resource):
         return "Hello, AWS Step Functions!"
 
     state_output = state_machine.simulate(
-        state_input=state_input,
+        state_input,
         resource_to_mock_fn={dummy_resource: mock_fn},
     )
 
@@ -236,7 +236,7 @@ def test_result_path_keep_both(compile_state_machine, dummy_resource):
         return output_text
 
     state_output = state_machine.simulate(
-        state_input=state_input,
+        state_input,
         resource_to_mock_fn={dummy_resource: mock_fn},
     )
 
