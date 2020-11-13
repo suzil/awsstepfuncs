@@ -152,7 +152,7 @@ class AbstractInputPathOutputPathState(AbstractState):
     >>> pass_state = PassState("Pass 1", input_path=input_path, output_path=output_path)
     >>> state_machine = StateMachine(start_state=pass_state)
     >>> _ = state_machine.simulate(
-    ...     state_input={
+    ...     {
     ...         "comment": "Example for InputPath.",
     ...         "dataset1": {"val1": 1, "val2": 2, "val3": 3},
     ...         "dataset2": {"val1": "a", "val2": "b", "val3": "c"},

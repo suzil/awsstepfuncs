@@ -15,7 +15,7 @@ def test_wait_state_later_timestamp():
     # Simulate the state machine
     with contextlib.closing(StringIO()) as fp:
         with redirect_stdout(fp):
-            state_machine.simulate(state_input=state_input)
+            state_machine.simulate(state_input)
         stdout = fp.getvalue()
 
     assert f"Waiting until {timestamp.isoformat()}" in stdout

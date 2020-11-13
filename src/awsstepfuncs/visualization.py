@@ -84,7 +84,7 @@ class Visualization:
     ... )
     >>> state_machine = StateMachine(start_state=choice_state)
     >>> _ = state_machine.simulate(
-    ...     state_input={"type": "Private", "value": 22}, show_visualization=True
+    ...     {"type": "Private", "value": 22}, show_visualization=True
     ... )
     Starting simulation of state machine
     Running ChoiceState('DispatchEvent')
@@ -137,7 +137,7 @@ class Visualization:
     ... )
     >>> state_machine = StateMachine(start_state=choice_state)
     >>> _ = state_machine.simulate(
-    ...     state_input={"type": "Private", "value": 102, "auditThreshold": 150},
+    ...     {"type": "Private", "value": 102, "auditThreshold": 150},
     ...     show_visualization=True
     ... )
     Starting simulation of state machine

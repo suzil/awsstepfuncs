@@ -126,7 +126,7 @@ class SucceedState(TerminalStateMixin, AbstractInputPathOutputPathState):
 
     >>> succeed_state = SucceedState("Success!")
     >>> state_machine = StateMachine(start_state=succeed_state)
-    >>> _ = state_machine.simulate(state_input={"Hello": "world!"})
+    >>> _ = state_machine.simulate({"Hello": "world!"})
     Starting simulation of state machine
     Running SucceedState('Success!')
     State input: {'Hello': 'world!'}
@@ -192,7 +192,7 @@ class ChoiceState(TerminalStateMixin, AbstractInputPathOutputPathState):
     ...     default=record_event_state,
     ... )
     >>> state_machine = StateMachine(start_state=choice_state)
-    >>> _ = state_machine.simulate(state_input={"type": "Private", "value": 22})
+    >>> _ = state_machine.simulate({"type": "Private", "value": 22})
     Starting simulation of state machine
     Running ChoiceState('DispatchEvent')
     State input: {'type': 'Private', 'value': 22}
@@ -209,7 +209,7 @@ class ChoiceState(TerminalStateMixin, AbstractInputPathOutputPathState):
 
     If no choice evaluates to true, then the default will be chosen.
 
-    >>> _ = state_machine.simulate(state_input={
+    >>> _ = state_machine.simulate({
     ...     "type": "Private",
     ...     "value": 102,
     ...     "auditThreshold": 150,
@@ -257,7 +257,7 @@ class ChoiceState(TerminalStateMixin, AbstractInputPathOutputPathState):
     ...     ],
     ... )
     >>> state_machine = StateMachine(start_state=choice_state)
-    >>> _ = state_machine.simulate(state_input={
+    >>> _ = state_machine.simulate({
     ...     "type": "Private",
     ...     "value": 102,
     ...     "auditThreshold": 150,
@@ -379,7 +379,7 @@ class WaitState(AbstractNextOrEndState):
 
     >>> wait_state = WaitState("Wait!", seconds_path="$.numSeconds")
     >>> state_machine = StateMachine(start_state=wait_state)
-    >>> state_output = state_machine.simulate(state_input={"numSeconds": 1})
+    >>> state_output = state_machine.simulate({"numSeconds": 1})
     Starting simulation of state machine
     Running WaitState('Wait!', seconds_path='$.numSeconds')
     State input: {'numSeconds': 1}
@@ -395,7 +395,7 @@ class WaitState(AbstractNextOrEndState):
 
     >>> wait_state = WaitState("Wait!", seconds_path="$.numSeconds")
     >>> state_machine = StateMachine(start_state=wait_state)
-    >>> state_output = state_machine.simulate(state_input={"numSeconds": "hello"})
+    >>> state_output = state_machine.simulate({"numSeconds": "hello"})
     Starting simulation of state machine
     Running WaitState('Wait!', seconds_path='$.numSeconds')
     State input: {'numSeconds': 'hello'}
@@ -409,7 +409,7 @@ class WaitState(AbstractNextOrEndState):
 
     >>> wait_state = WaitState("Wait!", timestamp_path="$.meta.timeToWait")
     >>> state_machine = StateMachine(start_state=wait_state)
-    >>> state_output = state_machine.simulate(state_input={"meta": {"timeToWait": "2020-01-01T00:00:00"}})
+    >>> state_output = state_machine.simulate({"meta": {"timeToWait": "2020-01-01T00:00:00"}})
     Starting simulation of state machine
     Running WaitState('Wait!', timestamp_path='$.meta.timeToWait')
     State input: {'meta': {'timeToWait': '2020-01-01T00:00:00'}}
@@ -651,7 +651,7 @@ class PassState(AbstractParametersState):
     >>> result = {"Hello": "world!"}
     >>> pass_state = PassState("Passing", result=result, result_path="$.result")
     >>> state_machine = StateMachine(start_state=pass_state)
-    >>> _ = state_machine.simulate(state_input={"sum": 42})
+    >>> _ = state_machine.simulate({"sum": 42})
     Starting simulation of state machine
     Running PassState('Passing')
     State input: {'sum': 42}
@@ -824,7 +824,7 @@ class MapState(AbstractRetryCatchState):
     ...     state_input["quantity"] *= 2
     ...     return state_input
     >>> _ = state_machine.simulate(
-    ...     state_input=state_input,
+    ...     state_input,
     ...     resource_to_mock_fn={resource: mock_fn},
     ... )
     Starting simulation of state machine
@@ -887,7 +887,7 @@ class MapState(AbstractRetryCatchState):
     ... )
     >>> state_machine = StateMachine(start_state=map_state)
     >>> _ = state_machine.simulate(
-    ...     state_input=state_input,
+    ...     state_input,
     ...     resource_to_mock_fn={resource: mock_fn},
     ... )
     Starting simulation of state machine
@@ -964,8 +964,6 @@ class MapState(AbstractRetryCatchState):
         state_output = []
         for item in items:
             state_output.append(
-                self.iterator.simulate(
-                    state_input=item, resource_to_mock_fn=resource_to_mock_fn
-                )
+                self.iterator.simulate(item, resource_to_mock_fn=resource_to_mock_fn)
             )
         return state_output

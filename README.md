@@ -124,7 +124,7 @@ def mock_times_two(data):
     return data
 
 state_output = state_machine.simulate(
-    state_input={"foo": 5, "bar": 1},
+    {"foo": 5, "bar": 1},
     resource_to_mock_fn={
         times_two_resource: mock_times_two,
     },
