@@ -101,8 +101,8 @@ class Visualization:
     Running SucceedState('Success!')
     State input: {'type': 'Private', 'value': 22}
     State input after applying input path of $: {'type': 'Private', 'value': 22}
-    State output after applying output path of $: {}
-    State output: {}
+    State output after applying output path of $: {'type': 'Private', 'value': 22}
+    State output: {'type': 'Private', 'value': 22}
     Terminating simulation of state machine
 
     .. figure:: ../../../assets/choice_visualization.gif
