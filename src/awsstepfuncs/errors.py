@@ -57,9 +57,12 @@ def string_to_error(error_string: str) -> Optional[Type[StateSimulationError]]:
     """Convert an error string to an error class.
 
     >>> string_to_error("States.Timeout")
-    <class 'awsstepfuncs.errors.TimeoutError'>
+    <class 'awsstepfuncs.errors.StateTimeoutError'>
 
     If no value is returned, then the error cannot be simulated.
+
+    >>> string_to_error("States.Permissions") is None
+    True
 
     >>> string_to_error("Invalid error string")
     Traceback (most recent call last):
