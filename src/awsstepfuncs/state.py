@@ -773,19 +773,27 @@ class TaskState(AbstractRetryCatchState):
         compiled["Resource"] = self.resource
         return compiled
 
-    def _execute(self, state_input: Any, resource_to_mock_fn: ResourceToMockFn) -> Any:
+    def _execute(
+        self,
+        state_input: Any,
+        resource_to_mock_fn: ResourceToMockFn,
+        parameters: Dict[str, Any] = None,
+    ) -> Any:
         """Execute the Task State.
 
         Args:
             state_input: The input state data.
             resource_to_mock_fn: A mapping of resource URIs to mock functions to
                 use if the state performs a task.
+            parameters: Parameters are passed as the context to the mock
+                function.
 
         Returns:
             The output of the state from executing the mock function given the
             state's input.
         """
-        return resource_to_mock_fn[self.resource](state_input)
+        # TODO: Implement parameters
+        return resource_to_mock_fn[self.resource](state_input, parameters or {})
 
 
 class ParallelState(AbstractRetryCatchState):
@@ -821,9 +829,9 @@ class MapState(AbstractRetryCatchState):
     ...        ],
     ...    },
     ... }
-    >>> def mock_fn(state_input):
-    ...     state_input["quantity"] *= 2
-    ...     return state_input
+    >>> def mock_fn(event, context):
+    ...     event["quantity"] *= 2
+    ...     return event
     >>> _ = state_machine.simulate(
     ...     state_input,
     ...     resource_to_mock_fn={resource: mock_fn},

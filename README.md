@@ -25,7 +25,7 @@ task_state.add_catcher(["States.ALL"], next_state=pass_state)
 
 state_machine = StateMachine(start_state=task_state)
 
-def failure_mock_fn(_):
+def failure_mock_fn(event, context):
     assert False
 
 state_machine.simulate(
@@ -119,9 +119,9 @@ state_machine.to_json("state_machine.json")
 The second use case is to simulate the state machine by defining mock functions for any resource and passing in some input data. The simulation of the state machine allows you to easily debug what's going on and if your state machine works as expected.
 
 ```py
-def mock_times_two(data):
-    data["foo"] *= 2
-    return data
+def mock_times_two(event, context):
+    event["foo"] *= 2
+    return event
 
 state_output = state_machine.simulate(
     {"foo": 5, "bar": 1},
