@@ -197,6 +197,7 @@ All errors are supported for compilation, but only a subset can be simulated. Fo
 | **States.NoChoiceMatched**        | :heavy_multiplication_x: (planned)      |
 | **States.IntrinsicFailure**       | :heavy_multiplication_x: (not sure yet) |
 
+
 ### Extra fields
 
 Currently lacking support for Context Objects, Payload Templates, and Parameters. When reporting coverage for states above, these fields are ignored.
