@@ -33,7 +33,12 @@ from awsstepfuncs.abstract_state import (
     AbstractState,
 )
 from awsstepfuncs.choice import AbstractChoice
-from awsstepfuncs.errors import AWSStepFuncsValueError
+from awsstepfuncs.errors import (
+    AWSStepFuncsValueError,
+    NoChoiceMatchedError,
+    StateSimulationError,
+    TaskFailedError,
+)
 from awsstepfuncs.reference_path import ReferencePath
 from awsstepfuncs.state_machine import StateMachine
 from awsstepfuncs.types import ResourceToMockFn
@@ -320,7 +325,7 @@ class ChoiceState(TerminalStateMixin, AbstractInputPathOutputPathState):
                 use if the state performs a task.
 
         Raises:
-            AWSStepFuncsValueError: Raised when no choice is true and no default is set.
+            NoChoiceMatchedError: Raised when no choice is true and no default is set.
 
         Returns:
             The output of the state.
@@ -335,7 +340,7 @@ class ChoiceState(TerminalStateMixin, AbstractInputPathOutputPathState):
                 print("Choosing next state by the default set")
                 self.next_state = self.default
             else:
-                raise AWSStepFuncsValueError("No choice is true and no default set")
+                raise NoChoiceMatchedError("No choice is true and no default set")
 
 
 class WaitState(AbstractNextOrEndState):
@@ -546,7 +551,7 @@ class WaitState(AbstractNextOrEndState):
                 use if the state performs a task.
 
         Raises:
-            AWSStepFuncsValueError: Raised when seconds_path doesn't point to an integer.
+            StateSimulationError: Raised when seconds_path doesn't point to an integer.
 
         Returns:
             The output of the state, same as input for the Wait State.
@@ -560,7 +565,7 @@ class WaitState(AbstractNextOrEndState):
         elif (seconds_path := self.seconds_path) is not None:
             seconds = seconds_path.apply(state_input)
             if not isinstance(seconds, int):
-                raise AWSStepFuncsValueError("seconds_path should point to an integer")
+                raise StateSimulationError("seconds_path should point to an integer")
             self._wait_seconds(seconds)
 
         elif (timestamp_path := self.timestamp_path) is not None:
@@ -792,12 +797,22 @@ class TaskState(AbstractRetryCatchState):
             resource_to_mock_fn: A mapping of resource URIs to mock functions to
                 use if the state performs a task.
 
+        Raises:
+            TaskFailedError: Raised if there is an exception when executing the
+                mock function.
+
         Returns:
             The output of the state from executing the mock function given the
             state's input.
         """
         # TODO: Add mock context?
-        return resource_to_mock_fn[self.resource](state_input, context=None)
+        mock_fn = resource_to_mock_fn[self.resource]
+        try:
+            state_output = mock_fn(state_input, context=None)
+        except Exception as exc:
+            raise TaskFailedError(str(exc))
+        else:
+            return state_output
 
 
 class ParallelState(AbstractRetryCatchState):
@@ -963,7 +978,8 @@ class MapState(AbstractRetryCatchState):
                 use if the state performs a task.
 
         Raises:
-            AWSStepFuncsValueError: Raised when ItemsPath does not return a list.
+            StateSimulationError: Raised when items_path does not evaluate to a
+                list.
 
         Returns:
             The output of the state by running the iterator state machine for
@@ -972,7 +988,7 @@ class MapState(AbstractRetryCatchState):
         items = ReferencePath(self.items_path).apply(state_input)
         print(f"Items after applying items_path of {self.items_path}: {items}")
         if not isinstance(items, list):
-            raise AWSStepFuncsValueError("items_path must yield a list")
+            raise StateSimulationError("items_path must yield a list")
 
         state_output = []
         for item in items:

@@ -6,10 +6,9 @@ from __future__ import annotations
 
 import re
 from abc import ABC
-from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Type, Union
 
-from awsstepfuncs.errors import AWSStepFuncsValueError
+from awsstepfuncs.errors import AWSStepFuncsValueError, StateSimulationError
 from awsstepfuncs.reference_path import ReferencePath
 from awsstepfuncs.types import ResourceToMockFn
 
@@ -505,33 +504,78 @@ class AbstractResultSelectorState(AbstractParametersState):
         return new_state_output
 
 
-@dataclass
-class Retrier:
+class AbstractErrorHandler(ABC):
+    """Error handlers compose of Retriers and Catchers."""
+
+    def __init__(self, error_equals: List[str]):
+        """Initialize child classes with error_equals handled.
+
+        Args:
+            error_equals: A list of error names.
+        """
+        self.error_equals: List[Union[str, Type[StateSimulationError]]] = [
+            error_class
+            if (error_class := StateSimulationError.from_string(error_string))
+            else error_string
+            for error_string in error_equals
+        ]
+
+    def compile(self) -> Dict[str, Any]:  # noqa: A003
+        """Compile the error handler with error_equals handled.
+
+        Returns:
+            A compilation with error_equals compiled.
+        """
+        return {
+            "ErrorEquals": [
+                error if isinstance(error, str) else error.error_string
+                for error in self.error_equals
+            ]
+        }
+
+
+class Retrier(AbstractErrorHandler):
     """Used to retry a failed state given the error names."""
 
-    error_equals: List[str]
-    interval_seconds: Optional[int] = None
-    backoff_rate: Optional[float] = None
-    max_attempts: Optional[int] = None
+    def __init__(
+        self,
+        error_equals: List[str],
+        interval_seconds: Optional[int] = None,
+        backoff_rate: Optional[float] = None,
+        max_attempts: Optional[int] = None,
+    ) -> None:
+        """Initialize a Retrier.
 
-    def __post_init__(self) -> None:
-        """Run validation on input values.
+        Args:
+            error_equals: A list of error names.
+            interval_seconds: The number of seconds before the first retry
+                attempt. Defaults to 1 if not specified.
+            backoff_rate: A number which is the multiplier that increases the
+                retry interval on each attempt. Defaults to 2.0 if not specified.
+            max_attempts: The maximum number of retry to attempt. Defaults to 3
+                if not specified. A value of zero means that the error should never
+                be retried.
 
         Raises:
             AWSStepFuncsValueError: Raised when interval_seconds is negative.
             AWSStepFuncsValueError: Raised when backoff_rate is less than 1.0.
             AWSStepFuncsValueError: Raised when max_attempts is negative.
         """
-        if self.interval_seconds and self.interval_seconds <= 0:  # pragma: no cover
+        if interval_seconds and interval_seconds <= 0:  # pragma: no cover
             raise AWSStepFuncsValueError("interval_seconds must be a positive integer")
-        if self.backoff_rate and self.backoff_rate < 1:  # pragma: no cover
+        if backoff_rate and backoff_rate < 1:  # pragma: no cover
             raise AWSStepFuncsValueError(
                 "backoff_rate must be greater than or equal to 1.0"
             )
-        if self.max_attempts is not None and self.max_attempts < 0:  # pragma: no cover
+        if max_attempts is not None and max_attempts < 0:  # pragma: no cover
             raise AWSStepFuncsValueError(
                 "max_attempts must be zero or a positive integer"
             )
+
+        super().__init__(error_equals)
+        self.interval_seconds = interval_seconds
+        self.backoff_rate = backoff_rate
+        self.max_attempts = max_attempts
 
     def compile(self) -> Dict[str, Union[List[str], int, float]]:  # noqa: A003
         """Compile the Retrier to Amazon States Language.
@@ -539,9 +583,7 @@ class Retrier:
         Returns:
             A Retrier in Amazon States Language.
         """
-        compiled: Dict[str, Union[List[str], int, float]] = {
-            "ErrorEquals": self.error_equals
-        }
+        compiled: Dict[str, Union[List[str], int, float]] = super().compile()
         if interval_seconds := self.interval_seconds:  # pragma: no cover
             compiled["IntervalSeconds"] = interval_seconds
         if backoff_rate := self.backoff_rate:  # pragma: no cover
@@ -551,12 +593,18 @@ class Retrier:
         return compiled
 
 
-@dataclass
-class Catcher:
+class Catcher(AbstractErrorHandler):
     """Used to go from an errored state to another state."""
 
-    error_equals: List[str]
-    next_state: AbstractState
+    def __init__(self, error_equals: List[str], next_state: AbstractState):
+        """Initialize a Catcher.
+
+        Args:
+            error_equals: A list of error names.
+            next_state: The state to transition to if the Catcher is matched.
+        """
+        super().__init__(error_equals)
+        self.next_state = next_state
 
     def compile(self) -> Dict[str, Union[List[str], str]]:  # noqa: A003
         """Compile the Catcher to Amazon States Language.
@@ -564,7 +612,7 @@ class Catcher:
         Returns:
             A Catcher in Amazon States Language.
         """
-        compiled: Dict[str, Union[List[str], str]] = {"ErrorEquals": self.error_equals}
+        compiled: Dict[str, Union[List[str], str]] = super().compile()
         compiled["Next"] = self.next_state.name
         return compiled
 

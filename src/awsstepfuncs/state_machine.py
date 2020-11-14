@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Any, Dict, Optional, Set, Tuple, Union
 
 from awsstepfuncs.abstract_state import AbstractRetryCatchState, AbstractState
-from awsstepfuncs.errors import AWSStepFuncsValueError
+from awsstepfuncs.errors import AWSStepFuncsValueError, StateSimulationError
 from awsstepfuncs.types import ResourceToMockFn
 from awsstepfuncs.visualization import Visualization
 
@@ -194,7 +194,7 @@ class StateMachine:
         """
         try:
             state_output = state.simulate(state_input, resource_to_mock_fn) or {}
-        except Exception:
+        except StateSimulationError:
             print("Error encountered in state, checking for catchers")
             next_state = self._check_for_catchers(state)
             state_output = {}
@@ -218,7 +218,7 @@ class StateMachine:
         """
         if isinstance(state, AbstractRetryCatchState):
             for catcher in state.catchers:
-                if "States.ALL" in catcher.error_equals:
+                if StateSimulationError in catcher.error_equals:
                     print(f"Found catcher, transitioning to {catcher.next_state}")
                     return catcher.next_state
             else:
