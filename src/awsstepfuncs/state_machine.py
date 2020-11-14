@@ -218,7 +218,7 @@ class StateMachine:
         """
         if isinstance(state, AbstractRetryCatchState):
             for catcher in state.catchers:
-                if "States.ALL" in catcher.error_equals:
+                if StateSimulationError in catcher.error_equals:
                     print(f"Found catcher, transitioning to {catcher.next_state}")
                     return catcher.next_state
             else:

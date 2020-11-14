@@ -62,20 +62,8 @@ class StateSimulationError(AWSStepFuncsError):
         >>> StateSimulationError.from_string("States.Permissions") is None
         True
 
-        An `AWSStepFuncsValueError` will be raised if the error string is
-        invalid.
-
-        >>> StateSimulationError.from_string("Invalid error string")
-        Traceback (most recent call last):
-            ...
-        awsstepfuncs.errors.AWSStepFuncsValueError: "Invalid error string" is not a valid error name
-
         Args:
             error_string: The error string, such as "States.ALL".
-
-        Raises:
-            AWSStepFuncsValueError: Raised when the error_string provided is
-                invalid.
 
         Returns:
             The error class if the error can be simulated.
@@ -89,15 +77,6 @@ class StateSimulationError(AWSStepFuncsError):
                 NoChoiceMatchedError,
             }
         }
-        compilation_only_errors = {
-            "States.Permissions",
-            "States.ResultPathMatchFailure",
-            "States.ParameterPathFailure",
-            "States.BranchFailed",
-            "States.IntrinsicFailure",
-        }
-        if error_string not in set(mapping) | compilation_only_errors:
-            raise AWSStepFuncsValueError(f'"{error_string}" is not a valid error name')
         return mapping.get(error_string)
 
 
