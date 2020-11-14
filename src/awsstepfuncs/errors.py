@@ -36,8 +36,14 @@ class AWSStepFuncsValueError(AWSStepFuncsError):
 class StateSimulationError(AWSStepFuncsError):
     """Raised when there is an error while simulating a state.
 
-    Do not raise this: this is merely meant to group together all state
-    simulation errors.
+    Generally a more specific error should be raised, but the
+    StateSimulationError may be raised if there is no other error that seems to
+    apply (potentially due to my lack of understanding).
+
+    For example, the Wait State can have a reference path evaluated on the state
+    input that doesn't lead to a valid value. For this case, right now we just
+    raise the generic StateSimulationError. TODO: What error occurs when this
+    actually happens in AWS Step Functions?
 
     Check this table for a list of state simulation errors: https://states-language.net/spec.html#appendix-a
     """
@@ -80,6 +86,7 @@ class StateSimulationError(AWSStepFuncsError):
                 StateSimulationError,
                 StateTimeoutError,
                 TaskFailedError,
+                NoChoiceMatchedError,
             }
         }
         compilation_only_errors = {
@@ -87,7 +94,6 @@ class StateSimulationError(AWSStepFuncsError):
             "States.ResultPathMatchFailure",
             "States.ParameterPathFailure",
             "States.BranchFailed",
-            "States.NoChoiceMatched",
             "States.IntrinsicFailure",
         }
         if error_string not in set(mapping) | compilation_only_errors:
@@ -109,3 +115,9 @@ class TaskFailedError(StateSimulationError):
     """Raised when the task has failed during the execution."""
 
     error_string = "States.TaskFailed"
+
+
+class NoChoiceMatchedError(StateSimulationError):
+    """Raised when the task has failed during the execution."""
+
+    error_string = "States.NoChoiceMatched"
