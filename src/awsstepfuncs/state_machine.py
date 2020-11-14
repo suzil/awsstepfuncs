@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any, Dict, Optional, Set, Tuple, Union
 
 from awsstepfuncs.abstract_state import AbstractRetryCatchState, AbstractState
+from awsstepfuncs.errors import AWSStepFuncsValueError
 from awsstepfuncs.types import ResourceToMockFn
 from awsstepfuncs.visualization import Visualization
 
@@ -33,12 +34,12 @@ class StateMachine:
                 "1.0".
 
         Raises:
-            ValueError: Raised when there are duplicate state names.
+            AWSStepFuncsValueError: Raised when there are duplicate state names.
         """
         self.start_state = start_state
 
         if not self._has_unique_names():
-            raise ValueError(
+            raise AWSStepFuncsValueError(
                 "Duplicate names detected in state machine. Names must be unique"
             )
 

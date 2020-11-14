@@ -9,6 +9,7 @@ from abc import ABC
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Union
 
+from awsstepfuncs.errors import AWSStepFuncsValueError
 from awsstepfuncs.reference_path import ReferencePath
 from awsstepfuncs.types import ResourceToMockFn
 
@@ -41,10 +42,10 @@ class AbstractState(ABC):
             comment: A human-readable description of the state.
 
         Raises:
-            ValueError: Raised when the state name exceeds 128 characters.
+            AWSStepFuncsValueError: Raised when the state name exceeds 128 characters.
         """
         if len(name) > MAX_STATE_NAME_LENGTH:
-            raise ValueError(
+            raise AWSStepFuncsValueError(
                 f"State name cannot exceed {MAX_STATE_NAME_LENGTH} characters"
             )
 
@@ -173,7 +174,7 @@ class AbstractInputPathOutputPathState(AbstractState):
     >>> PassState("Pass 1", input_path="$.dataset*")
     Traceback (most recent call last):
             ...
-    ValueError: Unsupported Reference Path operator: "*"
+    awsstepfuncs.errors.AWSStepFuncsValueError: Unsupported Reference Path operator: "*"
     """
 
     def __init__(
@@ -404,13 +405,13 @@ class AbstractResultSelectorState(AbstractParametersState):
             kwargs: Kwargs to pass to parent classes.
 
         Raises:
-            ValueError: Raised when the result selector is invalid.
+            AWSStepFuncsValueError: Raised when the result selector is invalid.
         """
         super().__init__(*args, **kwargs)
         if result_selector:
             try:
                 self._validate_result_selector(result_selector)
-            except ValueError:
+            except AWSStepFuncsValueError:
                 raise
 
         self.result_selector = result_selector
@@ -421,32 +422,34 @@ class AbstractResultSelectorState(AbstractParametersState):
 
         Here is a valid result selector:
 
-        AbstractResultSelectorState._validate_result_selector({"ClusterId.$": "$.output.ClusterId", "ResourceType.$": "$.resourceType"})
+        >>> AbstractResultSelectorState._validate_result_selector({"ClusterId.$": "$.output.ClusterId", "ResourceType.$": "$.resourceType"})
 
         Result selector keys must end with ".$".
 
         >>> AbstractResultSelectorState._validate_result_selector({"ClusterId": "$.output.ClusterId"})
         Traceback (most recent call last):
             ...
-        ValueError: All resource selector keys must end with .$
+        awsstepfuncs.errors.AWSStepFuncsValueError: All resource selector keys must end with .$
 
         Values must be valid ReferencePaths.
 
         >>> AbstractResultSelectorState._validate_result_selector({"ClusterId.$": "something invalid"})
         Traceback (most recent call last):
             ...
-        ValueError: Reference Path must begin with "$"
+        awsstepfuncs.errors.AWSStepFuncsValueError: Reference Path must begin with "$"
 
         Args:
             result_selector: The result selector to validate.
 
         Raises:
-            ValueError: Raised when a key doesn't end with ".$".
-            ValueError: Raised when a ReferencePath is invalid.
+            AWSStepFuncsValueError: Raised when a key doesn't end with ".$".
+            AWSStepFuncsValueError: Raised when a ReferencePath is invalid.
         """
         for key, reference_path in result_selector.items():
             if not key[-2:] == ".$":
-                raise ValueError("All resource selector keys must end with .$")
+                raise AWSStepFuncsValueError(
+                    "All resource selector keys must end with .$"
+                )
 
             ReferencePath(reference_path)
 
@@ -515,16 +518,20 @@ class Retrier:
         """Run validation on input values.
 
         Raises:
-            ValueError: Raised when interval_seconds is negative.
-            ValueError: Raised when backoff_rate is less than 1.0.
-            ValueError: Raised when max_attempts is negative.
+            AWSStepFuncsValueError: Raised when interval_seconds is negative.
+            AWSStepFuncsValueError: Raised when backoff_rate is less than 1.0.
+            AWSStepFuncsValueError: Raised when max_attempts is negative.
         """
         if self.interval_seconds and self.interval_seconds <= 0:  # pragma: no cover
-            raise ValueError("interval_seconds must be a positive integer")
+            raise AWSStepFuncsValueError("interval_seconds must be a positive integer")
         if self.backoff_rate and self.backoff_rate < 1:  # pragma: no cover
-            raise ValueError("backoff_rate must be greater than or equal to 1.0")
+            raise AWSStepFuncsValueError(
+                "backoff_rate must be greater than or equal to 1.0"
+            )
         if self.max_attempts is not None and self.max_attempts < 0:  # pragma: no cover
-            raise ValueError("max_attempts must be zero or a positive integer")
+            raise AWSStepFuncsValueError(
+                "max_attempts must be zero or a positive integer"
+            )
 
     def compile(self) -> Dict[str, Union[List[str], int, float]]:  # noqa: A003
         """Compile the Retrier to Amazon States Language.

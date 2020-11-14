@@ -5,6 +5,7 @@ from enum import Enum
 from typing import Any, List, Union
 
 from awsstepfuncs.abstract_state import AbstractState
+from awsstepfuncs.errors import AWSStepFuncsValueError
 from awsstepfuncs.reference_path import ReferencePath
 
 
@@ -105,7 +106,7 @@ class ChoiceRule:
     >>> ChoiceRule("$.career", string_equals="Pirate", is_present=True)
     Traceback (most recent call last):
         ...
-    ValueError: Exactly one data-test expression must be defined
+    awsstepfuncs.errors.AWSStepFuncsValueError: Exactly one data-test expression must be defined
 
     Be careful that if you specify a Reference Path that it evaluates to a value
     with the expected type.
@@ -114,7 +115,7 @@ class ChoiceRule:
     >>> salary_rule.evaluate({"salary": "100_000", "expectedSalary": 100_000})
     Traceback (most recent call last):
         ...
-    ValueError: string_equals_path must evaluate to a string value
+    awsstepfuncs.errors.AWSStepFuncsValueError: string_equals_path must evaluate to a string value
 
     There are many different data-test expressions to choose from:
 
@@ -215,13 +216,15 @@ class ChoiceRule:
             data_test_expression: The data-test expression to use.
 
         Raises:
-            ValueError: Raised when there is not exactly one data-test
+            AWSStepFuncsValueError: Raised when there is not exactly one data-test
                 expression defined.
         """
         self.variable = ReferencePath(variable)
 
         if len(data_test_expression) != 1:
-            raise ValueError("Exactly one data-test expression must be defined")
+            raise AWSStepFuncsValueError(
+                "Exactly one data-test expression must be defined"
+            )
 
         self.data_test_expression = DataTestExpression(
             *list(data_test_expression.items())[0]
@@ -266,7 +269,9 @@ class ChoiceRule:
     def _string_equals_path(self, data: Any, variable_value: str) -> bool:
         string_equals = self.data_test_expression.expression.apply(data)  # type: ignore
         if not (isinstance(string_equals, str)):
-            raise ValueError("string_equals_path must evaluate to a string value")
+            raise AWSStepFuncsValueError(
+                "string_equals_path must evaluate to a string value"
+            )
         return variable_value == string_equals
 
     def _string_greater_than(self, variable_value: str) -> bool:
@@ -275,7 +280,9 @@ class ChoiceRule:
     def _string_greater_than_path(self, data: Any, variable_value: str) -> bool:
         string_greater_than = self.data_test_expression.expression.apply(data)  # type: ignore
         if not (isinstance(string_greater_than, str)):  # pragma: no cover
-            raise ValueError("string_greater_than_path must evaluate to a string value")
+            raise AWSStepFuncsValueError(
+                "string_greater_than_path must evaluate to a string value"
+            )
         return variable_value > string_greater_than
 
     def _string_less_than(self, variable_value: str) -> bool:
@@ -284,7 +291,9 @@ class ChoiceRule:
     def _string_less_than_path(self, data: Any, variable_value: str) -> bool:
         string_less_than = self.data_test_expression.expression.apply(data)  # type: ignore
         if not (isinstance(string_less_than, str)):  # pragma: no cover
-            raise ValueError("string_less_than_path must evaluate to a string value")
+            raise AWSStepFuncsValueError(
+                "string_less_than_path must evaluate to a string value"
+            )
         return variable_value < string_less_than
 
     def _string_greater_than_equals(self, variable_value: str) -> bool:
@@ -293,7 +302,7 @@ class ChoiceRule:
     def _string_greater_than_equals_path(self, data: Any, variable_value: str) -> bool:
         string_greater_than_equals = self.data_test_expression.expression.apply(data)  # type: ignore
         if not (isinstance(string_greater_than_equals, str)):  # pragma: no cover
-            raise ValueError(
+            raise AWSStepFuncsValueError(
                 "string_greater_than_equals_path must evaluate to a string value"
             )
         return variable_value >= string_greater_than_equals
@@ -304,7 +313,7 @@ class ChoiceRule:
     def _string_less_than_equals_path(self, data: Any, variable_value: str) -> bool:
         string_less_than_equals = self.data_test_expression.expression.apply(data)  # type: ignore
         if not (isinstance(string_less_than_equals, str)):  # pragma: no cover
-            raise ValueError(
+            raise AWSStepFuncsValueError(
                 "string_less_than_equals_path must evaluate to a string value"
             )
         return variable_value <= string_less_than_equals
@@ -320,7 +329,7 @@ class ChoiceRule:
             isinstance(numeric_greater_than, int)
             or isinstance(numeric_greater_than, float)
         ):
-            raise ValueError(
+            raise AWSStepFuncsValueError(
                 "numeric_greater_than_path must evaluate to a numeric value"
             )
         return variable_value > numeric_greater_than
@@ -501,7 +510,7 @@ class VariableChoice(AbstractChoice):
     >>> variable_choice.evaluate({"rating": 53, "auditThreshold": "50"})
     Traceback (most recent call last):
         ...
-    ValueError: numeric_greater_than_path must evaluate to a numeric value
+    awsstepfuncs.errors.AWSStepFuncsValueError: numeric_greater_than_path must evaluate to a numeric value
     """
 
     def __init__(

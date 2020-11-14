@@ -6,6 +6,7 @@ from typing import Optional, Union
 import gvanim
 
 from awsstepfuncs.abstract_state import AbstractState
+from awsstepfuncs.errors import AWSStepFuncsValueError
 
 
 class Visualization:
@@ -179,7 +180,7 @@ class Visualization:
         >>> Visualization(start_state=state, output_path="state_machine.png")
         Traceback (most recent call last):
                 ...
-        ValueError: Visualization output path must end with ".gif"
+        awsstepfuncs.errors.AWSStepFuncsValueError: Visualization output path must end with ".gif"
 
         Args:
             start_state: The starting state of the state machine, used to
@@ -187,13 +188,15 @@ class Visualization:
             output_path: What path to save the visualization GIF to.
 
         Raises:
-            ValueError: Raised when the output path doesn't end with `.gif`.
+            AWSStepFuncsValueError: Raised when the output path doesn't end with `.gif`.
         """
         self.animation = gvanim.Animation()
         self._build_state_graph(start_state)
 
         if not str(output_path).endswith(".gif"):
-            raise ValueError('Visualization output path must end with ".gif"')
+            raise AWSStepFuncsValueError(
+                'Visualization output path must end with ".gif"'
+            )
 
         self.output_path = Path(output_path)
 

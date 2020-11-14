@@ -2,6 +2,8 @@ from typing import Any
 
 from jsonpath_rw import parse as parse_jsonpath
 
+from awsstepfuncs.errors import AWSStepFuncsValueError
+
 
 class ReferencePath:
     """Reference Path validation and application.
@@ -24,12 +26,12 @@ class ReferencePath:
             reference_path: The Reference Path string to use (a JSONPath).
 
         Raises:
-            ValueError: Raised when the Reference Path is malformed.
+            AWSStepFuncsValueError: Raised when the Reference Path is malformed.
         """
         self.reference_path = reference_path or "$"
         try:
             self._validate()
-        except ValueError:
+        except AWSStepFuncsValueError:
             raise
 
     def __repr__(self) -> str:
@@ -63,18 +65,20 @@ class ReferencePath:
         """Validate a Reference Path for Amazon States Language.
 
         Raises:
-            ValueError: Raised when Reference Path is an empty string or does not
+            AWSStepFuncsValueError: Raised when Reference Path is an empty string or does not
                 begin with a "$".
-            ValueError: Raised when the Reference Path has an unsupported operator (an
+            AWSStepFuncsValueError: Raised when the Reference Path has an unsupported operator (an
                 operator that Amazon States Language does not support).
         """
         if not self.reference_path or str(self.reference_path)[0] != "$":
-            raise ValueError('Reference Path must begin with "$"')
+            raise AWSStepFuncsValueError('Reference Path must begin with "$"')
 
         unsupported_operators = {"@", "..", ",", ":", "?", "*"}
         for operator in unsupported_operators:
             if operator in str(self.reference_path):
-                raise ValueError(f'Unsupported Reference Path operator: "{operator}"')
+                raise AWSStepFuncsValueError(
+                    f'Unsupported Reference Path operator: "{operator}"'
+                )
 
     def apply(self, data: dict) -> Any:
         """Parse then apply a Reference Path on some data.
