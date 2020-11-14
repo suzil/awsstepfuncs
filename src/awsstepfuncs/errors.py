@@ -42,6 +42,8 @@ class StateSimulationError(AWSStepFuncsError):
     Check this table for a list of state simulation errors: https://states-language.net/spec.html#appendix-a
     """
 
+    error_string = "States.ALL"
+
     @staticmethod
     def from_string(error_string: str) -> Optional[Type[StateSimulationError]]:
         """Convert a state simulation error string to an error class.
@@ -73,9 +75,12 @@ class StateSimulationError(AWSStepFuncsError):
             The error class if the error can be simulated.
         """
         mapping = {
-            "States.ALL": StateSimulationError,
-            "States.Timeout": StateTimeoutError,
-            "States.TaskFailed": TaskFailedError,
+            error_class.error_string: error_class
+            for error_class in {
+                StateSimulationError,
+                StateTimeoutError,
+                TaskFailedError,
+            }
         }
         compilation_only_errors = {
             "States.Permissions",
@@ -97,6 +102,10 @@ class StateTimeoutError(StateSimulationError):
     to heartbeat for a time longer than the "HeartbeatSeconds" value.
     """
 
+    error_string = "States.Timeout"
+
 
 class TaskFailedError(StateSimulationError):
     """Raised when the task has failed during the execution."""
+
+    error_string = "States.TaskFailed"
