@@ -25,7 +25,7 @@ class Visualization:
     >>> _ = pass_state >> fail_state
     >>> _ = task_state.add_catcher(["States.ALL"], next_state=pass_state)
     >>> state_machine = StateMachine(start_state=task_state)
-    >>> def failure_mock_fn(_):
+    >>> def failure_mock_fn(event, context):
     ...     assert False
     >>> _ = state_machine.simulate(
     ...     resource_to_mock_fn={resource: failure_mock_fn}, show_visualization=True

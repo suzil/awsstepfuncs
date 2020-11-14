@@ -40,9 +40,9 @@ def test_task_state(compile_state_machine, dummy_resource):
 
     # Simulate the state machine
 
-    def mock_fn(data):
-        data["foo"] *= 2
-        return data
+    def mock_fn(event, context):
+        event["foo"] *= 2
+        return event
 
     with contextlib.closing(StringIO()) as fp:
         with redirect_stdout(fp):
@@ -98,7 +98,7 @@ def test_result_selector(compile_state_machine, dummy_resource):
 
     # Simulate the state machine
 
-    def mock_fn(_):
+    def mock_fn(event, context):
         return {
             "resourceType": "elasticmapreduce",
             "resource": "createCluster.sync",
@@ -153,7 +153,7 @@ def test_result_path_only_state_output(compile_state_machine, dummy_resource):
 
     output_text = "Hello, AWS Step Functions!"
 
-    def mock_fn(_):
+    def mock_fn(event, context):
         return output_text
 
     state_output = state_machine.simulate(
@@ -190,7 +190,7 @@ def test_result_path_only_state_input(compile_state_machine, dummy_resource):
         "who": "AWS Step Functions",
     }
 
-    def mock_fn(_):
+    def mock_fn(event, context):
         return "Hello, AWS Step Functions!"
 
     state_output = state_machine.simulate(
@@ -232,7 +232,7 @@ def test_result_path_keep_both(compile_state_machine, dummy_resource):
 
     output_text = "Hello, AWS Step Functions!"
 
-    def mock_fn(_):
+    def mock_fn(event, context):
         return output_text
 
     state_output = state_machine.simulate(
