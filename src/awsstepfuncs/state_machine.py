@@ -118,6 +118,7 @@ class StateMachine:
         *,
         resource_to_mock_fn: ResourceToMockFn = None,
         show_visualization: bool = False,
+        visualization_output_path: str = "state_machine.gif",
     ) -> Any:
         """Simulate the state machine by executing all of the states.
 
@@ -128,6 +129,8 @@ class StateMachine:
             show_visualization: Whether or not to create an animated GIF
                 visualization of the state machine when simulating. Outputs to
                 `state_machine.gif`.
+            visualization_output_path: If show_visualization is set to `True`,
+                what path to save the visualization GIF to.
 
         Returns:
             The final output state from simulating the state machine.
@@ -140,7 +143,9 @@ class StateMachine:
 
         visualization = None
         if show_visualization:
-            visualization = Visualization(self.start_state)
+            visualization = Visualization(
+                start_state=self.start_state, output_path=visualization_output_path
+            )
 
         current_data = state_input
         current_state: Optional[AbstractState] = self.start_state
