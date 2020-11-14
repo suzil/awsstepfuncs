@@ -777,7 +777,6 @@ class TaskState(AbstractRetryCatchState):
         self,
         state_input: Any,
         resource_to_mock_fn: ResourceToMockFn,
-        parameters: Dict[str, Any] = None,
     ) -> Any:
         """Execute the Task State.
 
@@ -785,15 +784,13 @@ class TaskState(AbstractRetryCatchState):
             state_input: The input state data.
             resource_to_mock_fn: A mapping of resource URIs to mock functions to
                 use if the state performs a task.
-            parameters: Parameters are passed as the context to the mock
-                function.
 
         Returns:
             The output of the state from executing the mock function given the
             state's input.
         """
-        # TODO: Implement parameters
-        return resource_to_mock_fn[self.resource](state_input, parameters or {})
+        # TODO: Add mock context?
+        return resource_to_mock_fn[self.resource](state_input, context=None)
 
 
 class ParallelState(AbstractRetryCatchState):
