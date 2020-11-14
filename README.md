@@ -183,7 +183,7 @@ As you can see from the standard output, each state is executed and data flows b
 
 ### Errors
 
-All errors are supported for compilation, but only a subset can be simulated. For a description of error codes, check out [this table](https://states-language.net/spec.html#appendix-a).
+All errors are supported for compilation, but only a subset can be simulated. For a description of all error codes, check out [this table](https://states-language.net/spec.html#appendix-a).
 
 | Error code                        | Simulation Support                      |
 | --------------------------------- | --------------------------------------- |
