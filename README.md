@@ -183,7 +183,19 @@ As you can see from the standard output, each state is executed and data flows b
 
 ### Errors
 
-TODO
+All errors are supported for compilation, but only a subset can be simulated. For a description of error codes, check out [this table](https://states-language.net/spec.html#appendix-a).
+
+| Error code                        | Simulation Support                      |
+| --------------------------------- | --------------------------------------- |
+| **States.ALL**                    | :heavy_check_mark:                      |
+| **States.Timeout**                | :heavy_multiplication_x: (planned)      |
+| **States.TaskFailed**             | :heavy_multiplication_x: (planned)      |
+| **States.Permissions**            | :heavy_multiplication_x: (not possible) |
+| **States.ResultPathMatchFailure** | :heavy_multiplication_x: (planned)      |
+| **States.ParameterPathFailure**   | :heavy_multiplication_x: (planned)      |
+| **States.BranchFailed**           | :heavy_multiplication_x: (planned)      |
+| **States.NoChoiceMatched**        | :heavy_multiplication_x: (planned)      |
+| **States.IntrinsicFailure**       | :heavy_multiplication_x: (not sure yet) |
 
 
 ### Extra fields
