@@ -185,18 +185,23 @@ As you can see from the standard output, each state is executed and data flows b
 
 All errors are supported for compilation, but only a subset can be simulated. For a description of all error codes, check out [this table](https://states-language.net/spec.html#appendix-a).
 
-| Error code                        | Simulation Support                      |
-| --------------------------------- | --------------------------------------- |
-| **States.ALL**                    | :heavy_check_mark:                      |
-| **States.Timeout**                | :heavy_multiplication_x: (planned)      |
-| **States.TaskFailed**             | :heavy_check_mark:                      |
-| **States.Permissions**            | :heavy_multiplication_x: (not possible) |
-| **States.ResultPathMatchFailure** | :heavy_multiplication_x: (planned)      |
-| **States.ParameterPathFailure**   | :heavy_multiplication_x: (planned)      |
-| **States.BranchFailed**           | :heavy_multiplication_x: (planned)      |
-| **States.NoChoiceMatched**        | :heavy_check_mark:                      |
-| **States.IntrinsicFailure**       | :heavy_multiplication_x: (not sure yet) |
+| Error code                        | Compilation        | Simulation                              |
+| --------------------------------- | ------------------ | --------------------------------------- |
+| **States.ALL**                    | :heavy_check_mark: | :heavy_check_mark:                      |
+| **States.Timeout**                | :heavy_check_mark: | :heavy_multiplication_x:                |
+| **States.TaskFailed**             | :heavy_check_mark: | :heavy_check_mark:                      |
+| **States.Permissions**            | :heavy_check_mark: | :heavy_multiplication_x: (not possible) |
+| **States.ResultPathMatchFailure** | :heavy_check_mark: | :heavy_multiplication_x:                |
+| **States.ParameterPathFailure**   | :heavy_check_mark: | :heavy_multiplication_x:                |
+| **States.BranchFailed**           | :heavy_check_mark: | :heavy_multiplication_x:                |
+| **States.NoChoiceMatched**        | :heavy_check_mark: | :heavy_check_mark:                      |
+| **States.IntrinsicFailure**       | :heavy_check_mark: | :heavy_multiplication_x:                |
 
+
+| Error handler | Compilation        | Simulation               |
+| ------------- | ------------------ | ------------------------ |
+| **Retrier**   | :heavy_check_mark: | :heavy_multiplication_x: |
+| **Catcher**   | :heavy_check_mark: | :heavy_check_mark:       |
 
 ### Extra fields
 
