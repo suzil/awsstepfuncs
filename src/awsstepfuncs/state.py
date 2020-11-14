@@ -782,7 +782,8 @@ class TaskState(AbstractRetryCatchState):
                 use if the state performs a task.
 
         Returns:
-            The output of the state from running the mock function.
+            The output of the state from executing the mock function given the
+            state's input.
         """
         return resource_to_mock_fn[self.resource](state_input)
 
