@@ -12,9 +12,8 @@ class should also define a constant class variable called `state_type` that
 corresponds to type in Amazon States Language.
 
 There are two interesting methods common for many classes:
-- simulate() -- Simulate the state including input/output processing
-- _execute() -- Execute the state, eg. for a Wait State, wait the designated
-                time
+- `simulate()`: Simulate the state including input/output processing
+- `_execute()`: Execute the state, eg. for a Wait State, wait the designated time
 """
 from __future__ import annotations
 
