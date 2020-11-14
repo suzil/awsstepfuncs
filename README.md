@@ -135,13 +135,13 @@ assert state_output == {"foo": 10, "bar": 1}
 
 ```
 Starting simulation of state machine
-Running PassState('My Pass')
+Executing PassState('My Pass')
 State input: {'foo': 5, 'bar': 1}
 State input after applying input path of $: {'foo': 5, 'bar': 1}
 Output from applying result path of $: {'foo': 5, 'bar': 1}
 State output after applying output path of $: {'foo': 5, 'bar': 1}
 State output: {'foo': 5, 'bar': 1}
-Running TaskState('My Task')
+Executing TaskState('My Task')
 State input: {'foo': 5, 'bar': 1}
 State input after applying input path of $: {'foo': 5, 'bar': 1}
 Output from applying result path of $: {'foo': 10, 'bar': 1}

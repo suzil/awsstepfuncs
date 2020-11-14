@@ -65,8 +65,8 @@ class AbstractState(ABC):
             compiled["Comment"] = comment
         return compiled
 
-    def _run(self, state_input: Any, resource_to_mock_fn: ResourceToMockFn) -> Any:
-        """Run the state.
+    def _execute(self, state_input: Any, resource_to_mock_fn: ResourceToMockFn) -> Any:
+        """Execute the state.
 
         Args:
             state_input: The input state data.
@@ -89,7 +89,7 @@ class AbstractState(ABC):
         Returns:
             The output of the state after applying any output processing.
         """
-        return self._run(state_input, resource_to_mock_fn) or {}
+        return self._execute(state_input, resource_to_mock_fn) or {}
 
     def __rshift__(self, other: AbstractState, /) -> AbstractState:
         """Overload >> operator to set state execution order.
@@ -159,7 +159,7 @@ class AbstractInputPathOutputPathState(AbstractState):
     ...     }
     ... )
     Starting simulation of state machine
-    Running PassState('Pass 1')
+    Executing PassState('Pass 1')
     State input: {'comment': 'Example for InputPath.', 'dataset1': {'val1': 1, 'val2': 2, 'val3': 3}, 'dataset2': {'val1': 'a', 'val2': 'b', 'val3': 'c'}}
     State input after applying input path of $.dataset2: {'val1': 'a', 'val2': 'b', 'val3': 'c'}
     Output from applying result path of $: {'val1': 'a', 'val2': 'b', 'val3': 'c'}
@@ -205,7 +205,7 @@ class AbstractInputPathOutputPathState(AbstractState):
             The output of the state after applying any output processing.
         """
         state_input = apply_input_path(self.input_path, state_input)
-        state_output = self._run(state_input, resource_to_mock_fn) or {}
+        state_output = self._execute(state_input, resource_to_mock_fn) or {}
         return apply_output_path(self.output_path, state_output)
 
     def compile(self) -> Dict[str, Any]:  # noqa: A003
@@ -300,7 +300,7 @@ class AbstractResultPathState(AbstractNextOrEndState):
             The output of the state after applying any output processing.
         """
         state_input = apply_input_path(self.input_path, state_input)
-        state_output = self._run(state_input, resource_to_mock_fn) or {}
+        state_output = self._execute(state_input, resource_to_mock_fn) or {}
         state_output = self._apply_result_path(state_input, state_output)
         return apply_output_path(self.output_path, state_output)
 
@@ -474,7 +474,7 @@ class AbstractResultSelectorState(AbstractParametersState):
             The output of the state after applying any output processing.
         """
         state_input = apply_input_path(self.input_path, state_input)
-        state_output = self._run(state_input, resource_to_mock_fn) or {}
+        state_output = self._execute(state_input, resource_to_mock_fn) or {}
         if self.result_selector:
             state_output = self._apply_result_selector(state_output)
             print(
@@ -655,19 +655,19 @@ class AbstractRetryCatchState(AbstractResultSelectorState):
         ...     assert False
         >>> _ = state_machine.simulate(resource_to_mock_fn={resource: failure_mock_fn})
         Starting simulation of state machine
-        Running TaskState('Task')
+        Executing TaskState('Task')
         State input: {}
         State input after applying input path of $: {}
         Error encountered in state, checking for catchers
         Found catcher, transitioning to PassState('Pass')
         State output: {}
-        Running PassState('Pass')
+        Executing PassState('Pass')
         State input: {}
         State input after applying input path of $: {}
         Output from applying result path of $: {}
         State output after applying output path of $: {}
         State output: {}
-        Running FailState('Failure', error='IFailed', cause='I failed!')
+        Executing FailState('Failure', error='IFailed', cause='I failed!')
         State input: {}
         State output: {}
         Terminating simulation of state machine
@@ -678,7 +678,7 @@ class AbstractRetryCatchState(AbstractResultSelectorState):
         >>> _ = task_state.add_catcher(["Timeout"], next_state=pass_state)
         >>> _ = state_machine.simulate(resource_to_mock_fn={resource: failure_mock_fn})
         Starting simulation of state machine
-        Running TaskState('Task')
+        Executing TaskState('Task')
         State input: {}
         State input after applying input path of $: {}
         Error encountered in state, checking for catchers

@@ -152,7 +152,7 @@ class StateMachine:
         print("Starting simulation of state machine")
 
         while current_state is not None:
-            print(f"Running {current_state}")
+            print(f"Executing {current_state}")
             print("State input:", current_data)
             if visualization:
                 visualization.highlight_state(current_state)
