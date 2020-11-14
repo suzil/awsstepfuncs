@@ -33,6 +33,7 @@ from awsstepfuncs.abstract_state import (
     AbstractState,
 )
 from awsstepfuncs.choice import AbstractChoice
+from awsstepfuncs.errors import AWSStepFuncsValueError
 from awsstepfuncs.reference_path import ReferencePath
 from awsstepfuncs.state_machine import StateMachine
 from awsstepfuncs.types import ResourceToMockFn
@@ -54,16 +55,18 @@ class TerminalStateMixin(ABC):
         >>> fail_state >> pass_state
         Traceback (most recent call last):
             ...
-        ValueError: FailState cannot have a next state
+        awsstepfuncs.errors.AWSStepFuncsValueError: FailState cannot have a next state
 
         Args:
             _: The other state besides self.
 
         Raises:
-            ValueError: Raised when trying to set next state on a terminal
+            AWSStepFuncsValueError: Raised when trying to set next state on a terminal
                 state.
         """
-        raise ValueError(f"{self.__class__.__name__} cannot have a next state")
+        raise AWSStepFuncsValueError(
+            f"{self.__class__.__name__} cannot have a next state"
+        )
 
 
 class FailState(TerminalStateMixin, AbstractState):
@@ -317,7 +320,7 @@ class ChoiceState(TerminalStateMixin, AbstractInputPathOutputPathState):
                 use if the state performs a task.
 
         Raises:
-            ValueError: Raised when no choice is true and no default is set.
+            AWSStepFuncsValueError: Raised when no choice is true and no default is set.
 
         Returns:
             The output of the state.
@@ -332,13 +335,15 @@ class ChoiceState(TerminalStateMixin, AbstractInputPathOutputPathState):
                 print("Choosing next state by the default set")
                 self.next_state = self.default
             else:
-                raise ValueError("No choice is true and no default set")
+                raise AWSStepFuncsValueError("No choice is true and no default set")
 
 
 class WaitState(AbstractNextOrEndState):
     """A Wait State causes the interpreter to delay the machine for a specified time.
 
     You can specify the number of seconds to wait.
+
+    >>> from awsstepfuncs import *
 
     >>> wait_state = WaitState("Wait!", seconds=1)
     >>> state_machine = StateMachine(start_state=wait_state)
@@ -357,7 +362,7 @@ class WaitState(AbstractNextOrEndState):
     >>> WaitState("Wait!", seconds=-1)
     Traceback (most recent call last):
         ...
-    ValueError: seconds must be greater than zero
+    awsstepfuncs.errors.AWSStepFuncsValueError: seconds must be greater than zero
 
     You can specify a timestamp to wait until. If the time has already past,
     then there is no wait.
@@ -427,14 +432,14 @@ class WaitState(AbstractNextOrEndState):
     >>> WaitState("Wait", seconds=5, timestamp=datetime.now())
     Traceback (most recent call last):
         ...
-    ValueError: Exactly one must be defined: seconds, timestamp, seconds_path, timestamp_path
+    awsstepfuncs.errors.AWSStepFuncsValueError: Exactly one must be defined: seconds, timestamp, seconds_path, timestamp_path
 
     No parameters set:
 
     >>> WaitState("Wait")
     Traceback (most recent call last):
         ...
-    ValueError: Exactly one must be defined: seconds, timestamp, seconds_path, timestamp_path
+    awsstepfuncs.errors.AWSStepFuncsValueError: Exactly one must be defined: seconds, timestamp, seconds_path, timestamp_path
 
     Refs: https://states-language.net/#wait-state
     """
@@ -461,7 +466,7 @@ class WaitState(AbstractNextOrEndState):
             kwargs: Kwargs to pass to parent classes.
 
         Raises:
-            ValueError: Raised when not exactly one is defined: seconds,
+            AWSStepFuncsValueError: Raised when not exactly one is defined: seconds,
                 timestamp, seconds_path, timestamp_path.
         """
         super().__init__(*args, **kwargs)
@@ -473,12 +478,12 @@ class WaitState(AbstractNextOrEndState):
             )
             != 1
         ):
-            raise ValueError(
+            raise AWSStepFuncsValueError(
                 "Exactly one must be defined: seconds, timestamp, seconds_path, timestamp_path"
             )
 
         if seconds and not (seconds > 0):
-            raise ValueError("seconds must be greater than zero")
+            raise AWSStepFuncsValueError("seconds must be greater than zero")
 
         self.seconds = seconds
         self.timestamp = timestamp
@@ -541,7 +546,7 @@ class WaitState(AbstractNextOrEndState):
                 use if the state performs a task.
 
         Raises:
-            ValueError: Raised when seconds_path doesn't point to an integer.
+            AWSStepFuncsValueError: Raised when seconds_path doesn't point to an integer.
 
         Returns:
             The output of the state, same as input for the Wait State.
@@ -555,7 +560,7 @@ class WaitState(AbstractNextOrEndState):
         elif (seconds_path := self.seconds_path) is not None:
             seconds = seconds_path.apply(state_input)
             if not isinstance(seconds, int):
-                raise ValueError("seconds_path should point to an integer")
+                raise AWSStepFuncsValueError("seconds_path should point to an integer")
             self._wait_seconds(seconds)
 
         elif (timestamp_path := self.timestamp_path) is not None:
@@ -577,6 +582,8 @@ class WaitState(AbstractNextOrEndState):
 
 class PassState(AbstractParametersState):
     """The Pass State by default passes its input to its output, performing no work.
+
+    >>> from awsstepfuncs import *
 
     >>> pass_state1 = PassState("Pass 1", comment="The starting state")
     >>> pass_state2 = PassState("Pass 2")
@@ -666,7 +673,7 @@ class PassState(AbstractParametersState):
     >>> PassState("a" * 129)
     Traceback (most recent call last):
         ...
-    ValueError: State name cannot exceed 128 characters
+    awsstepfuncs.errors.AWSStepFuncsValueError: State name cannot exceed 128 characters
     """
 
     state_type = "Pass"
@@ -956,7 +963,7 @@ class MapState(AbstractRetryCatchState):
                 use if the state performs a task.
 
         Raises:
-            ValueError: Raised when ItemsPath does not return a list.
+            AWSStepFuncsValueError: Raised when ItemsPath does not return a list.
 
         Returns:
             The output of the state by running the iterator state machine for
@@ -965,7 +972,7 @@ class MapState(AbstractRetryCatchState):
         items = ReferencePath(self.items_path).apply(state_input)
         print(f"Items after applying items_path of {self.items_path}: {items}")
         if not isinstance(items, list):
-            raise ValueError("items_path must yield a list")
+            raise AWSStepFuncsValueError("items_path must yield a list")
 
         state_output = []
         for item in items:

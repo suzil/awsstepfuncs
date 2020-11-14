@@ -4,7 +4,7 @@ from io import StringIO
 
 import pytest
 
-from awsstepfuncs import PassState, StateMachine, TaskState
+from awsstepfuncs import AWSStepFuncsValueError, PassState, StateMachine, TaskState
 
 
 @pytest.fixture(scope="session")
@@ -248,7 +248,9 @@ def test_result_path_keep_both(compile_state_machine, dummy_resource):
 
 def test_state_has_invalid_result_selector(dummy_resource):
     invalid_result_selector = {"ClusterId.$": "$.dataset*"}
-    with pytest.raises(ValueError, match='Unsupported Reference Path operator: "*"'):
+    with pytest.raises(
+        AWSStepFuncsValueError, match='Unsupported Reference Path operator: "*"'
+    ):
         TaskState(
             "My Task",
             resource=dummy_resource,

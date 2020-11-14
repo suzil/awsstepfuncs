@@ -1,6 +1,12 @@
 import pytest
 
-from awsstepfuncs import FailState, PassState, StateMachine, TaskState
+from awsstepfuncs import (
+    AWSStepFuncsValueError,
+    FailState,
+    PassState,
+    StateMachine,
+    TaskState,
+)
 
 
 def test_one_state(compile_state_machine):
@@ -29,7 +35,7 @@ def test_duplicate_names():
     pass_state2 = PassState(duplicate_name)
     pass_state1 >> pass_state2
     with pytest.raises(
-        ValueError,
+        AWSStepFuncsValueError,
         match="Duplicate names detected in state machine. Names must be unique",
     ):
         StateMachine(start_state=pass_state1)
@@ -41,7 +47,7 @@ def test_duplicate_names_catcher():
     transition_state = FailState(duplicate_name, error="MyError", cause="Negligence")
     task_state.add_catcher(["Something"], next_state=transition_state)
     with pytest.raises(
-        ValueError,
+        AWSStepFuncsValueError,
         match="Duplicate names detected in state machine. Names must be unique",
     ):
         StateMachine(start_state=task_state)

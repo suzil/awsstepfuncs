@@ -8,6 +8,7 @@ from awsstepfuncs.choice import (  # noqa: F401
     NotChoice,
     VariableChoice,
 )
+from awsstepfuncs.errors import AWSStepFuncsValueError  # noqa: F401
 from awsstepfuncs.state import (  # noqa: F401
     ChoiceState,
     FailState,
