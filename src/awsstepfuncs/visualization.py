@@ -1,6 +1,7 @@
 import os
+from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Optional
+from typing import Optional, Union
 
 import gvanim
 
@@ -163,16 +164,38 @@ class Visualization:
 
     def __init__(
         self,
+        *,
         start_state: AbstractState,
+        output_path: Union[str, Path] = "state_machine.gif",
     ):
         """Initialize a state machine visualization.
+
+        >>> from awsstepfuncs import *
+
+        Make sure that if you specify the output path for the visualization that it
+        ends with `.gif`; otherwise, there will be an error.
+
+        >>> state = PassState("Public")
+        >>> Visualization(start_state=state, output_path="state_machine.png")
+        Traceback (most recent call last):
+                ...
+        ValueError: Visualization output path must end with ".gif"
 
         Args:
             start_state: The starting state of the state machine, used to
                 determine all possible state transitions.
+            output_path: What path to save the visualization GIF to.
+
+        Raises:
+            ValueError: Raised when the output path doesn't end with `.gif`.
         """
         self.animation = gvanim.Animation()
         self._build_state_graph(start_state)
+
+        if not str(output_path).endswith(".gif"):
+            raise ValueError('Visualization output path must end with ".gif"')
+
+        self.output_path = Path(output_path)
 
     def _build_state_graph(self, start_state: AbstractState) -> None:  # noqa: CCR001
         """Add all the possible state transitions to the graph.
@@ -209,15 +232,16 @@ class Visualization:
             current_state = current_state.next_state
 
     def render(self) -> None:
-        """Render the state machine visualization to a file (`state_machine.gif`)."""
+        """Render the state machine visualization to a GIF file."""
         graphs = self.animation.graphs()
-        base_name = "state_machine"
         size = 700
         with TemporaryDirectory() as tmp_dir:
             files = gvanim.render(
-                graphs, os.path.join(tmp_dir, base_name), "png", size=size
+                graphs, os.path.join(tmp_dir, "state_machine"), "png", size=size
             )
-            gvanim.gif(files, base_name, delay=50, size=size)
+            # TODO: Replace with removesuffix() when dropping 3.8 support
+            output_path_without_ext = str(self.output_path)[:-4]
+            gvanim.gif(files, output_path_without_ext, delay=50, size=size)
 
     def highlight_state(self, state: AbstractState) -> None:
         """Highlight a state.
