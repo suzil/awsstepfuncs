@@ -54,6 +54,9 @@ class StateSimulationError(AWSStepFuncsError):
         >>> StateSimulationError.from_string("States.Permissions") is None
         True
 
+        An `AWSStepFuncsValueError` will be raised if the error string is
+        invalid.
+
         >>> StateSimulationError.from_string("Invalid error string")
         Traceback (most recent call last):
             ...
