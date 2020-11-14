@@ -6,14 +6,14 @@ Each row in the table is its own ABC. All latter rows inherit from previous
 rows. States (the columns) are concrete classes that inherit from the ABC that
 has the right fields available.
 
-Each concrete class should implement its own _run() method that will run the
+Each concrete class should implement its own _execute() method that will Execute the
 state according to its business logic when running a simulation. Each concrete
 class should also define a constant class variable called `state_type` that
 corresponds to type in Amazon States Language.
 
 There are two interesting methods common for many classes:
 - simulate() -- Simulate the state including input/output processing
-- _run() -- Run the state, eg. for a WaitState wait the designated time
+- _execute() -- Execute the state, eg. for a WaitState wait the designated time
 """
 from __future__ import annotations
 
@@ -73,7 +73,7 @@ class FailState(TerminalStateMixin, AbstractState):
     >>> state_machine = StateMachine(start_state=fail_state)
     >>> state_output = state_machine.simulate()
     Starting simulation of state machine
-    Running FailState('Failure', error='IFailed', cause='I failed!')
+    Executing FailState('Failure', error='IFailed', cause='I failed!')
     State input: {}
     State output: {}
     Terminating simulation of state machine
@@ -128,7 +128,7 @@ class SucceedState(TerminalStateMixin, AbstractInputPathOutputPathState):
     >>> state_machine = StateMachine(start_state=succeed_state)
     >>> _ = state_machine.simulate({"Hello": "world!"})
     Starting simulation of state machine
-    Running SucceedState('Success!')
+    Executing SucceedState('Success!')
     State input: {'Hello': 'world!'}
     State input after applying input path of $: {'Hello': 'world!'}
     State output after applying output path of $: {'Hello': 'world!'}
@@ -138,8 +138,8 @@ class SucceedState(TerminalStateMixin, AbstractInputPathOutputPathState):
 
     state_type = "Succeed"
 
-    def _run(self, state_input: Any, resource_to_mock_fn: ResourceToMockFn) -> Any:
-        """Run the Succeed State.
+    def _execute(self, state_input: Any, resource_to_mock_fn: ResourceToMockFn) -> Any:
+        """Execute the Succeed State.
 
         Args:
             state_input: The input state data.
@@ -194,12 +194,12 @@ class ChoiceState(TerminalStateMixin, AbstractInputPathOutputPathState):
     >>> state_machine = StateMachine(start_state=choice_state)
     >>> _ = state_machine.simulate({"type": "Private", "value": 22})
     Starting simulation of state machine
-    Running ChoiceState('DispatchEvent')
+    Executing ChoiceState('DispatchEvent')
     State input: {'type': 'Private', 'value': 22}
     State input after applying input path of $: {'type': 'Private', 'value': 22}
     State output after applying output path of $: {'type': 'Private', 'value': 22}
     State output: {'type': 'Private', 'value': 22}
-    Running PassState('ValueInTwenties')
+    Executing PassState('ValueInTwenties')
     State input: {'type': 'Private', 'value': 22}
     State input after applying input path of $: {'type': 'Private', 'value': 22}
     Output from applying result path of $: {'type': 'Private', 'value': 22}
@@ -215,14 +215,14 @@ class ChoiceState(TerminalStateMixin, AbstractInputPathOutputPathState):
     ...     "auditThreshold": 150,
     ... })
     Starting simulation of state machine
-    Running ChoiceState('DispatchEvent')
+    Executing ChoiceState('DispatchEvent')
     State input: {'type': 'Private', 'value': 102, 'auditThreshold': 150}
     State input after applying input path of $: {'type': 'Private', 'value': 102, 'auditThreshold': 150}
     No choice evaluated to true
     Choosing next state by the default set
     State output after applying output path of $: {}
     State output: {}
-    Running PassState('RecordEvent')
+    Executing PassState('RecordEvent')
     State input: {}
     State input after applying input path of $: {}
     Output from applying result path of $: {}
@@ -263,7 +263,7 @@ class ChoiceState(TerminalStateMixin, AbstractInputPathOutputPathState):
     ...     "auditThreshold": 150,
     ... })
     Starting simulation of state machine
-    Running ChoiceState('DispatchEvent')
+    Executing ChoiceState('DispatchEvent')
     State input: {'type': 'Private', 'value': 102, 'auditThreshold': 150}
     State input after applying input path of $: {'type': 'Private', 'value': 102, 'auditThreshold': 150}
     No choice evaluated to true
@@ -306,8 +306,8 @@ class ChoiceState(TerminalStateMixin, AbstractInputPathOutputPathState):
         compiled.pop("End")  # Not correct for Choice State
         return compiled  # pragma: no cover
 
-    def _run(self, state_input: Any, resource_to_mock_fn: ResourceToMockFn) -> Any:
-        """Run the Choice State.
+    def _execute(self, state_input: Any, resource_to_mock_fn: ResourceToMockFn) -> Any:
+        """Execute the Choice State.
 
         Sets the next state.
 
@@ -344,7 +344,7 @@ class WaitState(AbstractNextOrEndState):
     >>> state_machine = StateMachine(start_state=wait_state)
     >>> state_output = state_machine.simulate()
     Starting simulation of state machine
-    Running WaitState('Wait!', seconds=1)
+    Executing WaitState('Wait!', seconds=1)
     State input: {}
     State input after applying input path of $: {}
     Waiting 1 seconds
@@ -367,7 +367,7 @@ class WaitState(AbstractNextOrEndState):
     >>> state_machine = StateMachine(start_state=wait_state)
     >>> state_output = state_machine.simulate()
     Starting simulation of state machine
-    Running WaitState('Wait!', timestamp='2020-01-01T00:00:00')
+    Executing WaitState('Wait!', timestamp='2020-01-01T00:00:00')
     State input: {}
     State input after applying input path of $: {}
     State output after applying output path of $: {}
@@ -381,7 +381,7 @@ class WaitState(AbstractNextOrEndState):
     >>> state_machine = StateMachine(start_state=wait_state)
     >>> state_output = state_machine.simulate({"numSeconds": 1})
     Starting simulation of state machine
-    Running WaitState('Wait!', seconds_path='$.numSeconds')
+    Executing WaitState('Wait!', seconds_path='$.numSeconds')
     State input: {'numSeconds': 1}
     State input after applying input path of $: {'numSeconds': 1}
     Waiting 1 seconds
@@ -397,7 +397,7 @@ class WaitState(AbstractNextOrEndState):
     >>> state_machine = StateMachine(start_state=wait_state)
     >>> state_output = state_machine.simulate({"numSeconds": "hello"})
     Starting simulation of state machine
-    Running WaitState('Wait!', seconds_path='$.numSeconds')
+    Executing WaitState('Wait!', seconds_path='$.numSeconds')
     State input: {'numSeconds': 'hello'}
     State input after applying input path of $: {'numSeconds': 'hello'}
     Error encountered in state, checking for catchers
@@ -411,7 +411,7 @@ class WaitState(AbstractNextOrEndState):
     >>> state_machine = StateMachine(start_state=wait_state)
     >>> state_output = state_machine.simulate({"meta": {"timeToWait": "2020-01-01T00:00:00"}})
     Starting simulation of state machine
-    Running WaitState('Wait!', timestamp_path='$.meta.timeToWait')
+    Executing WaitState('Wait!', timestamp_path='$.meta.timeToWait')
     State input: {'meta': {'timeToWait': '2020-01-01T00:00:00'}}
     State input after applying input path of $: {'meta': {'timeToWait': '2020-01-01T00:00:00'}}
     Waiting until 2020-01-01T00:00:00
@@ -532,8 +532,8 @@ class WaitState(AbstractNextOrEndState):
             output += f", timestamp_path={timestamp_path!r}"
         return output + ")"
 
-    def _run(self, state_input: Any, resource_to_mock_fn: ResourceToMockFn) -> Any:
-        """Run the Wait State.
+    def _execute(self, state_input: Any, resource_to_mock_fn: ResourceToMockFn) -> Any:
+        """Execute the Wait State.
 
         Args:
             state_input: The input state data.
@@ -609,19 +609,19 @@ class PassState(AbstractParametersState):
 
     >>> _ = state_machine.simulate()
     Starting simulation of state machine
-    Running PassState('Pass 1')
+    Executing PassState('Pass 1')
     State input: {}
     State input after applying input path of $: {}
     Output from applying result path of $: {}
     State output after applying output path of $: {}
     State output: {}
-    Running PassState('Pass 2')
+    Executing PassState('Pass 2')
     State input: {}
     State input after applying input path of $: {}
     Output from applying result path of $: {}
     State output after applying output path of $: {}
     State output: {}
-    Running PassState('Pass 3')
+    Executing PassState('Pass 3')
     State input: {}
     State input after applying input path of $: {}
     Output from applying result path of $: {}
@@ -636,7 +636,7 @@ class PassState(AbstractParametersState):
     >>> state_machine = StateMachine(start_state=pass_state)
     >>> state_output = state_machine.simulate()
     Starting simulation of state machine
-    Running PassState('Passing')
+    Executing PassState('Passing')
     State input: {}
     State input after applying input path of $: {}
     Output from applying result path of $: {'Hello': 'world!'}
@@ -653,7 +653,7 @@ class PassState(AbstractParametersState):
     >>> state_machine = StateMachine(start_state=pass_state)
     >>> _ = state_machine.simulate({"sum": 42})
     Starting simulation of state machine
-    Running PassState('Passing')
+    Executing PassState('Passing')
     State input: {'sum': 42}
     State input after applying input path of $: {'sum': 42}
     Output from applying result path of $.result: {'sum': 42, 'result': {'Hello': 'world!'}}
@@ -700,8 +700,8 @@ class PassState(AbstractParametersState):
             compiled["Result"] = result
         return compiled
 
-    def _run(self, state_input: Any, resource_to_mock_fn: ResourceToMockFn) -> Any:
-        """Run the Pass State.
+    def _execute(self, state_input: Any, resource_to_mock_fn: ResourceToMockFn) -> Any:
+        """Execute the Pass State.
 
         Args:
             state_input: The input state data.
@@ -773,8 +773,8 @@ class TaskState(AbstractRetryCatchState):
         compiled["Resource"] = self.resource
         return compiled
 
-    def _run(self, state_input: Any, resource_to_mock_fn: ResourceToMockFn) -> Any:
-        """Run the Task State.
+    def _execute(self, state_input: Any, resource_to_mock_fn: ResourceToMockFn) -> Any:
+        """Execute the Task State.
 
         Args:
             state_input: The input state data.
@@ -828,12 +828,12 @@ class MapState(AbstractRetryCatchState):
     ...     resource_to_mock_fn={resource: mock_fn},
     ... )
     Starting simulation of state machine
-    Running MapState('Validate-All')
+    Executing MapState('Validate-All')
     State input: {'ship-date': '2016-03-14T01:59:00Z', 'detail': {'delivery-partner': 'UQS', 'shipped': [{'prod': 'R31', 'dest-code': 9511, 'quantity': 1344}, {'prod': 'S39', 'dest-code': 9511, 'quantity': 40}]}}
     State input after applying input path of $.detail: {'delivery-partner': 'UQS', 'shipped': [{'prod': 'R31', 'dest-code': 9511, 'quantity': 1344}, {'prod': 'S39', 'dest-code': 9511, 'quantity': 40}]}
     Items after applying items_path of $.shipped: [{'prod': 'R31', 'dest-code': 9511, 'quantity': 1344}, {'prod': 'S39', 'dest-code': 9511, 'quantity': 40}]
     Starting simulation of state machine
-    Running TaskState('Validate')
+    Executing TaskState('Validate')
     State input: {'prod': 'R31', 'dest-code': 9511, 'quantity': 1344}
     State input after applying input path of $: {'prod': 'R31', 'dest-code': 9511, 'quantity': 1344}
     Output from applying result path of $: {'prod': 'R31', 'dest-code': 9511, 'quantity': 2688}
@@ -841,7 +841,7 @@ class MapState(AbstractRetryCatchState):
     State output: {'prod': 'R31', 'dest-code': 9511, 'quantity': 2688}
     Terminating simulation of state machine
     Starting simulation of state machine
-    Running TaskState('Validate')
+    Executing TaskState('Validate')
     State input: {'prod': 'S39', 'dest-code': 9511, 'quantity': 40}
     State input after applying input path of $: {'prod': 'S39', 'dest-code': 9511, 'quantity': 40}
     Output from applying result path of $: {'prod': 'S39', 'dest-code': 9511, 'quantity': 80}
@@ -891,7 +891,7 @@ class MapState(AbstractRetryCatchState):
     ...     resource_to_mock_fn={resource: mock_fn},
     ... )
     Starting simulation of state machine
-    Running MapState('Validate-All')
+    Executing MapState('Validate-All')
     State input: {'ship-date': '2016-03-14T01:59:00Z', 'detail': {'delivery-partner': 'UQS', 'shipped': [{'prod': 'R31', 'dest-code': 9511, 'quantity': 2688}, {'prod': 'S39', 'dest-code': 9511, 'quantity': 80}]}}
     State input after applying input path of $.detail: {'delivery-partner': 'UQS', 'shipped': [{'prod': 'R31', 'dest-code': 9511, 'quantity': 2688}, {'prod': 'S39', 'dest-code': 9511, 'quantity': 80}]}
     Items after applying items_path of $.delivery-partner: UQS
@@ -941,8 +941,8 @@ class MapState(AbstractRetryCatchState):
         compiled["Iterator"] = self.iterator.compile()
         return compiled
 
-    def _run(self, state_input: Any, resource_to_mock_fn: ResourceToMockFn) -> Any:
-        """Run the Map State.
+    def _execute(self, state_input: Any, resource_to_mock_fn: ResourceToMockFn) -> Any:
+        """Execute the Map State.
 
         Args:
             state_input: The input state data.

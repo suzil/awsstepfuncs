@@ -31,19 +31,19 @@ class Visualization:
     ...     resource_to_mock_fn={resource: failure_mock_fn}, show_visualization=True
     ... )
     Starting simulation of state machine
-    Running TaskState('My task')
+    Executing TaskState('My task')
     State input: {}
     State input after applying input path of $: {}
     Error encountered in state, checking for catchers
     Found catcher, transitioning to PassState('Just passing')
     State output: {}
-    Running PassState('Just passing')
+    Executing PassState('Just passing')
     State input: {}
     State input after applying input path of $: {}
     Output from applying result path of $: {}
     State output after applying output path of $: {}
     State output: {}
-    Running FailState('Failure', error='IFailed', cause='I failed!')
+    Executing FailState('Failure', error='IFailed', cause='I failed!')
     State input: {}
     State output: {}
     Terminating simulation of state machine
@@ -88,18 +88,18 @@ class Visualization:
     ...     {"type": "Private", "value": 22}, show_visualization=True
     ... )
     Starting simulation of state machine
-    Running ChoiceState('DispatchEvent')
+    Executing ChoiceState('DispatchEvent')
     State input: {'type': 'Private', 'value': 22}
     State input after applying input path of $: {'type': 'Private', 'value': 22}
     State output after applying output path of $: {'type': 'Private', 'value': 22}
     State output: {'type': 'Private', 'value': 22}
-    Running PassState('ValueInTwenties')
+    Executing PassState('ValueInTwenties')
     State input: {'type': 'Private', 'value': 22}
     State input after applying input path of $: {'type': 'Private', 'value': 22}
     Output from applying result path of $: {'type': 'Private', 'value': 22}
     State output after applying output path of $: {'type': 'Private', 'value': 22}
     State output: {'type': 'Private', 'value': 22}
-    Running SucceedState('Success!')
+    Executing SucceedState('Success!')
     State input: {'type': 'Private', 'value': 22}
     State input after applying input path of $: {'type': 'Private', 'value': 22}
     State output after applying output path of $: {'type': 'Private', 'value': 22}
@@ -142,14 +142,14 @@ class Visualization:
     ...     show_visualization=True
     ... )
     Starting simulation of state machine
-    Running ChoiceState('DispatchEvent')
+    Executing ChoiceState('DispatchEvent')
     State input: {'type': 'Private', 'value': 102, 'auditThreshold': 150}
     State input after applying input path of $: {'type': 'Private', 'value': 102, 'auditThreshold': 150}
     No choice evaluated to true
     Choosing next state by the default set
     State output after applying output path of $: {}
     State output: {}
-    Running PassState('RecordEvent')
+    Executing PassState('RecordEvent')
     State input: {}
     State input after applying input path of $: {}
     Output from applying result path of $: {}
