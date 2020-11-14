@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 from typing import Any, Dict, Optional, Set, Tuple, Union
 
-from awsstepfuncs.abstract_state import AbstractRetryCatchState, AbstractState
+from awsstepfuncs.abstract_state import AbstractRetryCatchState, AbstractState, Catcher
 from awsstepfuncs.errors import AWSStepFuncsValueError, StateSimulationError
 from awsstepfuncs.types import ResourceToMockFn
 from awsstepfuncs.visualization import Visualization
@@ -203,8 +203,7 @@ class StateMachine:
 
         return next_state, state_output
 
-    @staticmethod
-    def _check_for_catchers(state: AbstractState) -> Optional[AbstractState]:
+    def _check_for_catchers(self, state: AbstractState) -> Optional[AbstractState]:
         """Check for any failed state catchers.
 
         Currently only checks for the "catch-all" catcher of error name
@@ -218,9 +217,18 @@ class StateMachine:
         """
         if isinstance(state, AbstractRetryCatchState):
             for catcher in state.catchers:
-                if StateSimulationError in catcher.error_equals:
+                if self._check_if_catcher_matches(catcher):
                     print(f"Found catcher, transitioning to {catcher.next_state}")
                     return catcher.next_state
             else:
                 print("No catchers were matched")
         return None
+
+    @staticmethod
+    def _check_if_catcher_matches(catcher: Catcher) -> bool:
+        """Check if a Catcher matches any of the supported error classes."""
+        for error_class in StateSimulationError.get_all_error_classes():
+            if error_class in catcher.error_equals:
+                return True
+        else:
+            return False

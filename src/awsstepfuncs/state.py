@@ -264,6 +264,8 @@ class ChoiceState(TerminalStateMixin, AbstractInputPathOutputPathState):
     ...         )
     ...     ],
     ... )
+    >>> timeout_state = PassState("Timeout error")
+    >>> no_choice_state = PassState("No next state error")
     >>> state_machine = StateMachine(start_state=choice_state)
     >>> _ = state_machine.simulate({
     ...     "type": "Private",

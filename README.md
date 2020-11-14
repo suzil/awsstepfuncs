@@ -189,12 +189,12 @@ All errors are supported for compilation, but only a subset can be simulated. Fo
 | --------------------------------- | --------------------------------------- |
 | **States.ALL**                    | :heavy_check_mark:                      |
 | **States.Timeout**                | :heavy_multiplication_x: (planned)      |
-| **States.TaskFailed**             | :heavy_multiplication_x: (planned)      |
+| **States.TaskFailed**             | :heavy_check_mark:                      |
 | **States.Permissions**            | :heavy_multiplication_x: (not possible) |
 | **States.ResultPathMatchFailure** | :heavy_multiplication_x: (planned)      |
 | **States.ParameterPathFailure**   | :heavy_multiplication_x: (planned)      |
 | **States.BranchFailed**           | :heavy_multiplication_x: (planned)      |
-| **States.NoChoiceMatched**        | :heavy_multiplication_x: (planned)      |
+| **States.NoChoiceMatched**        | :heavy_check_mark:                      |
 | **States.IntrinsicFailure**       | :heavy_multiplication_x: (not sure yet) |
 
 
