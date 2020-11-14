@@ -1,3 +1,6 @@
+from typing import Optional, Type
+
+
 class AWSStepFuncsError(Exception):
     """Base error for this package.
 
@@ -26,3 +29,66 @@ class AWSStepFuncsValueError(AWSStepFuncsError):
         ...
     awsstepfuncs.errors.AWSStepFuncsValueError: seconds must be greater than zero
     """
+
+
+class StateSimulationError(AWSStepFuncsError):
+    """Raised when there is an error while simulating a state.
+
+    Do not raise this: this is merely meant to group together all state
+    simulation errors.
+
+    Check this table for a list of state simulation errors: https://states-language.net/spec.html#appendix-a
+    """
+
+
+class StateTimeoutError(StateSimulationError):
+    """Raised when the state has timed out while simulating.
+
+    A Task State either ran longer than the "TimeoutSeconds" value, or failed
+    to heartbeat for a time longer than the "HeartbeatSeconds" value.
+    """
+
+
+class TaskFailedError(StateSimulationError):
+    """Raised when the task has failed during the execution."""
+
+
+def string_to_error(error_string: str) -> Optional[Type[StateSimulationError]]:
+    """Convert an error string to an error class.
+
+    >>> string_to_error("States.Timeout")
+    <class 'awsstepfuncs.errors.TimeoutError'>
+
+    If no value is returned, then the error cannot be simulated.
+
+    >>> string_to_error("Invalid error string")
+    Traceback (most recent call last):
+        ...
+    awsstepfuncs.errors.AWSStepFuncsValueError: "Invalid error string" is not a valid error name
+
+    Args:
+        error_string: The error string, such as "States.ALL".
+
+    Raises:
+        AWSStepFuncsValueError: Raised when the error_string provided is
+            invalid.
+
+    Returns:
+        The error class if the error can be simulated.
+    """
+    mapping = {
+        "States.ALL": StateSimulationError,
+        "States.Timeout": StateTimeoutError,
+        "States.TaskFailed": TaskFailedError,
+    }
+    compilation_only_errors = {
+        "States.Permissions",
+        "States.ResultPathMatchFailure",
+        "States.ParameterPathFailure",
+        "States.BranchFailed",
+        "States.NoChoiceMatched",
+        "States.IntrinsicFailure",
+    }
+    if error_string not in set(mapping) | compilation_only_errors:
+        raise AWSStepFuncsValueError(f'"{error_string}" is not a valid error name')
+    return mapping.get(error_string)
