@@ -5,7 +5,7 @@ from typing import Optional, Union
 
 import gvanim
 
-from awsstepfuncs.abstract_state import AbstractRetryCatchState, AbstractState
+from awsstepfuncs.abstract_state import AbstractState
 
 
 class Visualization:
@@ -204,10 +204,6 @@ class Visualization:
             start_state: The starting state of the state machine, used to
                 determine all possible state transitions.
         """
-        # TODO: Check if there's a way to refactor the code to avoid this
-        # circular dependency
-        from awsstepfuncs.state import ChoiceState
-
         self.animation.add_node(start_state.name)
         current_state: Optional[AbstractState] = start_state
         while current_state is not None:
@@ -215,17 +211,17 @@ class Visualization:
                 self.animation.add_edge(
                     current_state.name, current_state.next_state.name
                 )
-            elif isinstance(current_state, ChoiceState):
-                for choice in current_state.choices:
+            elif hasattr(current_state, "choices"):
+                for choice in current_state.choices:  # type: ignore
                     self.animation.add_edge(current_state.name, choice.next_state.name)
                     self._build_state_graph(choice.next_state)
 
-                if default := current_state.default:
+                if default := current_state.default:  # type: ignore
                     self.animation.add_edge(current_state.name, default.name)
                     self._build_state_graph(default)
 
-            if isinstance(current_state, AbstractRetryCatchState):
-                for catcher in current_state.catchers:
+            if hasattr(current_state, "catchers"):
+                for catcher in current_state.catchers:  # type: ignore
                     self.animation.add_edge(current_state.name, catcher.next_state.name)
                     self._build_state_graph(catcher.next_state)
 
