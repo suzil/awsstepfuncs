@@ -46,6 +46,7 @@ class Visualization:
     State output: {}
     Executing FailState('Failure', error='IFailed', cause='I failed!')
     State input: {}
+    Error encountered in state, checking for catchers
     State output: {}
     Terminating simulation of state machine
 

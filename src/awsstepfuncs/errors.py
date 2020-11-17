@@ -105,3 +105,28 @@ class NoChoiceMatchedError(StateSimulationError):
     """Raised when a Choice State failed to pick a next state."""
 
     error_string = "States.NoChoiceMatched"
+
+
+class FailStateError(StateSimulationError):
+    """Raised when running a Fail State."""
+
+    def __init__(self, *, error: str, cause: str):
+        """Initialize a FailStateError.
+
+        Args:
+            error: An error string representing the error.
+            cause: A human-readable description of the error.
+        """
+        self.error_string = error
+        self.cause = cause
+
+    def __repr__(self) -> str:
+        """Return a representation of the FailStateError.
+
+        >>> FailStateError(error="IFailed", cause="I failed!")
+        FailStateError(error='IFailed', cause='I failed!')
+
+        Returns:
+            String representation of the FailStateError.
+        """
+        return f"{self.__class__.__name__}(error={self.error_string!r}, cause={self.cause!r})"

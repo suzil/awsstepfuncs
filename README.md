@@ -160,7 +160,7 @@ As you can see from the standard output, each state is executed and data flows b
 
 | State        | Compile Coverage                                                                                            | Simulation Coverage                                                                                         |
 | ------------ | ----------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| **Fail**     | :heavy_check_mark:                                                                                          | :heavy_multiplication_x: Missing error handling                                                             |
+| **Fail**     | :heavy_check_mark:                                                                                          | :heavy_check_mark:                                                                                          |
 | **Succeed**  | :heavy_check_mark:                                                                                          | :heavy_check_mark:                                                                                          |
 | **Choice**   | :heavy_multiplication_x:                                                                                    | :heavy_multiplication_x:                                                                                    |
 | **Wait**     | :heavy_check_mark:                                                                                          | :heavy_check_mark:                                                                                          |
