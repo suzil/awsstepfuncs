@@ -194,8 +194,10 @@ class StateMachine:
         """
         try:
             state_output = state.simulate(state_input, resource_to_mock_fn) or {}
-        except StateSimulationError:
-            print("Error encountered in state, checking for catchers")
+        except StateSimulationError as exc:
+            print(
+                f"{exc.__class__.__name__} encountered in state, checking for catchers"
+            )
             next_state = self._check_for_catchers(state)
             state_output = {}
         else:

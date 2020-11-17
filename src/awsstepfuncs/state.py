@@ -84,7 +84,7 @@ class FailState(TerminalStateMixin, AbstractState):
     Starting simulation of state machine
     Executing FailState('Failure', error='IFailed', cause='I failed!')
     State input: {}
-    Error encountered in state, checking for catchers
+    FailStateError encountered in state, checking for catchers
     State output: {}
     Terminating simulation of state machine
     """
@@ -290,7 +290,7 @@ class ChoiceState(TerminalStateMixin, AbstractInputPathOutputPathState):
     State input: {'type': 'Private', 'value': 102, 'auditThreshold': 150}
     State input after applying input path of $: {'type': 'Private', 'value': 102, 'auditThreshold': 150}
     No choice evaluated to true
-    Error encountered in state, checking for catchers
+    NoChoiceMatchedError encountered in state, checking for catchers
     State output: {}
     Terminating simulation of state machine
     """
@@ -425,7 +425,7 @@ class WaitState(AbstractNextOrEndState):
     Executing WaitState('Wait!', seconds_path='$.numSeconds')
     State input: {'numSeconds': 'hello'}
     State input after applying input path of $: {'numSeconds': 'hello'}
-    Error encountered in state, checking for catchers
+    StateSimulationError encountered in state, checking for catchers
     State output: {}
     Terminating simulation of state machine
 
@@ -938,7 +938,7 @@ class MapState(AbstractRetryCatchState):
     State input: {'ship-date': '2016-03-14T01:59:00Z', 'detail': {'delivery-partner': 'UQS', 'shipped': [{'prod': 'R31', 'dest-code': 9511, 'quantity': 2688}, {'prod': 'S39', 'dest-code': 9511, 'quantity': 80}]}}
     State input after applying input path of $.detail: {'delivery-partner': 'UQS', 'shipped': [{'prod': 'R31', 'dest-code': 9511, 'quantity': 2688}, {'prod': 'S39', 'dest-code': 9511, 'quantity': 80}]}
     Items after applying items_path of $.delivery-partner: UQS
-    Error encountered in state, checking for catchers
+    StateSimulationError encountered in state, checking for catchers
     No catchers were matched
     State output: {}
     Terminating simulation of state machine
