@@ -35,6 +35,7 @@ from awsstepfuncs.abstract_state import (
 from awsstepfuncs.choice import AbstractChoice
 from awsstepfuncs.errors import (
     AWSStepFuncsValueError,
+    FailStateError,
     NoChoiceMatchedError,
     StateSimulationError,
     TaskFailedError,
@@ -79,10 +80,11 @@ class FailState(TerminalStateMixin, AbstractState):
 
     >>> fail_state = FailState("Failure", error="IFailed", cause="I failed!")
     >>> state_machine = StateMachine(start_state=fail_state)
-    >>> state_output = state_machine.simulate()
+    >>> _ = state_machine.simulate()
     Starting simulation of state machine
     Executing FailState('Failure', error='IFailed', cause='I failed!')
     State input: {}
+    Error encountered in state, checking for catchers
     State output: {}
     Terminating simulation of state machine
     """
@@ -117,6 +119,19 @@ class FailState(TerminalStateMixin, AbstractState):
         compiled["Error"] = self.error
         compiled["Cause"] = self.cause
         return compiled
+
+    def _execute(self, state_input: Any, resource_to_mock_fn: ResourceToMockFn) -> Any:
+        """Execute the Fail State.
+
+        Args:
+            state_input: The input state data.
+            resource_to_mock_fn: A mapping of resource URIs to mock functions to
+                use if the state performs a task.
+
+        Raises:
+            FailStateError: Always raised with the error and cause.
+        """
+        raise FailStateError(error=self.error, cause=self.cause)
 
     def __str__(self) -> str:
         """Create a human-readable string representation of a state.

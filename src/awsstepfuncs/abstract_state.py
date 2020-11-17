@@ -5,7 +5,7 @@ Based on this table: https://states-language.net/spec.html#state-type-table
 from __future__ import annotations
 
 import re
-from abc import ABC
+from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional, Type, Union
 
 from awsstepfuncs.errors import AWSStepFuncsValueError, StateSimulationError
@@ -65,6 +65,7 @@ class AbstractState(ABC):
             compiled["Comment"] = comment
         return compiled
 
+    @abstractmethod
     def _execute(self, state_input: Any, resource_to_mock_fn: ResourceToMockFn) -> Any:
         """Execute the state.
 
@@ -73,10 +74,11 @@ class AbstractState(ABC):
             resource_to_mock_fn: A mapping of resource URIs to mock functions to
                 use if the state performs a task.
 
-        Returns:
-            An empty output state.
+        Raises:
+            NotImplementedError: Raised when child classes do not implement this
+                method.
         """
-        return {}
+        raise NotImplementedError
 
     def simulate(self, state_input: Any, resource_to_mock_fn: ResourceToMockFn) -> Any:
         """Simulate the state including input and output processing.
@@ -724,6 +726,7 @@ class AbstractRetryCatchState(AbstractResultSelectorState):
         State output: {}
         Executing FailState('Failure', error='IFailed', cause='I failed!')
         State input: {}
+        Error encountered in state, checking for catchers
         State output: {}
         Terminating simulation of state machine
 
