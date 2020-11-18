@@ -46,6 +46,7 @@ class StateMachine:
 
         self.comment = comment
         self.version = version
+        self.print: Printer  # Used for simulations
 
     @property
     def all_states(self) -> Set[AbstractState]:
