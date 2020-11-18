@@ -222,15 +222,32 @@ class StateMachine:
                 color=Color.RED,
                 emoji="❌",
             )
-            catcher = self._check_for_catchers(state)
-            next_state = catcher.next_state if catcher else None
-            # TODO: Check if a catcher's next state should really have no input,
-            # seems like it might be wrong
-            state_output = {}
+            return self._check_for_retriers_and_catchers(state, error=exc)
         else:
-            next_state = state.next_state
+            return state.next_state, state_output
 
-        return next_state, state_output
+    def _check_for_retriers_and_catchers(
+        self, state: AbstractState, error: StateSimulationError
+    ) -> Tuple[Optional[AbstractState], Any]:
+        """Check for any matching retriers or catchers for a failed state.
+
+        Currently only checks for catchers.
+
+        Args:
+            state: The failed state.
+            error: The state simulation error encountered in the failed state.
+
+        Returns:
+            A tuple containing the next state and the state output.
+        """
+        # TODO: Actually check if the error encountered matches a catcher error
+        assert error  # This is currently unused, so asserting for lint
+
+        catcher = self._check_for_catchers(state)
+        next_state = catcher.next_state if catcher else None
+        # TODO: Check if a catcher's next state should really have no input,
+        # seems like it might be wrong
+        return next_state, {}
 
     def _check_for_catchers(self, state: AbstractState) -> Optional[Catcher]:
         """Check for any failed state catchers.
