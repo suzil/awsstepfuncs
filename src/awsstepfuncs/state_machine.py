@@ -280,9 +280,8 @@ class StateMachine:
     @staticmethod
     def _catcher_matches(catcher: Catcher, error: StateSimulationError) -> bool:
         """Check if the catcher matches the given error."""
-        # If the error is in error_equals or if the catch-all States.ALL
-        # (StateSimulationError) is in error_equals
         return (
-            error.__class__ in catcher.error_equals
-            or StateSimulationError in catcher.error_equals
+            error.error_string in catcher.error_equals  # Custom error, eg. IFailed
+            or error.__class__ in catcher.error_equals  # eg. States.TaskFailed
+            or StateSimulationError in catcher.error_equals  # States.ALL
         )
