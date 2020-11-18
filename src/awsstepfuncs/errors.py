@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import List, Optional, Type
+from typing import Optional, Type
 
 
 class AWSStepFuncsError(Exception):
@@ -78,11 +78,6 @@ class StateSimulationError(AWSStepFuncsError):
             }
         }
         return mapping.get(error_string)
-
-    @staticmethod
-    def get_all_error_classes() -> List[Type[StateSimulationError]]:
-        """Return all error classes."""
-        return [StateSimulationError] + StateSimulationError.__subclasses__()
 
 
 class StateTimeoutError(StateSimulationError):
