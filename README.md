@@ -134,7 +134,9 @@ state_output = state_machine.simulate(
 assert state_output == {"foo": 10, "bar": 1}
 ```
 
-![Colorful STDOUT](assets/colorful_stdout.png)
+<p align="center">
+  <img src="assets/colorful_stdout.png">
+</p>
 
 As you can see from the standard output, each state is executed and data flows between the states ending with some final state output.
 
