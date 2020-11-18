@@ -128,27 +128,13 @@ state_output = state_machine.simulate(
     resource_to_mock_fn={
         times_two_resource: mock_times_two,
     },
+    colorful=True,
 )
 
 assert state_output == {"foo": 10, "bar": 1}
 ```
 
-```
-Starting simulation of state machine
-Executing PassState('My Pass')
-State input: {'foo': 5, 'bar': 1}
-State input after applying input path of $: {'foo': 5, 'bar': 1}
-Output from applying result path of $: {'foo': 5, 'bar': 1}
-State output after applying output path of $: {'foo': 5, 'bar': 1}
-State output: {'foo': 5, 'bar': 1}
-Executing TaskState('My Task')
-State input: {'foo': 5, 'bar': 1}
-State input after applying input path of $: {'foo': 5, 'bar': 1}
-Output from applying result path of $: {'foo': 10, 'bar': 1}
-State output after applying output path of $: {'foo': 10, 'bar': 1}
-State output: {'foo': 10, 'bar': 1}
-Terminating simulation of state machine
-```
+![Colorful STDOUT](assets/colorful_stdout.png)
 
 As you can see from the standard output, each state is executed and data flows between the states ending with some final state output.
 
