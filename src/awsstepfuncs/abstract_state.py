@@ -574,7 +574,7 @@ class AbstractRetryCatchState(AbstractResultSelectorState):
                 be retried.
 
         Returns:
-            Itself.
+            Itself to allow for chaining.
         """
         retrier = Retrier(
             error_equals=error_equals,
@@ -655,7 +655,7 @@ class AbstractRetryCatchState(AbstractResultSelectorState):
             next_state: The name of the next state.
 
         Returns:
-            Itself.
+            Itself to allow for chaining.
         """
         catcher = Catcher(
             error_equals=error_equals,
