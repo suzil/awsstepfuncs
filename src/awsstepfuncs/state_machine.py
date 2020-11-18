@@ -240,16 +240,15 @@ class StateMachine:
         Returns:
             A tuple containing the next state and the state output.
         """
-        # TODO: Actually check if the error encountered matches a catcher error
-        assert error  # This is currently unused, so asserting for lint
-
-        catcher = self._check_for_catchers(state)
+        catcher = self._check_for_catchers(state, error)
         next_state = catcher.next_state if catcher else None
         # TODO: Check if a catcher's next state should really have no input,
         # seems like it might be wrong
         return next_state, {}
 
-    def _check_for_catchers(self, state: AbstractState) -> Optional[Catcher]:
+    def _check_for_catchers(
+        self, state: AbstractState, error: StateSimulationError
+    ) -> Optional[Catcher]:
         """Check for any failed state catchers.
 
         Currently only checks for the "catch-all" catcher of error name
@@ -257,6 +256,7 @@ class StateMachine:
 
         Args:
             state: The state to check for catchers.
+            error: The state simulation error that occurred.
 
         Returns:
             The state to transition to if a catcher can be applied.
@@ -266,7 +266,7 @@ class StateMachine:
         )
         if isinstance(state, AbstractRetryCatchState):
             for catcher in state.catchers:
-                if self._check_if_catcher_matches(catcher):
+                if self._catcher_matches(catcher, error):
                     self.print(
                         f"Found catcher, transitioning to {catcher.next_state}",
                         color=Color.GREEN,
@@ -278,10 +278,10 @@ class StateMachine:
         return None
 
     @staticmethod
-    def _check_if_catcher_matches(catcher: Catcher) -> bool:
-        """Check if a Catcher matches any of the supported error classes."""
-        for error_class in StateSimulationError.get_all_error_classes():
-            if error_class in catcher.error_equals:
-                return True
-        else:
-            return False
+    def _catcher_matches(catcher: Catcher, error: StateSimulationError) -> bool:
+        """Check if the catcher matches the given error."""
+        return (
+            error.error_string in catcher.error_equals  # Custom error, eg. IFailed
+            or error.__class__ in catcher.error_equals  # eg. States.TaskFailed
+            or StateSimulationError in catcher.error_equals  # States.ALL
+        )
