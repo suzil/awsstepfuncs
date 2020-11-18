@@ -218,18 +218,21 @@ class StateMachine:
             )
         except StateSimulationError as exc:
             self.print(
-                f"{exc.__class__.__name__} encountered in state, checking for catchers",
+                f"{exc.__class__.__name__} encountered in state",
                 color=Color.RED,
                 emoji="❌",
             )
-            next_state = self._check_for_catchers(state)
+            catcher = self._check_for_catchers(state)
+            next_state = catcher.next_state if catcher else None
+            # TODO: Check if a catcher's next state should really have no input,
+            # seems like it might be wrong
             state_output = {}
         else:
             next_state = state.next_state
 
         return next_state, state_output
 
-    def _check_for_catchers(self, state: AbstractState) -> Optional[AbstractState]:
+    def _check_for_catchers(self, state: AbstractState) -> Optional[Catcher]:
         """Check for any failed state catchers.
 
         Currently only checks for the "catch-all" catcher of error name
@@ -241,6 +244,9 @@ class StateMachine:
         Returns:
             The state to transition to if a catcher can be applied.
         """
+        self.print(
+            "Checking for catchers", color=Color.BLUE, style=Style.DIM, emoji="🔎"
+        )
         if isinstance(state, AbstractRetryCatchState):
             for catcher in state.catchers:
                 if self._check_if_catcher_matches(catcher):
@@ -249,7 +255,7 @@ class StateMachine:
                         color=Color.GREEN,
                         emoji="➡️",
                     )
-                    return catcher.next_state
+                    return catcher
             else:
                 self.print("No catchers were matched", style=Style.DIM)
         return None

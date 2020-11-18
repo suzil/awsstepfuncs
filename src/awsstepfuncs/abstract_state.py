@@ -618,7 +618,8 @@ class AbstractRetryCatchState(AbstractResultSelectorState):
         Executing TaskState('Task')
         State input: {}
         State input after applying input path of $: {}
-        TaskFailedError encountered in state, checking for catchers
+        TaskFailedError encountered in state
+        Checking for catchers
         Found catcher, transitioning to PassState('Pass')
         State output: {}
         Executing PassState('Pass')
@@ -629,7 +630,8 @@ class AbstractRetryCatchState(AbstractResultSelectorState):
         State output: {}
         Executing FailState('Failure', error='IFailed', cause='I failed!')
         State input: {}
-        FailStateError encountered in state, checking for catchers
+        FailStateError encountered in state
+        Checking for catchers
         State output: {}
         Terminating simulation of state machine
 
@@ -642,7 +644,8 @@ class AbstractRetryCatchState(AbstractResultSelectorState):
         Executing TaskState('Task')
         State input: {}
         State input after applying input path of $: {}
-        TaskFailedError encountered in state, checking for catchers
+        TaskFailedError encountered in state
+        Checking for catchers
         No catchers were matched
         State output: {}
         Terminating simulation of state machine
