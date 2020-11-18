@@ -9,24 +9,11 @@ from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional, Type, Union
 
 from awsstepfuncs.errors import AWSStepFuncsValueError, StateSimulationError
+from awsstepfuncs.printer import Printer, Style
 from awsstepfuncs.reference_path import ReferencePath
 from awsstepfuncs.types import ResourceToMockFn
 
 MAX_STATE_NAME_LENGTH = 128
-
-
-def apply_input_path(input_path: ReferencePath, state_input: Any) -> Any:
-    """Apply input path to some state input."""
-    state_input = input_path.apply(state_input)
-    print(f"State input after applying input path of {input_path}:", state_input)
-    return state_input
-
-
-def apply_output_path(output_path: ReferencePath, state_output: Any) -> Any:
-    """Apply output path to some state output."""
-    state_output = output_path.apply(state_output)
-    print(f"State output after applying output path of {output_path}:", state_output)
-    return state_output
 
 
 class AbstractState(ABC):
@@ -51,6 +38,7 @@ class AbstractState(ABC):
         self.name = name
         self.comment = comment
         self.next_state: Optional[AbstractState] = None
+        self.print: Printer  # Used for simulations
 
     def compile(self) -> Dict[str, Any]:  # noqa: A003
         """Compile the state to Amazon States Language.
@@ -80,7 +68,9 @@ class AbstractState(ABC):
         """
         raise NotImplementedError
 
-    def simulate(self, state_input: Any, resource_to_mock_fn: ResourceToMockFn) -> Any:
+    def simulate(
+        self, state_input: Any, *, resource_to_mock_fn: ResourceToMockFn
+    ) -> Any:
         """Simulate the state including input and output processing.
 
         Args:
@@ -206,9 +196,29 @@ class AbstractInputPathOutputPathState(AbstractState):
         Returns:
             The output of the state after applying any output processing.
         """
-        state_input = apply_input_path(self.input_path, state_input)
+        state_input = self._apply_input_path(state_input)
         state_output = self._execute(state_input, resource_to_mock_fn) or {}
-        return apply_output_path(self.output_path, state_output)
+        return self._apply_output_path(state_output)
+
+    def _apply_input_path(self, state_input: Any) -> Any:
+        """Apply input path to some state input."""
+        state_input = self.input_path.apply(state_input)
+        self.print(
+            f"State input after applying input path of {self.input_path}:",
+            state_input,
+            style=Style.DIM,
+        )
+        return state_input
+
+    def _apply_output_path(self, state_output: Any) -> Any:
+        """Apply output path to some state output."""
+        state_output = self.output_path.apply(state_output)
+        self.print(
+            f"State output after applying output path of {self.output_path}:",
+            state_output,
+            style=Style.DIM,
+        )
+        return state_output
 
     def compile(self) -> Dict[str, Any]:  # noqa: A003
         """Compile the state to Amazon States Language.
@@ -301,10 +311,10 @@ class AbstractResultPathState(AbstractNextOrEndState):
         Returns:
             The output of the state after applying any output processing.
         """
-        state_input = apply_input_path(self.input_path, state_input)
+        state_input = self._apply_input_path(state_input)
         state_output = self._execute(state_input, resource_to_mock_fn) or {}
         state_output = self._apply_result_path(state_input, state_output)
-        return apply_output_path(self.output_path, state_output)
+        return self._apply_output_path(state_output)
 
     def _apply_result_path(self, state_input: Any, state_output: Any) -> Any:
         """Apply ResultPath to combine state input with state output.
@@ -333,7 +343,11 @@ class AbstractResultPathState(AbstractNextOrEndState):
         else:  # pragma: no cover
             assert False, "Should never happen"  # noqa: PT015
 
-        print(f"Output from applying result path of {self.result_path}:", output)
+        self.print(
+            f"Output from applying result path of {self.result_path}:",
+            output,
+            style=Style.DIM,
+        )
         return output
 
 
@@ -477,16 +491,17 @@ class AbstractResultSelectorState(AbstractParametersState):
         Returns:
             The output of the state after applying any output processing.
         """
-        state_input = apply_input_path(self.input_path, state_input)
+        state_input = self._apply_input_path(state_input)
         state_output = self._execute(state_input, resource_to_mock_fn) or {}
         if self.result_selector:
             state_output = self._apply_result_selector(state_output)
-            print(
+            self.print(
                 f"State output after applying result selector {self.result_selector}:",
                 state_output,
+                style=Style.DIM,
             )
         state_output = self._apply_result_path(state_input, state_output)
-        return apply_output_path(self.output_path, state_output)
+        return self._apply_output_path(state_output)
 
     def _apply_result_selector(self, state_output: Any) -> Dict[str, Any]:
         """Apply the ResultSelector to select a portion of the state output.

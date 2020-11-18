@@ -6,6 +6,7 @@ from typing import Any, Dict, Optional, Set, Tuple, Union
 
 from awsstepfuncs.abstract_state import AbstractRetryCatchState, AbstractState, Catcher
 from awsstepfuncs.errors import AWSStepFuncsValueError, StateSimulationError
+from awsstepfuncs.printer import Color, Printer, Style
 from awsstepfuncs.types import ResourceToMockFn
 from awsstepfuncs.visualization import Visualization
 
@@ -120,6 +121,7 @@ class StateMachine:
         resource_to_mock_fn: ResourceToMockFn = None,
         show_visualization: bool = False,
         visualization_output_path: str = "state_machine.gif",
+        colorful: bool = False,
     ) -> Any:
         """Simulate the state machine by executing all of the states.
 
@@ -132,6 +134,7 @@ class StateMachine:
                 `state_machine.gif`.
             visualization_output_path: If show_visualization is set to `True`,
                 what path to save the visualization GIF to.
+            colorful: Whether to make the simulation STDOUT messages ✨pop✨.
 
         Returns:
             The final output state from simulating the state machine.
@@ -148,36 +151,51 @@ class StateMachine:
                 start_state=self.start_state, output_path=visualization_output_path
             )
 
+        self.print = Printer(colorful=colorful)
+
         current_data = state_input
         current_state: Optional[AbstractState] = self.start_state
-        print("Starting simulation of state machine")
+        self.print(
+            "Starting simulation of state machine", color=Color.YELLOW, emoji="✨"
+        )
 
         while current_state is not None:
-            print(f"Executing {current_state}")
-            print("State input:", current_data)
+            self.print(
+                f"Executing {current_state}",
+                color=Color.BLUE,
+                style=Style.BRIGHT,
+                emoji="👷",
+            )
+            self.print("State input:", current_data, style=Style.DIM)
             if visualization:
                 visualization.highlight_state(current_state)
 
+            current_state.print = self.print
             next_state, next_data = self._simulate_state(
-                current_state, current_data, resource_to_mock_fn
+                current_state,
+                state_input=current_data,
+                resource_to_mock_fn=resource_to_mock_fn,
             )
 
             if visualization and next_state:
                 visualization.highlight_state_transition(current_state, next_state)
 
             current_state, current_data = next_state, next_data
-            print("State output:", current_data)
+            self.print("State output:", current_data, style=Style.DIM)
 
         if visualization:
             visualization.render()
 
-        print("Terminating simulation of state machine")
+        self.print(
+            "Terminating simulation of state machine", color=Color.YELLOW, emoji="😴"
+        )
 
         return current_data
 
     def _simulate_state(
         self,
         state: AbstractState,
+        *,
         state_input: Any,
         resource_to_mock_fn: ResourceToMockFn,
     ) -> Tuple[Optional[AbstractState], Any]:
@@ -193,10 +211,15 @@ class StateMachine:
             The next state and the output data.
         """
         try:
-            state_output = state.simulate(state_input, resource_to_mock_fn) or {}
+            state_output = (
+                state.simulate(state_input, resource_to_mock_fn=resource_to_mock_fn)
+                or {}
+            )
         except StateSimulationError as exc:
-            print(
-                f"{exc.__class__.__name__} encountered in state, checking for catchers"
+            self.print(
+                f"{exc.__class__.__name__} encountered in state, checking for catchers",
+                color=Color.RED,
+                emoji="❌",
             )
             next_state = self._check_for_catchers(state)
             state_output = {}
@@ -220,10 +243,14 @@ class StateMachine:
         if isinstance(state, AbstractRetryCatchState):
             for catcher in state.catchers:
                 if self._check_if_catcher_matches(catcher):
-                    print(f"Found catcher, transitioning to {catcher.next_state}")
+                    self.print(
+                        f"Found catcher, transitioning to {catcher.next_state}",
+                        color=Color.GREEN,
+                        emoji="➡️",
+                    )
                     return catcher.next_state
             else:
-                print("No catchers were matched")
+                self.print("No catchers were matched", style=Style.DIM)
         return None
 
     @staticmethod
