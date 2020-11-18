@@ -146,7 +146,7 @@ As you can see from the standard output, each state is executed and data flows b
 
 ### States compilation and simulation
 
-| State        | Compile Coverage                                                                                            | Simulation Coverage                                                                                         |
+| State        | Compilation                                                                                                 | Simulation                                                                                                  |
 | ------------ | ----------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
 | **Fail**     | :heavy_check_mark:                                                                                          | :heavy_check_mark:                                                                                          |
 | **Succeed**  | :heavy_check_mark:                                                                                          | :heavy_check_mark:                                                                                          |
