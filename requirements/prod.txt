@@ -1,3 +1,4 @@
+colorama==0.4.4
 GraphvizAnim==1.1.0
 jsonpath_rw==1.4.0
 pause==0.3

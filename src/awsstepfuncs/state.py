@@ -40,6 +40,7 @@ from awsstepfuncs.errors import (
     StateSimulationError,
     TaskFailedError,
 )
+from awsstepfuncs.printer import Color, Style
 from awsstepfuncs.reference_path import ReferencePath
 from awsstepfuncs.state_machine import StateMachine
 from awsstepfuncs.types import ResourceToMockFn
@@ -350,9 +351,13 @@ class ChoiceState(TerminalStateMixin, AbstractInputPathOutputPathState):
                 self.next_state = choice.next_state
                 return state_input
         else:
-            print("No choice evaluated to true")
+            self.print("No choice evaluated to true", style=Style.DIM)
             if self.default:
-                print("Choosing next state by the default set")
+                self.print(
+                    "Choosing next state by the default set",
+                    color=Color.GREEN,
+                    emoji="➡️",
+                )
                 self.next_state = self.default
             else:
                 raise NoChoiceMatchedError("No choice is true and no default set")
@@ -592,11 +597,11 @@ class WaitState(AbstractNextOrEndState):
 
     def _wait_seconds(self, seconds: int) -> None:
         """Wait for the specified number of seconds."""
-        print(f"Waiting {seconds} seconds")
+        self.print(f"Waiting {seconds} seconds", style=Style.DIM)
         time.sleep(seconds)
 
     def _wait_for_timestamp(self, timestamp: datetime) -> None:
-        print(f"Waiting until {timestamp.isoformat()}")
+        self.print(f"Waiting until {timestamp.isoformat()}", style=Style.DIM)
         pause.until(timestamp)
 
 
@@ -1001,7 +1006,10 @@ class MapState(AbstractRetryCatchState):
             all items.
         """
         items = ReferencePath(self.items_path).apply(state_input)
-        print(f"Items after applying items_path of {self.items_path}: {items}")
+        self.print(
+            f"Items after applying items_path of {self.items_path}: {items}",
+            style=Style.DIM,
+        )
         if not isinstance(items, list):
             raise StateSimulationError("items_path must yield a list")
 
