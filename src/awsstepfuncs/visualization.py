@@ -35,7 +35,8 @@ class Visualization:
     Executing TaskState('My task')
     State input: {}
     State input after applying input path of $: {}
-    TaskFailedError encountered in state, checking for catchers
+    TaskFailedError encountered in state
+    Checking for catchers
     Found catcher, transitioning to PassState('Just passing')
     State output: {}
     Executing PassState('Just passing')
@@ -46,7 +47,8 @@ class Visualization:
     State output: {}
     Executing FailState('Failure', error='IFailed', cause='I failed!')
     State input: {}
-    FailStateError encountered in state, checking for catchers
+    FailStateError encountered in state
+    Checking for catchers
     State output: {}
     Terminating simulation of state machine
 
