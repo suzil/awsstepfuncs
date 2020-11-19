@@ -55,7 +55,9 @@ jobs:
       run: make lint
 
     - name: Test
-      run: make test
+      run: |
+        make doctest
+        make unittest  # Exclude doctests from coverage
 
     - name: Docs
       run: SPHINXOPTS=-W make builddocs

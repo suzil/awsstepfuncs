@@ -8,6 +8,16 @@ lint:
 test:
 	python -m pytest
 
+.PHONY: unittest
+## Run unit tests
+unittest:
+	python -m pytest tests/
+
+.PHONY: doctest
+## Run doctests
+doctest:
+	python -m pytest src/
+
 .PHONY: showcov
 ## Open the test coverage overview using the default HTML viewer
 showcov:
