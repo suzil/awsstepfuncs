@@ -616,19 +616,6 @@ class PassState(AbstractParametersState):
     If `result_path` is specified, the `result` will be placed on that Reference
     Path.
 
-    >>> result = {"Hello": "world!"}
-    >>> pass_state = PassState("Passing", result=result, result_path="$.result")
-    >>> state_machine = StateMachine(start_state=pass_state)
-    >>> _ = state_machine.simulate({"sum": 42})
-    Starting simulation of state machine
-    Executing PassState('Passing')
-    State input: {'sum': 42}
-    State input after applying input path of $: {'sum': 42}
-    Output from applying result path of $.result: {'sum': 42, 'result': {'Hello': 'world!'}}
-    State output after applying output path of $: {'sum': 42, 'result': {'Hello': 'world!'}}
-    State output: {'sum': 42, 'result': {'Hello': 'world!'}}
-    Terminating simulation of state machine
-
     Be careful! The state name has a maximum length of 128 characters.
 
     >>> PassState("a" * 129)
