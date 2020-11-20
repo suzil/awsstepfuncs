@@ -146,50 +146,50 @@ As you can see from the standard output, each state is executed and data flows b
 
 ### States compilation and simulation
 
-| State        | Compilation                                                                                                 | Simulation                                                                                                  |
-| ------------ | ----------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| **Fail**     | :heavy_check_mark:                                                                                          | :heavy_check_mark:                                                                                          |
-| **Succeed**  | :heavy_check_mark:                                                                                          | :heavy_check_mark:                                                                                          |
-| **Choice**   | :heavy_multiplication_x:                                                                                    | :heavy_multiplication_x:                                                                                    |
-| **Wait**     | :heavy_check_mark:                                                                                          | :heavy_check_mark:                                                                                          |
-| **Pass**     | :heavy_check_mark:                                                                                          | :heavy_check_mark:                                                                                          |
-| **Map**      | :heavy_check_mark:                                                                                          | :heavy_check_mark:                                                                                          |
-| **Parallel** | :heavy_multiplication_x:                                                                                    | :heavy_multiplication_x:                                                                                    |
-| **Task**     | :heavy_multiplication_x: Missing TimeoutSeconds, TimeoutSecondsPath, HeartbeatSeconds, HeartbeatSecondsPath | :heavy_multiplication_x: Missing TimeoutSeconds, TimeoutSecondsPath, HeartbeatSeconds, HeartbeatSecondsPath |
+| State        | Compilation                                                                          | Simulation                                                                           |
+| ------------ | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------ |
+| **Fail**     | ✔️                                                                                    | ✔️                                                                                    |
+| **Succeed**  | ✔️                                                                                    | ✔️                                                                                    |
+| **Choice**   | ❌                                                                                    | ❌                                                                                    |
+| **Wait**     | ✔️                                                                                    | ✔️                                                                                    |
+| **Pass**     | ✔️                                                                                    | ✔️                                                                                    |
+| **Map**      | ✔️                                                                                    | ✔️                                                                                    |
+| **Parallel** | ❌                                                                                    | ❌                                                                                    |
+| **Task**     | ❌ Missing TimeoutSeconds, TimeoutSecondsPath, HeartbeatSeconds, HeartbeatSecondsPath | ❌ Missing TimeoutSeconds, TimeoutSecondsPath, HeartbeatSeconds, HeartbeatSecondsPath |
 
 
 ### Input and output processing
 
-| Field              | Compilation        | Simulation               |
-| ------------------ | ------------------ | ------------------------ |
-| **InputPath**      | :heavy_check_mark: | :heavy_check_mark:       |
-| **OutputPath**     | :heavy_check_mark: | :heavy_check_mark:       |
-| **Parameters**     | :heavy_check_mark: | :heavy_multiplication_x: |
-| **ResultSelector** | :heavy_check_mark: | :heavy_check_mark:       |
-| **ResultPath**     | :heavy_check_mark: | :heavy_check_mark:       |
+| Field              | Compilation | Simulation |
+| ------------------ | ----------- | ---------- |
+| **InputPath**      | ✔️           | ✔️          |
+| **OutputPath**     | ✔️           | ✔️          |
+| **Parameters**     | ✔️           | ❌          |
+| **ResultSelector** | ✔️           | ✔️          |
+| **ResultPath**     | ✔️           | ✔️          |
 
 
 ### Errors
 
 All errors are supported for compilation, but only a subset can be simulated. For a description of all error codes, check out [this table](https://states-language.net/spec.html#appendix-a).
 
-| Error code                        | Compilation        | Simulation                              |
-| --------------------------------- | ------------------ | --------------------------------------- |
-| **States.ALL**                    | :heavy_check_mark: | :heavy_check_mark:                      |
-| **States.Timeout**                | :heavy_check_mark: | :heavy_multiplication_x:                |
-| **States.TaskFailed**             | :heavy_check_mark: | :heavy_check_mark:                      |
-| **States.Permissions**            | :heavy_check_mark: | :heavy_multiplication_x: (not possible) |
-| **States.ResultPathMatchFailure** | :heavy_check_mark: | :heavy_multiplication_x:                |
-| **States.ParameterPathFailure**   | :heavy_check_mark: | :heavy_multiplication_x:                |
-| **States.BranchFailed**           | :heavy_check_mark: | :heavy_multiplication_x:                |
-| **States.NoChoiceMatched**        | :heavy_check_mark: | :heavy_check_mark:                      |
-| **States.IntrinsicFailure**       | :heavy_check_mark: | :heavy_multiplication_x:                |
+| Error code                        | Compilation | Simulation       |
+| --------------------------------- | ----------- | ---------------- |
+| **States.ALL**                    | ✔️           | ✔️                |
+| **States.Timeout**                | ✔️           | ❌                |
+| **States.TaskFailed**             | ✔️           | ✔️                |
+| **States.Permissions**            | ✔️           | ❌ (not possible) |
+| **States.ResultPathMatchFailure** | ✔️           | ❌                |
+| **States.ParameterPathFailure**   | ✔️           | ❌                |
+| **States.BranchFailed**           | ✔️           | ❌                |
+| **States.NoChoiceMatched**        | ✔️           | ✔️                |
+| **States.IntrinsicFailure**       | ✔️           | ❌                |
 
 
-| Error handler | Compilation        | Simulation               |
-| ------------- | ------------------ | ------------------------ |
-| **Retrier**   | :heavy_check_mark: | :heavy_multiplication_x: |
-| **Catcher**   | :heavy_check_mark: | :heavy_check_mark:       |
+| Error handler | Compilation | Simulation |
+| ------------- | ----------- | ---------- |
+| **Retrier**   | ✔️           | ❌          |
+| **Catcher**   | ✔️           | ✔️          |
 
 ### Extra fields
 
