@@ -138,35 +138,6 @@ class AbstractInputPathOutputPathState(AbstractState):
 
     `input_path` and `output_path` let you control what is input and output from
     a state by using Reference Paths.
-
-    >>> from awsstepfuncs import *
-    >>> input_path = "$.dataset2"
-    >>> output_path = "$.val1"
-    >>> pass_state = PassState("Pass 1", input_path=input_path, output_path=output_path)
-    >>> state_machine = StateMachine(start_state=pass_state)
-    >>> _ = state_machine.simulate(
-    ...     {
-    ...         "comment": "Example for InputPath.",
-    ...         "dataset1": {"val1": 1, "val2": 2, "val3": 3},
-    ...         "dataset2": {"val1": "a", "val2": "b", "val3": "c"},
-    ...     }
-    ... )
-    Starting simulation of state machine
-    Executing PassState('Pass 1')
-    State input: {'comment': 'Example for InputPath.', 'dataset1': {'val1': 1, 'val2': 2, 'val3': 3}, 'dataset2': {'val1': 'a', 'val2': 'b', 'val3': 'c'}}
-    State input after applying input path of $.dataset2: {'val1': 'a', 'val2': 'b', 'val3': 'c'}
-    Output from applying result path of $: {'val1': 'a', 'val2': 'b', 'val3': 'c'}
-    State output after applying output path of $.val1: a
-    State output: a
-    Terminating simulation of state machine
-
-    Be careful! `input_path` and `output_path` are both Reference Paths and
-    therefore must be unambiguous and not evaluate to multiple nodes.
-
-    >>> PassState("Pass 1", input_path="$.dataset*")
-    Traceback (most recent call last):
-            ...
-    awsstepfuncs.errors.AWSStepFuncsValueError: Unsupported Reference Path operator: "*"
     """
 
     def __init__(
@@ -223,24 +194,6 @@ class AbstractInputPathOutputPathState(AbstractState):
 
     def compile(self) -> Dict[str, Any]:  # noqa: A003
         """Compile the state to Amazon States Language.
-
-        >>> from awsstepfuncs import *
-        >>> pass_state = PassState("Pass 1", input_path="$.dataset2", output_path="$.val1")
-        >>> state_machine = StateMachine(start_state=pass_state)
-        >>> output = state_machine.compile()
-        >>> expected = {
-        ...     "StartAt": "Pass 1",
-        ...     "States": {
-        ...         "Pass 1": {
-        ...             "Type": "Pass",
-        ...             "InputPath": "$.dataset2",
-        ...             "OutputPath": "$.val1",
-        ...             "End": True,
-        ...         }
-        ...     },
-        ... }
-        >>> assert output == expected
-
 
         Returns:
             A dictionary representing the compiled state in Amazon States
