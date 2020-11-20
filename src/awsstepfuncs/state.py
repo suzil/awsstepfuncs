@@ -634,11 +634,6 @@ class PassState(AbstractParametersState):
     def compile(self) -> Dict[str, Any]:  # noqa: A003
         """Compile the state to Amazon States Language.
 
-        >>> result = {"Hello": "world!"}
-        >>> pass_state = PassState("Passing", result=result)
-        >>> pass_state.compile()
-        {'Type': 'Pass', 'End': True, 'Result': {'Hello': 'world!'}}
-
         Returns:
             A dictionary representing the compiled state in Amazon States
             Language.
