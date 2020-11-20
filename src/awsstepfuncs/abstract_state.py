@@ -517,54 +517,7 @@ class AbstractRetryCatchState(AbstractResultSelectorState):
         be caught with `"States.ALL"`. Right now it's the only error code
         supported when simulating.
 
-        >>> from awsstepfuncs import *
-        >>> resource = "123"
-        >>> task_state = TaskState("Task", resource=resource)
-        >>> succeed_state = SucceedState("Success")
-        >>> pass_state = PassState("Pass")
-        >>> fail_state = FailState("Failure", error="IFailed", cause="I failed!")
-        >>> _ = task_state >> succeed_state
-        >>> _ = pass_state >> fail_state
-        >>> _ = task_state.add_catcher(["States.ALL"], next_state=pass_state)
-        >>> state_machine = StateMachine(start_state=task_state)
-        >>> def failure_mock_fn(event, context):
-        ...     assert False
-        >>> _ = state_machine.simulate(resource_to_mock_fn={resource: failure_mock_fn})
-        Starting simulation of state machine
-        Executing TaskState('Task')
-        State input: {}
-        State input after applying input path of $: {}
-        TaskFailedError encountered in state
-        Checking for catchers
-        Found catcher, transitioning to PassState('Pass')
-        State output: {}
-        Executing PassState('Pass')
-        State input: {}
-        State input after applying input path of $: {}
-        Output from applying result path of $: {}
-        State output after applying output path of $: {}
-        State output: {}
-        Executing FailState('Failure', error='IFailed', cause='I failed!')
-        State input: {}
-        FailStateError encountered in state
-        Checking for catchers
-        State output: {}
-        Terminating simulation of state machine
-
         If no catcher can be applied, then the state machine will terminate.
-
-        >>> _ = task_state.catchers.pop()  # Remove States.ALL catcher
-        >>> _ = task_state.add_catcher(["Timeout"], next_state=pass_state)
-        >>> _ = state_machine.simulate(resource_to_mock_fn={resource: failure_mock_fn})
-        Starting simulation of state machine
-        Executing TaskState('Task')
-        State input: {}
-        State input after applying input path of $: {}
-        TaskFailedError encountered in state
-        Checking for catchers
-        No catchers were matched
-        State output: {}
-        Terminating simulation of state machine
 
         Args:
             error_equals: A list of error names.
