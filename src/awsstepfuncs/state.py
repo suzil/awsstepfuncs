@@ -613,20 +613,6 @@ class PassState(AbstractParametersState):
 
     If `result` is passed, its value is treated as the output of a virtual task.
 
-    >>> result = {"Hello": "world!"}
-    >>> pass_state = PassState("Passing", result=result)
-    >>> state_machine = StateMachine(start_state=pass_state)
-    >>> state_output = state_machine.simulate()
-    Starting simulation of state machine
-    Executing PassState('Passing')
-    State input: {}
-    State input after applying input path of $: {}
-    Output from applying result path of $: {'Hello': 'world!'}
-    State output after applying output path of $: {'Hello': 'world!'}
-    State output: {'Hello': 'world!'}
-    Terminating simulation of state machine
-    >>> assert state_output == result
-
     If `result_path` is specified, the `result` will be placed on that Reference
     Path.
 
