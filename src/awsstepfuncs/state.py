@@ -125,17 +125,6 @@ class SucceedState(TerminalStateMixin, AbstractInputPathOutputPathState):
     """The Succeed State terminates with a mark of success.
 
     The Succeed State's output is the same as its input.
-
-    >>> succeed_state = SucceedState("Success!")
-    >>> state_machine = StateMachine(start_state=succeed_state)
-    >>> _ = state_machine.simulate({"Hello": "world!"})
-    Starting simulation of state machine
-    Executing SucceedState('Success!')
-    State input: {'Hello': 'world!'}
-    State input after applying input path of $: {'Hello': 'world!'}
-    State output after applying output path of $: {'Hello': 'world!'}
-    State output: {'Hello': 'world!'}
-    Terminating simulation of state machine
     """
 
     state_type = "Succeed"
