@@ -280,18 +280,6 @@ class WaitState(AbstractNextOrEndState):
     def compile(self) -> Dict[str, Any]:  # noqa: A003
         """Compile the state to Amazon States Language.
 
-        >>> WaitState("Wait!", seconds=5).compile()
-        {'Type': 'Wait', 'End': True, 'Seconds': 5}
-
-        >>> WaitState("Wait!", timestamp=datetime(2020,1,1)).compile()
-        {'Type': 'Wait', 'End': True, 'Timestamp': '2020-01-01T00:00:00'}
-
-        >>> WaitState("Wait!", seconds_path="$.numSeconds").compile()
-        {'Type': 'Wait', 'End': True, 'SecondsPath': '$.numSeconds'}
-
-        >>> WaitState("Wait!", timestamp_path="$.meta.timeToWait").compile()
-        {'Type': 'Wait', 'End': True, 'TimestampPath': '$.meta.timeToWait'}
-
         Returns:
             A dictionary representing the compiled state in Amazon States
             Language.

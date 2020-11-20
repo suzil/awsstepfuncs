@@ -128,3 +128,29 @@ def test_no_parameters_set():
         match="Exactly one must be defined: seconds, timestamp, seconds_path, timestamp_path",
     ):
         WaitState("Wait")
+
+
+def test_compile():
+    assert WaitState("Wait!", seconds=5).compile() == {
+        "Type": "Wait",
+        "End": True,
+        "Seconds": 5,
+    }
+
+    assert WaitState("Wait!", timestamp=datetime(2020, 1, 1)).compile() == {
+        "Type": "Wait",
+        "End": True,
+        "Timestamp": "2020-01-01T00:00:00",
+    }
+
+    assert WaitState("Wait!", seconds_path="$.numSeconds").compile() == {
+        "Type": "Wait",
+        "End": True,
+        "SecondsPath": "$.numSeconds",
+    }
+
+    assert WaitState("Wait!", timestamp_path="$.meta.timeToWait").compile() == {
+        "Type": "Wait",
+        "End": True,
+        "TimestampPath": "$.meta.timeToWait",
+    }
