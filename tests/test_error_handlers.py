@@ -1,7 +1,3 @@
-import contextlib
-from contextlib import redirect_stdout
-from io import StringIO
-
 from awsstepfuncs import FailState, PassState, StateMachine, TaskState
 
 
@@ -38,7 +34,7 @@ def test_catcher():
     task_state >> another_fail_state
 
 
-def test_multiple_catchers():
+def test_multiple_catchers(capture_stdout):
     resource = "123"
     task_state = TaskState("Task", resource=resource)
     timeout_state = PassState("Timeout")
@@ -52,25 +48,26 @@ def test_multiple_catchers():
         # Will cause a TaskFailedError
         assert False  # noqa: PT015
 
-    with contextlib.closing(StringIO()) as fp:
-        with redirect_stdout(fp):
-            state_machine.simulate(resource_to_mock_fn={resource: failure_mock_fn})
-        stdout = [line for line in fp.getvalue().split("\n") if line]
+    stdout = capture_stdout(
+        lambda: state_machine.simulate(resource_to_mock_fn={resource: failure_mock_fn})
+    )
 
-    assert stdout == [
-        "Starting simulation of state machine",
-        "Executing TaskState('Task')",
-        "State input: {}",
-        "State input after applying input path of $: {}",
-        "TaskFailedError encountered in state",
-        "Checking for catchers",
-        "Found catcher, transitioning to PassState('Task Failed')",
-        "State output: {}",
-        "Executing PassState('Task Failed')",
-        "State input: {}",
-        "State input after applying input path of $: {}",
-        "Output from applying result path of $: {}",
-        "State output after applying output path of $: {}",
-        "State output: {}",
-        "Terminating simulation of state machine",
-    ]
+    assert (
+        stdout
+        == """Starting simulation of state machine
+Executing TaskState('Task')
+State input: {}
+State input after applying input path of $: {}
+TaskFailedError encountered in state
+Checking for catchers
+Found catcher, transitioning to PassState('Task Failed')
+State output: {}
+Executing PassState('Task Failed')
+State input: {}
+State input after applying input path of $: {}
+Output from applying result path of $: {}
+State output after applying output path of $: {}
+State output: {}
+Terminating simulation of state machine
+"""
+    )

@@ -1,10 +1,7 @@
-from contextlib import closing, redirect_stdout
-from io import StringIO
-
 from awsstepfuncs import PassState, StateMachine
 
 
-def test_pass_state():
+def test_pass_state(capture_stdout):
     pass_state1 = PassState("Pass 1", comment="The starting state")
     pass_state2 = PassState("Pass 2")
     pass_state3 = PassState("Pass 3")
@@ -31,10 +28,7 @@ def test_pass_state():
         },
     }
 
-    with closing(StringIO()) as fp:
-        with redirect_stdout(fp):
-            state_machine.simulate()
-        stdout = fp.getvalue()
+    stdout = capture_stdout(lambda: state_machine.simulate())
 
     assert (
         stdout
@@ -62,7 +56,7 @@ Terminating simulation of state machine
     )
 
 
-def test_pass_state_result():
+def test_pass_state_result(capture_stdout):
     result = {"Hello": "world!"}
     pass_state = PassState("Passing", result=result)
     state_machine = StateMachine(start_state=pass_state)
@@ -74,10 +68,7 @@ def test_pass_state_result():
         },
     }
 
-    with closing(StringIO()) as fp:
-        with redirect_stdout(fp):
-            state_output = state_machine.simulate()
-        stdout = fp.getvalue()
+    stdout = capture_stdout(lambda: state_machine.simulate())
 
     assert (
         stdout
@@ -91,4 +82,3 @@ State output: {'Hello': 'world!'}
 Terminating simulation of state machine
 """
     )
-    assert state_output == result

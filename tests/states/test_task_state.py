@@ -1,7 +1,3 @@
-import contextlib
-from contextlib import redirect_stdout
-from io import StringIO
-
 import pytest
 
 from awsstepfuncs import AWSStepFuncsValueError, PassState, StateMachine, TaskState
@@ -12,7 +8,7 @@ def dummy_resource():
     return "arn:aws:lambda:ap-southeast-2:710187714096:function:DivideNumbers"
 
 
-def test_task_state(compile_state_machine, dummy_resource):
+def test_task_state(compile_state_machine, dummy_resource, capture_stdout):
     pass_state = PassState("Pass", comment="The starting state")
     task_state = TaskState("Task", resource=dummy_resource)
 
@@ -44,31 +40,30 @@ def test_task_state(compile_state_machine, dummy_resource):
         event["foo"] *= 2
         return event
 
-    with contextlib.closing(StringIO()) as fp:
-        with redirect_stdout(fp):
-            state_output = state_machine.simulate(
-                {"foo": 5, "bar": 1},
-                resource_to_mock_fn={dummy_resource: mock_fn},
-            )
-        stdout = [line for line in fp.getvalue().split("\n") if line]
-
-    assert state_output == {"foo": 10, "bar": 1}
-    assert stdout == [
-        "Starting simulation of state machine",
-        "Executing PassState('Pass')",
-        "State input: {'foo': 5, 'bar': 1}",
-        "State input after applying input path of $: {'foo': 5, 'bar': 1}",
-        "Output from applying result path of $: {'foo': 5, 'bar': 1}",
-        "State output after applying output path of $: {'foo': 5, 'bar': 1}",
-        "State output: {'foo': 5, 'bar': 1}",
-        "Executing TaskState('Task')",
-        "State input: {'foo': 5, 'bar': 1}",
-        "State input after applying input path of $: {'foo': 5, 'bar': 1}",
-        "Output from applying result path of $: {'foo': 10, 'bar': 1}",
-        "State output after applying output path of $: {'foo': 10, 'bar': 1}",
-        "State output: {'foo': 10, 'bar': 1}",
-        "Terminating simulation of state machine",
-    ]
+    stdout = capture_stdout(
+        lambda: state_machine.simulate(
+            {"foo": 5, "bar": 1},
+            resource_to_mock_fn={dummy_resource: mock_fn},
+        )
+    )
+    assert (
+        stdout
+        == """Starting simulation of state machine
+Executing PassState('Pass')
+State input: {'foo': 5, 'bar': 1}
+State input after applying input path of $: {'foo': 5, 'bar': 1}
+Output from applying result path of $: {'foo': 5, 'bar': 1}
+State output after applying output path of $: {'foo': 5, 'bar': 1}
+State output: {'foo': 5, 'bar': 1}
+Executing TaskState('Task')
+State input: {'foo': 5, 'bar': 1}
+State input after applying input path of $: {'foo': 5, 'bar': 1}
+Output from applying result path of $: {'foo': 10, 'bar': 1}
+State output after applying output path of $: {'foo': 10, 'bar': 1}
+State output: {'foo': 10, 'bar': 1}
+Terminating simulation of state machine
+"""
+    )
 
 
 def test_result_selector(compile_state_machine, dummy_resource):
