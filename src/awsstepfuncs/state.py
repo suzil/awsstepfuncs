@@ -70,19 +70,7 @@ class TerminalStateMixin(ABC):
 
 
 class FailState(TerminalStateMixin, AbstractState):
-    """The Fail State terminates the machine and marks it as a failure.
-
-    >>> fail_state = FailState("Failure", error="IFailed", cause="I failed!")
-    >>> state_machine = StateMachine(start_state=fail_state)
-    >>> _ = state_machine.simulate()
-    Starting simulation of state machine
-    Executing FailState('Failure', error='IFailed', cause='I failed!')
-    State input: {}
-    FailStateError encountered in state
-    Checking for catchers
-    State output: {}
-    Terminating simulation of state machine
-    """
+    """The Fail State terminates the machine and marks it as a failure."""
 
     state_type = "Fail"
 
@@ -101,10 +89,6 @@ class FailState(TerminalStateMixin, AbstractState):
 
     def compile(self) -> Dict[str, Any]:  # noqa: A003
         """Compile the state to Amazon States Language.
-
-        >>> fail_state = FailState("FailState", error="ErrorA", cause="Kaiju attack")
-        >>> fail_state.compile()
-        {'Type': 'Fail', 'Error': 'ErrorA', 'Cause': 'Kaiju attack'}
 
         Returns:
             A dictionary representing the compiled state in Amazon States
