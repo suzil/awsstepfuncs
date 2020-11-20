@@ -369,24 +369,6 @@ class AbstractResultSelectorState(AbstractParametersState):
     def _validate_result_selector(result_selector: Dict[str, str]) -> None:
         """Validate result selector.
 
-        Here is a valid result selector:
-
-        >>> AbstractResultSelectorState._validate_result_selector({"ClusterId.$": "$.output.ClusterId", "ResourceType.$": "$.resourceType"})
-
-        Result selector keys must end with ".$".
-
-        >>> AbstractResultSelectorState._validate_result_selector({"ClusterId": "$.output.ClusterId"})
-        Traceback (most recent call last):
-            ...
-        awsstepfuncs.errors.AWSStepFuncsValueError: All resource selector keys must end with .$
-
-        Values must be valid ReferencePaths.
-
-        >>> AbstractResultSelectorState._validate_result_selector({"ClusterId.$": "something invalid"})
-        Traceback (most recent call last):
-            ...
-        awsstepfuncs.errors.AWSStepFuncsValueError: Reference Path must begin with "$"
-
         Args:
             result_selector: The result selector to validate.
 
@@ -400,6 +382,7 @@ class AbstractResultSelectorState(AbstractParametersState):
                     "All resource selector keys must end with .$"
                 )
 
+            # TODO: Check if ReferencePath(...) is being called twice
             ReferencePath(reference_path)
 
     def compile(self) -> Dict[str, Any]:  # noqa: A003

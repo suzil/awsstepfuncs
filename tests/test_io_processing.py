@@ -1,4 +1,10 @@
+import re
+
+import pytest
+
 from awsstepfuncs import PassState, StateMachine
+from awsstepfuncs.abstract_state import AbstractResultSelectorState
+from awsstepfuncs.errors import AWSStepFuncsValueError
 
 
 def test_input_output_paths(capture_stdout):
@@ -60,3 +66,21 @@ def test_result_path():
 
     state_output = state_machine.simulate({"sum": 42})
     assert state_output == {"sum": 42, "result": {"Hello": "world!"}}
+
+
+def test_validate_result_selector():
+    # TODO: It's not ideal to be testing private methods but better to test
+    # public APIs
+
+    # Valid
+    AbstractResultSelectorState._validate_result_selector(
+        {"ClusterId.$": "$.output.ClusterId", "ResourceType.$": "$.resourceType"}
+    )
+
+    with pytest.raises(
+        AWSStepFuncsValueError,
+        match=re.escape("All resource selector keys must end with .$"),
+    ):
+        AbstractResultSelectorState._validate_result_selector(
+            {"ClusterId": "$.output.ClusterId"}
+        )
