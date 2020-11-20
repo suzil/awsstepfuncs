@@ -615,13 +615,6 @@ class PassState(AbstractParametersState):
 
     If `result_path` is specified, the `result` will be placed on that Reference
     Path.
-
-    Be careful! The state name has a maximum length of 128 characters.
-
-    >>> PassState("a" * 129)
-    Traceback (most recent call last):
-        ...
-    awsstepfuncs.errors.AWSStepFuncsValueError: State name cannot exceed 128 characters
     """
 
     state_type = "Pass"
