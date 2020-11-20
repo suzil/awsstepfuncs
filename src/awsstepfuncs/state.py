@@ -680,10 +680,6 @@ class TaskState(AbstractRetryCatchState):
     def compile(self) -> Dict[str, Any]:  # noqa: A003
         """Compile the state to Amazon States Language.
 
-        >>> task_state = TaskState("Task", resource="arn:aws:lambda:ap-southeast-2:710187714096:function:DummyResource")
-        >>> task_state.compile()
-        {'Type': 'Task', 'End': True, 'Resource': 'arn:aws:lambda:ap-southeast-2:710187714096:function:DummyResource'}
-
         Returns:
             A dictionary representing the compiled state in Amazon States
             Language.
