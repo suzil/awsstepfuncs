@@ -57,13 +57,6 @@ class TerminalStateMixin(ABC):
         You cannot set a next state on a ChoiceState, SucceedState, or FailState
         as they are terminal states.
 
-        >>> fail_state = FailState("Fail", error="JustBecause", cause="Because I feel like it")
-        >>> pass_state = PassState("Pass")
-        >>> fail_state >> pass_state
-        Traceback (most recent call last):
-            ...
-        awsstepfuncs.errors.AWSStepFuncsValueError: FailState cannot have a next state
-
         Args:
             _: The other state besides self.
 
