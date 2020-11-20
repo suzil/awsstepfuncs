@@ -2,7 +2,40 @@ import contextlib
 from contextlib import redirect_stdout
 from io import StringIO
 
-from awsstepfuncs import PassState, StateMachine, TaskState
+from awsstepfuncs import FailState, PassState, StateMachine, TaskState
+
+
+def test_retrier_zero_max_attempts():
+    task_state = TaskState("Task", resource="123").add_retrier(
+        ["SomeError"], max_attempts=0
+    )
+    fail_state = FailState("Fail", error="SomeError", cause="I did it!")
+    task_state >> fail_state
+
+    # TODO
+
+
+def test_catcher():
+    task_state = TaskState("Task", resource="123").add_retrier(
+        ["SomeError"], max_attempts=0
+    )
+
+    # We should end up at `transition_state` because "States.ALL" catches all
+    # errors and transitions to `transition_state`
+    transition_state = TaskState("Cleanup", resource="456")
+    task_state.add_catcher(["States.ALL"], next_state=transition_state)
+    task_state.compile() == {
+        "Type": "Task",
+        "Next": "Fail",
+        "Retry": [{"ErrorEquals": ["SomeError"], "MaxAttempts": 0}],
+        "Catch": [{"ErrorEquals": ["States.ALL"], "Next": "Cleanup"}],
+        "Resource": "123",
+    }
+
+    another_fail_state = FailState(
+        "AnotherFail", error="AnotherError", cause="I did it again!"
+    )
+    task_state >> another_fail_state
 
 
 def test_multiple_catchers():

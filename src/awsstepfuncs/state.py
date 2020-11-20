@@ -661,31 +661,7 @@ class PassState(AbstractParametersState):
 
 
 class TaskState(AbstractRetryCatchState):
-    """The Task State executes the work identified by the Resource field.
-
-    >>> task_state = TaskState("Task", resource="123").add_retrier(["SomeError"], max_attempts=0)
-    >>> task_state.compile()
-    {'Type': 'Task', 'End': True, 'Retry': [{'ErrorEquals': ['SomeError'], 'MaxAttempts': 0}], 'Resource': '123'}
-
-    >>> fail_state = FailState("Fail", error="SomeError", cause="I did it!")
-    >>> _ = task_state >> fail_state
-
-    When the state machine simulates the previous example, task_state should not
-    get retried as even though a retrier was set for the thrown error, max
-    attempts set to zero means it will not be retried.
-
-    >>> transition_state = TaskState("Cleanup", resource="456")
-    >>> _ = task_state.add_catcher(["States.ALL"], next_state=transition_state)
-    >>> task_state.compile()
-    {'Type': 'Task', 'Next': 'Fail', 'Retry': [{'ErrorEquals': ['SomeError'], 'MaxAttempts': 0}], 'Catch': [{'ErrorEquals': ['States.ALL'], 'Next': 'Cleanup'}], 'Resource': '123'}
-
-    >>> another_fail_state = FailState("AnotherFail", error="AnotherError", cause="I did it again!")
-    >>> _ = task_state >> another_fail_state
-
-    When the state machine simulates the previous example, in this case, we
-    should end up at `transition_state` because "States.ALL" catches all errors
-    and transitions to `transition_state`.
-    """
+    """The Task State executes the work identified by the Resource field."""
 
     state_type = "Task"
 
