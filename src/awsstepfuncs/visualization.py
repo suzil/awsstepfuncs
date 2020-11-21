@@ -91,6 +91,7 @@ class Visualization:
 
     .. highlight:: python
     .. code-block:: python
+
         record_event_state = PassState("RecordEvent")
 
         choice_state = ChoiceState(
