@@ -6,6 +6,8 @@ binaries). Therefore, these tests just check if the file gets created and that
 there are no runtime exceptions when running the code.
 """
 
+import pytest
+
 from awsstepfuncs import (
     AndChoice,
     ChoiceRule,
@@ -18,6 +20,8 @@ from awsstepfuncs import (
     TaskState,
     VariableChoice,
 )
+from awsstepfuncs.errors import AWSStepFuncsValueError
+from awsstepfuncs.visualization import Visualization
 
 
 def test_visualization(tmp_path):
@@ -122,3 +126,11 @@ def test_visualization_choice_state(tmp_path):
         visualization_output_path=output_path,
     )
     assert output_path.exists()
+
+
+def test_bad_file_extension():
+    state = PassState("Public")
+    with pytest.raises(
+        AWSStepFuncsValueError, match='Visualization output path must end with ".gif"'
+    ):
+        Visualization(start_state=state, output_path="state_machine.png")

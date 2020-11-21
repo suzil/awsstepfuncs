@@ -136,16 +136,8 @@ class Visualization:
     ):
         """Initialize a state machine visualization.
 
-        >>> from awsstepfuncs import *
-
         Make sure that if you specify the output path for the visualization that it
         ends with `.gif`; otherwise, there will be an error.
-
-        >>> state = PassState("Public")
-        >>> Visualization(start_state=state, output_path="state_machine.png")
-        Traceback (most recent call last):
-                ...
-        awsstepfuncs.errors.AWSStepFuncsValueError: Visualization output path must end with ".gif"
 
         Args:
             start_state: The starting state of the state machine, used to
