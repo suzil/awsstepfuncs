@@ -41,6 +41,7 @@ def test_catcher(capture_stdout):
     def failure_mock_fn(event, context):
         assert False  # noqa: PT015
 
+    state_machine.simulate(resource_to_mock_fn={resource: failure_mock_fn})
     stdout = capture_stdout(
         lambda: state_machine.simulate(resource_to_mock_fn={resource: failure_mock_fn})
     )
