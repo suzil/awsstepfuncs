@@ -12,6 +12,8 @@
 
 The Python SDK `awsstepfuncs` can compile to [Amazon States Machine](https://states-language.net/) to use in a real AWS Step Functions application and can run simulations with mocked functions to debug state machines.
 
+The [python-lambda-local](https://github.com/HDE/python-lambda-local) library is used for the simulation of Lambda functions.
+
 ```py
 resource = "arn:aws:lambda:ap-southeast-2:710187714096:function:DummyResource"
 task_state = TaskState("My task", resource=resource)

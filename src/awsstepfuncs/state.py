@@ -17,13 +17,17 @@ There are two interesting methods common for many classes:
 """
 from __future__ import annotations
 
+import json
 import time
 from abc import ABC
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from json.decoder import JSONDecodeError
+from typing import Any, Callable, Dict, List, Optional
 
 import dateutil.parser
 import pause
+from lambda_local.context import Context as LambdaContext
+from lambda_local.main import call as lambda_call
 
 from awsstepfuncs.abstract_state import (
     AbstractInputPathOutputPathState,
@@ -455,14 +459,24 @@ class TaskState(AbstractRetryCatchState):
             The output of the state from executing the mock function given the
             state's input.
         """
-        # TODO: Add mock context?
         mock_fn = resource_to_mock_fn[self.resource]
-        try:
-            state_output = mock_fn(state_input, context=None)
-        except Exception as exc:
-            raise TaskFailedError(str(exc))
+        state_output = self._run_lambda_function(mock_fn, state_input)
+        if isinstance(state_output, dict) and (error := state_output.get("errorType")):
+            raise TaskFailedError(error)
         else:
             return state_output
+
+    @staticmethod
+    def _run_lambda_function(
+        lambda_fn: Callable, event: Any, timeout_seconds: int = 5
+    ) -> Any:
+        output = lambda_call(
+            lambda_fn, event, LambdaContext(timeout_in_seconds=timeout_seconds)
+        )[0]
+        try:
+            return json.loads(output)
+        except (TypeError, JSONDecodeError):
+            return output
 
 
 class ParallelState(AbstractRetryCatchState):
