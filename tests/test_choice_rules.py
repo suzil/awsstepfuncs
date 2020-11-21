@@ -1,14 +1,6 @@
 import pytest
 
 from awsstepfuncs import AWSStepFuncsValueError, ChoiceRule
-from awsstepfuncs.choice import DataTestExpression
-
-
-def test_data_test_expression_repr():
-    assert (
-        repr(DataTestExpression("string_equals", "Hello"))
-        == "DataTestExpression(string_equals='Hello')"
-    )
 
 
 def test_string_equals_reference_path():
@@ -104,8 +96,3 @@ def test_string_less_than_equals_path():
     assert rule.evaluate({"letter": "A", "compareLetter": "B"})
     assert rule.evaluate({"letter": "B", "compareLetter": "B"})
     assert not rule.evaluate({"letter": "C", "compareLetter": "B"})
-
-
-def test_repr():
-    choice_rule = ChoiceRule("$.career", string_equals="Pirate")
-    assert repr(choice_rule) == "ChoiceRule('$.career', string_equals='Pirate')"

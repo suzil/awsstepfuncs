@@ -118,9 +118,6 @@ class FailStateError(StateSimulationError):
     def __repr__(self) -> str:
         """Return a representation of the FailStateError.
 
-        >>> FailStateError(error="IFailed", cause="I failed!")
-        FailStateError(error='IFailed', cause='I failed!')
-
         Returns:
             String representation of the FailStateError.
         """
