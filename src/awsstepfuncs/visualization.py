@@ -15,42 +15,28 @@ class Visualization:
     Here's a few examples of visualizations using
     `show_visualization=True`:
 
-    >>> from awsstepfuncs import *
+    .. highlight:: python
+    .. code-block:: python
 
-    >>> resource = "123"
-    >>> task_state = TaskState("My task", resource=resource)
-    >>> succeed_state = SucceedState("Success")
-    >>> pass_state = PassState("Just passing")
-    >>> fail_state = FailState("Failure", error="IFailed", cause="I failed!")
-    >>> _ = task_state >> succeed_state
-    >>> _ = pass_state >> fail_state
-    >>> _ = task_state.add_catcher(["States.ALL"], next_state=pass_state)
-    >>> state_machine = StateMachine(start_state=task_state)
-    >>> def failure_mock_fn(event, context):
-    ...     assert False
-    >>> _ = state_machine.simulate(
-    ...     resource_to_mock_fn={resource: failure_mock_fn}, show_visualization=True
-    ... )
-    Starting simulation of state machine
-    Executing TaskState('My task')
-    State input: {}
-    State input after applying input path of $: {}
-    TaskFailedError encountered in state
-    Checking for catchers
-    Found catcher, transitioning to PassState('Just passing')
-    State output: {}
-    Executing PassState('Just passing')
-    State input: {}
-    State input after applying input path of $: {}
-    Output from applying result path of $: {}
-    State output after applying output path of $: {}
-    State output: {}
-    Executing FailState('Failure', error='IFailed', cause='I failed!')
-    State input: {}
-    FailStateError encountered in state
-    Checking for catchers
-    State output: {}
-    Terminating simulation of state machine
+        resource = "123"
+        task_state = TaskState("My task", resource=resource)
+        succeed_state = SucceedState("Success")
+        pass_state = PassState("Just passing")
+        fail_state = FailState("Failure", error="IFailed", cause="I failed!")
+
+        task_state >> succeed_state
+        pass_state >> fail_state
+
+        task_state.add_catcher(["States.ALL"], next_state=pass_state)
+
+        state_machine = StateMachine(start_state=task_state)
+
+        def failure_mock_fn(event, context):
+            assert False
+
+        state_machine.simulate(
+            resource_to_mock_fn={resource: failure_mock_fn}, show_visualization=True
+        )
 
     .. figure:: ../../../assets/state_machine.gif
 
@@ -58,57 +44,44 @@ class Visualization:
 
     A choice state:
 
-    >>> public_state = PassState("Public")
-    >>> value_in_twenties_state = PassState("ValueInTwenties")
-    >>> after_value_in_twenties_state = SucceedState("Success!")
-    >>> _ = value_in_twenties_state >> after_value_in_twenties_state
-    >>> start_audit_state = PassState("StartAudit")
-    >>> record_event_state = PassState("RecordEvent")
-    >>> choice_state = ChoiceState(
-    ...     "DispatchEvent",
-    ...     choices=[
-    ...         NotChoice(
-    ...             variable="$.type",
-    ...             string_equals="Private",
-    ...             next_state=public_state,
-    ...         ),
-    ...         AndChoice(
-    ...             [
-    ...                 ChoiceRule(variable="$.value", is_present=True),
-    ...                 ChoiceRule(variable="$.value", numeric_greater_than_equals=20),
-    ...                 ChoiceRule(variable="$.value", numeric_less_than=30),
-    ...             ],
-    ...             next_state=value_in_twenties_state,
-    ...         ),
-    ...         VariableChoice(
-    ...             variable="$.rating",
-    ...             numeric_greater_than_path="$.auditThreshold",
-    ...             next_state=start_audit_state,
-    ...         )
-    ...     ],
-    ... )
-    >>> state_machine = StateMachine(start_state=choice_state)
-    >>> _ = state_machine.simulate(
-    ...     {"type": "Private", "value": 22}, show_visualization=True
-    ... )
-    Starting simulation of state machine
-    Executing ChoiceState('DispatchEvent')
-    State input: {'type': 'Private', 'value': 22}
-    State input after applying input path of $: {'type': 'Private', 'value': 22}
-    State output after applying output path of $: {'type': 'Private', 'value': 22}
-    State output: {'type': 'Private', 'value': 22}
-    Executing PassState('ValueInTwenties')
-    State input: {'type': 'Private', 'value': 22}
-    State input after applying input path of $: {'type': 'Private', 'value': 22}
-    Output from applying result path of $: {'type': 'Private', 'value': 22}
-    State output after applying output path of $: {'type': 'Private', 'value': 22}
-    State output: {'type': 'Private', 'value': 22}
-    Executing SucceedState('Success!')
-    State input: {'type': 'Private', 'value': 22}
-    State input after applying input path of $: {'type': 'Private', 'value': 22}
-    State output after applying output path of $: {'type': 'Private', 'value': 22}
-    State output: {'type': 'Private', 'value': 22}
-    Terminating simulation of state machine
+    .. highlight:: python
+    .. code-block:: python
+
+        public_state = PassState("Public")
+        value_in_twenties_state = PassState("ValueInTwenties")
+        after_value_in_twenties_state = SucceedState("Success!")
+        start_audit_state = PassState("StartAudit")
+
+        value_in_twenties_state >> after_value_in_twenties_state
+
+        choice_state = ChoiceState(
+            "DispatchEvent",
+            choices=[
+                NotChoice(
+                    variable="$.type",
+                    string_equals="Private",
+                    next_state=public_state,
+                ),
+                AndChoice(
+                    [
+                        ChoiceRule(variable="$.value", is_present=True),
+                        ChoiceRule(variable="$.value", numeric_greater_than_equals=20),
+                        ChoiceRule(variable="$.value", numeric_less_than=30),
+                    ],
+                    next_state=value_in_twenties_state,
+                ),
+                VariableChoice(
+                    variable="$.rating",
+                    numeric_greater_than_path="$.auditThreshold",
+                    next_state=start_audit_state,
+                )
+            ],
+        )
+
+        state_machine = StateMachine(start_state=choice_state)
+        state_machine.simulate(
+            {"type": "Private", "value": 22}, show_visualization=True
+        )
 
     .. figure:: ../../../assets/choice_visualization.gif
 
@@ -116,50 +89,39 @@ class Visualization:
 
     A choice state when the default is chosen:
 
-    >>> choice_state = ChoiceState(
-    ...     "DispatchEvent",
-    ...     choices=[
-    ...         NotChoice(
-    ...             variable="$.type",
-    ...             string_equals="Private",
-    ...             next_state=public_state,
-    ...         ),
-    ...         AndChoice(
-    ...             [
-    ...                 ChoiceRule(variable="$.value", is_present=True),
-    ...                 ChoiceRule(variable="$.value", numeric_greater_than_equals=20),
-    ...                 ChoiceRule(variable="$.value", numeric_less_than=30),
-    ...             ],
-    ...             next_state=value_in_twenties_state,
-    ...         ),
-    ...         VariableChoice(
-    ...             variable="$.rating",
-    ...             numeric_greater_than_path="$.auditThreshold",
-    ...             next_state=start_audit_state,
-    ...         )
-    ...     ],
-    ...     default=record_event_state,
-    ... )
-    >>> state_machine = StateMachine(start_state=choice_state)
-    >>> _ = state_machine.simulate(
-    ...     {"type": "Private", "value": 102, "auditThreshold": 150},
-    ...     show_visualization=True
-    ... )
-    Starting simulation of state machine
-    Executing ChoiceState('DispatchEvent')
-    State input: {'type': 'Private', 'value': 102, 'auditThreshold': 150}
-    State input after applying input path of $: {'type': 'Private', 'value': 102, 'auditThreshold': 150}
-    No choice evaluated to true
-    Choosing next state by the default set
-    State output after applying output path of $: {}
-    State output: {}
-    Executing PassState('RecordEvent')
-    State input: {}
-    State input after applying input path of $: {}
-    Output from applying result path of $: {}
-    State output after applying output path of $: {}
-    State output: {}
-    Terminating simulation of state machine
+    .. highlight:: python
+    .. code-block:: python
+        record_event_state = PassState("RecordEvent")
+
+        choice_state = ChoiceState(
+            "DispatchEvent",
+            choices=[
+                NotChoice(
+                    variable="$.type",
+                    string_equals="Private",
+                    next_state=public_state,
+                ),
+                AndChoice(
+                    [
+                        ChoiceRule(variable="$.value", is_present=True),
+                        ChoiceRule(variable="$.value", numeric_greater_than_equals=20),
+                        ChoiceRule(variable="$.value", numeric_less_than=30),
+                    ],
+                    next_state=value_in_twenties_state,
+                ),
+                VariableChoice(
+                    variable="$.rating",
+                    numeric_greater_than_path="$.auditThreshold",
+                    next_state=start_audit_state,
+                )
+            ],
+            default=record_event_state,
+        )
+        state_machine = StateMachine(start_state=choice_state)
+        state_machine.simulate(
+            {"type": "Private", "value": 102, "auditThreshold": 150},
+            show_visualization=True
+        )
 
     .. figure:: ../../../assets/default_choice_visualization.gif
 
