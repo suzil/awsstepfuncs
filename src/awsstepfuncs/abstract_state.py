@@ -138,35 +138,6 @@ class AbstractInputPathOutputPathState(AbstractState):
 
     `input_path` and `output_path` let you control what is input and output from
     a state by using Reference Paths.
-
-    >>> from awsstepfuncs import *
-    >>> input_path = "$.dataset2"
-    >>> output_path = "$.val1"
-    >>> pass_state = PassState("Pass 1", input_path=input_path, output_path=output_path)
-    >>> state_machine = StateMachine(start_state=pass_state)
-    >>> _ = state_machine.simulate(
-    ...     {
-    ...         "comment": "Example for InputPath.",
-    ...         "dataset1": {"val1": 1, "val2": 2, "val3": 3},
-    ...         "dataset2": {"val1": "a", "val2": "b", "val3": "c"},
-    ...     }
-    ... )
-    Starting simulation of state machine
-    Executing PassState('Pass 1')
-    State input: {'comment': 'Example for InputPath.', 'dataset1': {'val1': 1, 'val2': 2, 'val3': 3}, 'dataset2': {'val1': 'a', 'val2': 'b', 'val3': 'c'}}
-    State input after applying input path of $.dataset2: {'val1': 'a', 'val2': 'b', 'val3': 'c'}
-    Output from applying result path of $: {'val1': 'a', 'val2': 'b', 'val3': 'c'}
-    State output after applying output path of $.val1: a
-    State output: a
-    Terminating simulation of state machine
-
-    Be careful! `input_path` and `output_path` are both Reference Paths and
-    therefore must be unambiguous and not evaluate to multiple nodes.
-
-    >>> PassState("Pass 1", input_path="$.dataset*")
-    Traceback (most recent call last):
-            ...
-    awsstepfuncs.errors.AWSStepFuncsValueError: Unsupported Reference Path operator: "*"
     """
 
     def __init__(
@@ -223,24 +194,6 @@ class AbstractInputPathOutputPathState(AbstractState):
 
     def compile(self) -> Dict[str, Any]:  # noqa: A003
         """Compile the state to Amazon States Language.
-
-        >>> from awsstepfuncs import *
-        >>> pass_state = PassState("Pass 1", input_path="$.dataset2", output_path="$.val1")
-        >>> state_machine = StateMachine(start_state=pass_state)
-        >>> output = state_machine.compile()
-        >>> expected = {
-        ...     "StartAt": "Pass 1",
-        ...     "States": {
-        ...         "Pass 1": {
-        ...             "Type": "Pass",
-        ...             "InputPath": "$.dataset2",
-        ...             "OutputPath": "$.val1",
-        ...             "End": True,
-        ...         }
-        ...     },
-        ... }
-        >>> assert output == expected
-
 
         Returns:
             A dictionary representing the compiled state in Amazon States
@@ -376,26 +329,6 @@ class AbstractParametersState(AbstractResultPathState):
     def compile(self) -> Dict[str, Any]:  # noqa: A003
         """Compile the state to Amazon States Language.
 
-        >>> from awsstepfuncs import *
-        >>> y_state = PassState("Y")
-        >>> x_state = TaskState(
-        ...     "X",
-        ...     resource="arn:aws:states:us-east-1:123456789012:task:X",
-        ...     parameters={"first": 88, "second": 99},
-        ... )
-        >>> _ = x_state >> y_state
-        >>> compiled = x_state.compile()
-        >>> expected = {
-        ...     "Type": "Task",
-        ...     "Resource": "arn:aws:states:us-east-1:123456789012:task:X",
-        ...     "Next": "Y",
-        ...     "Parameters": {
-        ...         "first": 88,
-        ...         "second": 99
-        ...     }
-        ... }
-        >>> assert compiled == expected
-
         Returns:
             A dictionary representing the compiled state in Amazon States
             Language.
@@ -436,24 +369,6 @@ class AbstractResultSelectorState(AbstractParametersState):
     def _validate_result_selector(result_selector: Dict[str, str]) -> None:
         """Validate result selector.
 
-        Here is a valid result selector:
-
-        >>> AbstractResultSelectorState._validate_result_selector({"ClusterId.$": "$.output.ClusterId", "ResourceType.$": "$.resourceType"})
-
-        Result selector keys must end with ".$".
-
-        >>> AbstractResultSelectorState._validate_result_selector({"ClusterId": "$.output.ClusterId"})
-        Traceback (most recent call last):
-            ...
-        awsstepfuncs.errors.AWSStepFuncsValueError: All resource selector keys must end with .$
-
-        Values must be valid ReferencePaths.
-
-        >>> AbstractResultSelectorState._validate_result_selector({"ClusterId.$": "something invalid"})
-        Traceback (most recent call last):
-            ...
-        awsstepfuncs.errors.AWSStepFuncsValueError: Reference Path must begin with "$"
-
         Args:
             result_selector: The result selector to validate.
 
@@ -467,6 +382,7 @@ class AbstractResultSelectorState(AbstractParametersState):
                     "All resource selector keys must end with .$"
                 )
 
+            # TODO: Check if ReferencePath(...) is being called twice
             ReferencePath(reference_path)
 
     def compile(self) -> Dict[str, Any]:  # noqa: A003
@@ -601,54 +517,7 @@ class AbstractRetryCatchState(AbstractResultSelectorState):
         be caught with `"States.ALL"`. Right now it's the only error code
         supported when simulating.
 
-        >>> from awsstepfuncs import *
-        >>> resource = "123"
-        >>> task_state = TaskState("Task", resource=resource)
-        >>> succeed_state = SucceedState("Success")
-        >>> pass_state = PassState("Pass")
-        >>> fail_state = FailState("Failure", error="IFailed", cause="I failed!")
-        >>> _ = task_state >> succeed_state
-        >>> _ = pass_state >> fail_state
-        >>> _ = task_state.add_catcher(["States.ALL"], next_state=pass_state)
-        >>> state_machine = StateMachine(start_state=task_state)
-        >>> def failure_mock_fn(event, context):
-        ...     assert False
-        >>> _ = state_machine.simulate(resource_to_mock_fn={resource: failure_mock_fn})
-        Starting simulation of state machine
-        Executing TaskState('Task')
-        State input: {}
-        State input after applying input path of $: {}
-        TaskFailedError encountered in state
-        Checking for catchers
-        Found catcher, transitioning to PassState('Pass')
-        State output: {}
-        Executing PassState('Pass')
-        State input: {}
-        State input after applying input path of $: {}
-        Output from applying result path of $: {}
-        State output after applying output path of $: {}
-        State output: {}
-        Executing FailState('Failure', error='IFailed', cause='I failed!')
-        State input: {}
-        FailStateError encountered in state
-        Checking for catchers
-        State output: {}
-        Terminating simulation of state machine
-
         If no catcher can be applied, then the state machine will terminate.
-
-        >>> _ = task_state.catchers.pop()  # Remove States.ALL catcher
-        >>> _ = task_state.add_catcher(["Timeout"], next_state=pass_state)
-        >>> _ = state_machine.simulate(resource_to_mock_fn={resource: failure_mock_fn})
-        Starting simulation of state machine
-        Executing TaskState('Task')
-        State input: {}
-        State input after applying input path of $: {}
-        TaskFailedError encountered in state
-        Checking for catchers
-        No catchers were matched
-        State output: {}
-        Terminating simulation of state machine
 
         Args:
             error_equals: A list of error names.

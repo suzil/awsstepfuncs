@@ -1,3 +1,5 @@
+import json
+
 import pytest
 
 from awsstepfuncs import (
@@ -7,26 +9,6 @@ from awsstepfuncs import (
     StateMachine,
     TaskState,
 )
-
-
-def test_one_state(compile_state_machine):
-    pass_state = PassState("My Pass", comment="The only state")
-    state_machine = StateMachine(
-        start_state=pass_state, comment="My state machine", version="1.1"
-    )
-    compiled = compile_state_machine(state_machine)
-    assert compiled == {
-        "StartAt": pass_state.name,
-        "Comment": state_machine.comment,
-        "Version": state_machine.version,
-        "States": {
-            pass_state.name: {
-                "Comment": pass_state.comment,
-                "Type": "Pass",
-                "End": True,
-            },
-        },
-    }
 
 
 def test_duplicate_names():
@@ -51,3 +33,28 @@ def test_duplicate_names_catcher():
         match="Duplicate names detected in state machine. Names must be unique",
     ):
         StateMachine(start_state=task_state)
+
+
+def test_to_json(tmp_path):
+    pass_state = PassState("My Pass", comment="The only state")
+    state_machine = StateMachine(
+        start_state=pass_state, comment="My state machine", version="1.1"
+    )
+
+    compiled_path = tmp_path / "state_machine.json"
+    state_machine.to_json(compiled_path)
+    with compiled_path.open() as fp:
+        compiled = json.load(fp)
+
+    assert compiled == {
+        "StartAt": pass_state.name,
+        "Comment": state_machine.comment,
+        "Version": state_machine.version,
+        "States": {
+            pass_state.name: {
+                "Comment": pass_state.comment,
+                "Type": "Pass",
+                "End": True,
+            },
+        },
+    }

@@ -1,7 +1,3 @@
-import contextlib
-from contextlib import redirect_stdout
-from io import StringIO
-
 import pytest
 
 from awsstepfuncs import AWSStepFuncsValueError, PassState, StateMachine, TaskState
@@ -12,7 +8,7 @@ def dummy_resource():
     return "arn:aws:lambda:ap-southeast-2:710187714096:function:DivideNumbers"
 
 
-def test_task_state(compile_state_machine, dummy_resource):
+def test_task_state(dummy_resource, capture_stdout):
     pass_state = PassState("Pass", comment="The starting state")
     task_state = TaskState("Task", resource=dummy_resource)
 
@@ -21,8 +17,7 @@ def test_task_state(compile_state_machine, dummy_resource):
     state_machine = StateMachine(start_state=pass_state)
 
     # Check the output from compiling
-    compiled = compile_state_machine(state_machine)
-    assert compiled == {
+    assert state_machine.compile() == {
         "StartAt": pass_state.name,
         "States": {
             pass_state.name: {
@@ -44,34 +39,33 @@ def test_task_state(compile_state_machine, dummy_resource):
         event["foo"] *= 2
         return event
 
-    with contextlib.closing(StringIO()) as fp:
-        with redirect_stdout(fp):
-            state_output = state_machine.simulate(
-                {"foo": 5, "bar": 1},
-                resource_to_mock_fn={dummy_resource: mock_fn},
-            )
-        stdout = [line for line in fp.getvalue().split("\n") if line]
+    stdout = capture_stdout(
+        lambda: state_machine.simulate(
+            {"foo": 5, "bar": 1},
+            resource_to_mock_fn={dummy_resource: mock_fn},
+        )
+    )
+    assert (
+        stdout
+        == """Starting simulation of state machine
+Executing PassState('Pass')
+State input: {'foo': 5, 'bar': 1}
+State input after applying input path of $: {'foo': 5, 'bar': 1}
+Output from applying result path of $: {'foo': 5, 'bar': 1}
+State output after applying output path of $: {'foo': 5, 'bar': 1}
+State output: {'foo': 5, 'bar': 1}
+Executing TaskState('Task')
+State input: {'foo': 5, 'bar': 1}
+State input after applying input path of $: {'foo': 5, 'bar': 1}
+Output from applying result path of $: {'foo': 10, 'bar': 1}
+State output after applying output path of $: {'foo': 10, 'bar': 1}
+State output: {'foo': 10, 'bar': 1}
+Terminating simulation of state machine
+"""
+    )
 
-    assert state_output == {"foo": 10, "bar": 1}
-    assert stdout == [
-        "Starting simulation of state machine",
-        "Executing PassState('Pass')",
-        "State input: {'foo': 5, 'bar': 1}",
-        "State input after applying input path of $: {'foo': 5, 'bar': 1}",
-        "Output from applying result path of $: {'foo': 5, 'bar': 1}",
-        "State output after applying output path of $: {'foo': 5, 'bar': 1}",
-        "State output: {'foo': 5, 'bar': 1}",
-        "Executing TaskState('Task')",
-        "State input: {'foo': 5, 'bar': 1}",
-        "State input after applying input path of $: {'foo': 5, 'bar': 1}",
-        "Output from applying result path of $: {'foo': 10, 'bar': 1}",
-        "State output after applying output path of $: {'foo': 10, 'bar': 1}",
-        "State output: {'foo': 10, 'bar': 1}",
-        "Terminating simulation of state machine",
-    ]
 
-
-def test_result_selector(compile_state_machine, dummy_resource):
+def test_result_selector(dummy_resource):
     result_selector = {
         "ClusterId.$": "$.output.ClusterId",
         "ResourceType.$": "$.resourceType",
@@ -83,8 +77,7 @@ def test_result_selector(compile_state_machine, dummy_resource):
     state_machine = StateMachine(start_state=task_state)
 
     # Check the output from compiling
-    compiled = compile_state_machine(state_machine)
-    assert compiled == {
+    assert state_machine.compile() == {
         "StartAt": task_state.name,
         "States": {
             task_state.name: {
@@ -127,13 +120,12 @@ def test_result_selector(compile_state_machine, dummy_resource):
     }
 
 
-def test_result_path_only_state_output(compile_state_machine, dummy_resource):
+def test_result_path_only_state_output(dummy_resource):
     task_state = TaskState("Task", resource=dummy_resource, result_path="$")
     state_machine = StateMachine(start_state=task_state)
 
     # Check the output from compiling
-    compiled = compile_state_machine(state_machine)
-    assert compiled == {
+    assert state_machine.compile() == {
         "StartAt": task_state.name,
         "States": {
             task_state.name: {
@@ -165,13 +157,12 @@ def test_result_path_only_state_output(compile_state_machine, dummy_resource):
     assert state_output == output_text
 
 
-def test_result_path_only_state_input(compile_state_machine, dummy_resource):
+def test_result_path_only_state_input(dummy_resource):
     task_state = TaskState("Task", resource=dummy_resource, result_path=None)
     state_machine = StateMachine(start_state=task_state)
 
     # Check the output from compiling
-    compiled = compile_state_machine(state_machine)
-    assert compiled == {
+    assert state_machine.compile() == {
         "StartAt": task_state.name,
         "States": {
             task_state.name: {
@@ -202,7 +193,7 @@ def test_result_path_only_state_input(compile_state_machine, dummy_resource):
     assert state_output == state_input
 
 
-def test_result_path_keep_both(compile_state_machine, dummy_resource):
+def test_result_path_keep_both(dummy_resource):
     result_key = "taskresult"
     task_state = TaskState(
         "Task", resource=dummy_resource, result_path=f"$.{result_key}"
@@ -210,8 +201,7 @@ def test_result_path_keep_both(compile_state_machine, dummy_resource):
     state_machine = StateMachine(start_state=task_state)
 
     # Check the output from compiling
-    compiled = compile_state_machine(state_machine)
-    assert compiled == {
+    assert state_machine.compile() == {
         "StartAt": task_state.name,
         "States": {
             task_state.name: {

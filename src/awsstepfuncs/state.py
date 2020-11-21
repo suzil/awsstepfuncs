@@ -57,13 +57,6 @@ class TerminalStateMixin(ABC):
         You cannot set a next state on a ChoiceState, SucceedState, or FailState
         as they are terminal states.
 
-        >>> fail_state = FailState("Fail", error="JustBecause", cause="Because I feel like it")
-        >>> pass_state = PassState("Pass")
-        >>> fail_state >> pass_state
-        Traceback (most recent call last):
-            ...
-        awsstepfuncs.errors.AWSStepFuncsValueError: FailState cannot have a next state
-
         Args:
             _: The other state besides self.
 
@@ -77,19 +70,7 @@ class TerminalStateMixin(ABC):
 
 
 class FailState(TerminalStateMixin, AbstractState):
-    """The Fail State terminates the machine and marks it as a failure.
-
-    >>> fail_state = FailState("Failure", error="IFailed", cause="I failed!")
-    >>> state_machine = StateMachine(start_state=fail_state)
-    >>> _ = state_machine.simulate()
-    Starting simulation of state machine
-    Executing FailState('Failure', error='IFailed', cause='I failed!')
-    State input: {}
-    FailStateError encountered in state
-    Checking for catchers
-    State output: {}
-    Terminating simulation of state machine
-    """
+    """The Fail State terminates the machine and marks it as a failure."""
 
     state_type = "Fail"
 
@@ -108,10 +89,6 @@ class FailState(TerminalStateMixin, AbstractState):
 
     def compile(self) -> Dict[str, Any]:  # noqa: A003
         """Compile the state to Amazon States Language.
-
-        >>> fail_state = FailState("FailState", error="ErrorA", cause="Kaiju attack")
-        >>> fail_state.compile()
-        {'Type': 'Fail', 'Error': 'ErrorA', 'Cause': 'Kaiju attack'}
 
         Returns:
             A dictionary representing the compiled state in Amazon States
@@ -148,17 +125,6 @@ class SucceedState(TerminalStateMixin, AbstractInputPathOutputPathState):
     """The Succeed State terminates with a mark of success.
 
     The Succeed State's output is the same as its input.
-
-    >>> succeed_state = SucceedState("Success!")
-    >>> state_machine = StateMachine(start_state=succeed_state)
-    >>> _ = state_machine.simulate({"Hello": "world!"})
-    Starting simulation of state machine
-    Executing SucceedState('Success!')
-    State input: {'Hello': 'world!'}
-    State input after applying input path of $: {'Hello': 'world!'}
-    State output after applying output path of $: {'Hello': 'world!'}
-    State output: {'Hello': 'world!'}
-    Terminating simulation of state machine
     """
 
     state_type = "Succeed"
@@ -178,125 +144,7 @@ class SucceedState(TerminalStateMixin, AbstractInputPathOutputPathState):
 
 
 class ChoiceState(TerminalStateMixin, AbstractInputPathOutputPathState):
-    """A Choice State adds branching logic to a state machine.
-
-    Define some states that can be conditionally transitioned to by the
-    Choice State.
-
-    >>> from awsstepfuncs import *
-    >>> public_state = PassState("Public")
-    >>> value_in_twenties_state = PassState("ValueInTwenties")
-    >>> start_audit_state = PassState("StartAudit")
-    >>> record_event_state = PassState("RecordEvent")
-
-    Now we can define a Choice State with branching logic based on
-    Choice Rules.
-
-    >>> choice_state = ChoiceState(
-    ...     "DispatchEvent",
-    ...     choices=[
-    ...         NotChoice(
-    ...             variable="$.type",
-    ...             string_equals="Private",
-    ...             next_state=public_state,
-    ...         ),
-    ...         AndChoice(
-    ...             [
-    ...                 ChoiceRule(variable="$.value", is_present=True),
-    ...                 ChoiceRule(variable="$.value", numeric_greater_than_equals=20),
-    ...                 ChoiceRule(variable="$.value", numeric_less_than=30),
-    ...             ],
-    ...             next_state=value_in_twenties_state,
-    ...         ),
-    ...         VariableChoice(
-    ...             variable="$.rating",
-    ...             numeric_greater_than_path="$.auditThreshold",
-    ...             next_state=start_audit_state,
-    ...         )
-    ...     ],
-    ...     default=record_event_state,
-    ... )
-    >>> state_machine = StateMachine(start_state=choice_state)
-    >>> _ = state_machine.simulate({"type": "Private", "value": 22})
-    Starting simulation of state machine
-    Executing ChoiceState('DispatchEvent')
-    State input: {'type': 'Private', 'value': 22}
-    State input after applying input path of $: {'type': 'Private', 'value': 22}
-    State output after applying output path of $: {'type': 'Private', 'value': 22}
-    State output: {'type': 'Private', 'value': 22}
-    Executing PassState('ValueInTwenties')
-    State input: {'type': 'Private', 'value': 22}
-    State input after applying input path of $: {'type': 'Private', 'value': 22}
-    Output from applying result path of $: {'type': 'Private', 'value': 22}
-    State output after applying output path of $: {'type': 'Private', 'value': 22}
-    State output: {'type': 'Private', 'value': 22}
-    Terminating simulation of state machine
-
-    If no choice evaluates to true, then the default will be chosen.
-
-    >>> _ = state_machine.simulate({
-    ...     "type": "Private",
-    ...     "value": 102,
-    ...     "auditThreshold": 150,
-    ... })
-    Starting simulation of state machine
-    Executing ChoiceState('DispatchEvent')
-    State input: {'type': 'Private', 'value': 102, 'auditThreshold': 150}
-    State input after applying input path of $: {'type': 'Private', 'value': 102, 'auditThreshold': 150}
-    No choice evaluated to true
-    Choosing next state by the default set
-    State output after applying output path of $: {}
-    State output: {}
-    Executing PassState('RecordEvent')
-    State input: {}
-    State input after applying input path of $: {}
-    Output from applying result path of $: {}
-    State output after applying output path of $: {}
-    State output: {}
-    Terminating simulation of state machine
-
-    If no choice evaluates to true and no default is set, then there will be an
-    error.
-
-    >>> choice_state = ChoiceState(
-    ...     "DispatchEvent",
-    ...     choices=[
-    ...         NotChoice(
-    ...             variable="$.type",
-    ...             string_equals="Private",
-    ...             next_state=public_state,
-    ...         ),
-    ...         AndChoice(
-    ...             [
-    ...                 ChoiceRule(variable="$.value", is_present=True),
-    ...                 ChoiceRule(variable="$.value", numeric_greater_than_equals=20),
-    ...                 ChoiceRule(variable="$.value", numeric_less_than=30),
-    ...             ],
-    ...             next_state=value_in_twenties_state,
-    ...         ),
-    ...         VariableChoice(
-    ...             variable="$.rating",
-    ...             numeric_greater_than_path="$.auditThreshold",
-    ...             next_state=start_audit_state,
-    ...         )
-    ...     ],
-    ... )
-    >>> state_machine = StateMachine(start_state=choice_state)
-    >>> _ = state_machine.simulate({
-    ...     "type": "Private",
-    ...     "value": 102,
-    ...     "auditThreshold": 150,
-    ... })
-    Starting simulation of state machine
-    Executing ChoiceState('DispatchEvent')
-    State input: {'type': 'Private', 'value': 102, 'auditThreshold': 150}
-    State input after applying input path of $: {'type': 'Private', 'value': 102, 'auditThreshold': 150}
-    No choice evaluated to true
-    NoChoiceMatchedError encountered in state
-    Checking for catchers
-    State output: {}
-    Terminating simulation of state machine
-    """
+    """A Choice State adds branching logic to a state machine."""
 
     state_type = "Choice"
 
@@ -368,106 +216,17 @@ class ChoiceState(TerminalStateMixin, AbstractInputPathOutputPathState):
 class WaitState(AbstractNextOrEndState):
     """A Wait State causes the interpreter to delay the machine for a specified time.
 
-    You can specify the number of seconds to wait.
-
-    >>> from awsstepfuncs import *
-
-    >>> wait_state = WaitState("Wait!", seconds=1)
-    >>> state_machine = StateMachine(start_state=wait_state)
-    >>> state_output = state_machine.simulate()
-    Starting simulation of state machine
-    Executing WaitState('Wait!', seconds=1)
-    State input: {}
-    State input after applying input path of $: {}
-    Waiting 1 seconds
-    State output after applying output path of $: {}
-    State output: {}
-    Terminating simulation of state machine
-
-    Seconds must be an integer greater than zero.
-
-    >>> WaitState("Wait!", seconds=-1)
-    Traceback (most recent call last):
-        ...
-    awsstepfuncs.errors.AWSStepFuncsValueError: seconds must be greater than zero
-
     You can specify a timestamp to wait until. If the time has already past,
     then there is no wait.
-
-    >>> from datetime import datetime, timedelta
-    >>> wait_state = WaitState("Wait!", timestamp=datetime(2020, 1, 1))
-    >>> state_machine = StateMachine(start_state=wait_state)
-    >>> state_output = state_machine.simulate()
-    Starting simulation of state machine
-    Executing WaitState('Wait!', timestamp='2020-01-01T00:00:00')
-    State input: {}
-    State input after applying input path of $: {}
-    State output after applying output path of $: {}
-    State output: {}
-    Terminating simulation of state machine
 
     Alternatively, you can use state input to specify the number of seconds wait
     by specifying a Reference Path `seconds_path`.
 
-    >>> wait_state = WaitState("Wait!", seconds_path="$.numSeconds")
-    >>> state_machine = StateMachine(start_state=wait_state)
-    >>> state_output = state_machine.simulate({"numSeconds": 1})
-    Starting simulation of state machine
-    Executing WaitState('Wait!', seconds_path='$.numSeconds')
-    State input: {'numSeconds': 1}
-    State input after applying input path of $: {'numSeconds': 1}
-    Waiting 1 seconds
-    State output after applying output path of $: {'numSeconds': 1}
-    State output: {'numSeconds': 1}
-    Terminating simulation of state machine
-
-    A `ValueError` will be thrown if `seconds_path` isn't a reference path to an
-    integer. This is considered a runtime exception and will be treated as an
-    error during the simulation.
-
-    >>> wait_state = WaitState("Wait!", seconds_path="$.numSeconds")
-    >>> state_machine = StateMachine(start_state=wait_state)
-    >>> state_output = state_machine.simulate({"numSeconds": "hello"})
-    Starting simulation of state machine
-    Executing WaitState('Wait!', seconds_path='$.numSeconds')
-    State input: {'numSeconds': 'hello'}
-    State input after applying input path of $: {'numSeconds': 'hello'}
-    StateSimulationError encountered in state
-    Checking for catchers
-    State output: {}
-    Terminating simulation of state machine
-
     Similarily, you can use state input to specify the timestamp (in ISO 8601
     format) to wait until.
 
-    >>> wait_state = WaitState("Wait!", timestamp_path="$.meta.timeToWait")
-    >>> state_machine = StateMachine(start_state=wait_state)
-    >>> state_output = state_machine.simulate({"meta": {"timeToWait": "2020-01-01T00:00:00"}})
-    Starting simulation of state machine
-    Executing WaitState('Wait!', timestamp_path='$.meta.timeToWait')
-    State input: {'meta': {'timeToWait': '2020-01-01T00:00:00'}}
-    State input after applying input path of $: {'meta': {'timeToWait': '2020-01-01T00:00:00'}}
-    Waiting until 2020-01-01T00:00:00
-    State output after applying output path of $: {'meta': {'timeToWait': '2020-01-01T00:00:00'}}
-    State output: {'meta': {'timeToWait': '2020-01-01T00:00:00'}}
-    Terminating simulation of state machine
-
     Exactly one must be defined: `seconds`, `timestamp`, `seconds_path`,
     `timestamp_path`.
-
-    Multiple parameters set:
-
-    >>> WaitState("Wait", seconds=5, timestamp=datetime.now())
-    Traceback (most recent call last):
-        ...
-    awsstepfuncs.errors.AWSStepFuncsValueError: Exactly one must be defined: seconds, timestamp, seconds_path, timestamp_path
-
-    No parameters set:
-
-    >>> WaitState("Wait")
-    Traceback (most recent call last):
-        ...
-    awsstepfuncs.errors.AWSStepFuncsValueError: Exactly one must be defined: seconds, timestamp, seconds_path, timestamp_path
 
     Refs: https://states-language.net/#wait-state
     """
@@ -520,18 +279,6 @@ class WaitState(AbstractNextOrEndState):
 
     def compile(self) -> Dict[str, Any]:  # noqa: A003
         """Compile the state to Amazon States Language.
-
-        >>> WaitState("Wait!", seconds=5).compile()
-        {'Type': 'Wait', 'End': True, 'Seconds': 5}
-
-        >>> WaitState("Wait!", timestamp=datetime(2020,1,1)).compile()
-        {'Type': 'Wait', 'End': True, 'Timestamp': '2020-01-01T00:00:00'}
-
-        >>> WaitState("Wait!", seconds_path="$.numSeconds").compile()
-        {'Type': 'Wait', 'End': True, 'SecondsPath': '$.numSeconds'}
-
-        >>> WaitState("Wait!", timestamp_path="$.meta.timeToWait").compile()
-        {'Type': 'Wait', 'End': True, 'TimestampPath': '$.meta.timeToWait'}
 
         Returns:
             A dictionary representing the compiled state in Amazon States
@@ -611,97 +358,10 @@ class WaitState(AbstractNextOrEndState):
 class PassState(AbstractParametersState):
     """The Pass State by default passes its input to its output, performing no work.
 
-    >>> from awsstepfuncs import *
-
-    >>> pass_state1 = PassState("Pass 1", comment="The starting state")
-    >>> pass_state2 = PassState("Pass 2")
-    >>> pass_state3 = PassState("Pass 3")
-
-    Define the state machine.
-
-    >>> _ = pass_state1 >> pass_state2 >> pass_state3
-    >>> state_machine = StateMachine(start_state=pass_state1)
-
-    Make sure that the workflow is correctly specified.
-
-    >>> [state.name for state in state_machine.start_state]
-    ['Pass 1', 'Pass 2', 'Pass 3']
-
-    Check that it compiles correctly.
-
-    >>> compiled = state_machine.compile()
-    >>> expected = {
-    ...     "StartAt": "Pass 1",
-    ...     "States": {
-    ...         "Pass 2": {"Type": "Pass", "Next": "Pass 3"},
-    ...         "Pass 1": {"Type": "Pass", "Comment": "The starting state", "Next": "Pass 2"},
-    ...         "Pass 3": {"Type": "Pass", "End": True},
-    ...     },
-    ... }
-    >>> assert compiled == expected
-
-    Then you can run a simulation to debug it.
-
-    >>> _ = state_machine.simulate()
-    Starting simulation of state machine
-    Executing PassState('Pass 1')
-    State input: {}
-    State input after applying input path of $: {}
-    Output from applying result path of $: {}
-    State output after applying output path of $: {}
-    State output: {}
-    Executing PassState('Pass 2')
-    State input: {}
-    State input after applying input path of $: {}
-    Output from applying result path of $: {}
-    State output after applying output path of $: {}
-    State output: {}
-    Executing PassState('Pass 3')
-    State input: {}
-    State input after applying input path of $: {}
-    Output from applying result path of $: {}
-    State output after applying output path of $: {}
-    State output: {}
-    Terminating simulation of state machine
-
     If `result` is passed, its value is treated as the output of a virtual task.
-
-    >>> result = {"Hello": "world!"}
-    >>> pass_state = PassState("Passing", result=result)
-    >>> state_machine = StateMachine(start_state=pass_state)
-    >>> state_output = state_machine.simulate()
-    Starting simulation of state machine
-    Executing PassState('Passing')
-    State input: {}
-    State input after applying input path of $: {}
-    Output from applying result path of $: {'Hello': 'world!'}
-    State output after applying output path of $: {'Hello': 'world!'}
-    State output: {'Hello': 'world!'}
-    Terminating simulation of state machine
-    >>> assert state_output == result
 
     If `result_path` is specified, the `result` will be placed on that Reference
     Path.
-
-    >>> result = {"Hello": "world!"}
-    >>> pass_state = PassState("Passing", result=result, result_path="$.result")
-    >>> state_machine = StateMachine(start_state=pass_state)
-    >>> _ = state_machine.simulate({"sum": 42})
-    Starting simulation of state machine
-    Executing PassState('Passing')
-    State input: {'sum': 42}
-    State input after applying input path of $: {'sum': 42}
-    Output from applying result path of $.result: {'sum': 42, 'result': {'Hello': 'world!'}}
-    State output after applying output path of $: {'sum': 42, 'result': {'Hello': 'world!'}}
-    State output: {'sum': 42, 'result': {'Hello': 'world!'}}
-    Terminating simulation of state machine
-
-    Be careful! The state name has a maximum length of 128 characters.
-
-    >>> PassState("a" * 129)
-    Traceback (most recent call last):
-        ...
-    awsstepfuncs.errors.AWSStepFuncsValueError: State name cannot exceed 128 characters
     """
 
     state_type = "Pass"
@@ -720,11 +380,6 @@ class PassState(AbstractParametersState):
 
     def compile(self) -> Dict[str, Any]:  # noqa: A003
         """Compile the state to Amazon States Language.
-
-        >>> result = {"Hello": "world!"}
-        >>> pass_state = PassState("Passing", result=result)
-        >>> pass_state.compile()
-        {'Type': 'Pass', 'End': True, 'Result': {'Hello': 'world!'}}
 
         Returns:
             A dictionary representing the compiled state in Amazon States
@@ -753,31 +408,7 @@ class PassState(AbstractParametersState):
 
 
 class TaskState(AbstractRetryCatchState):
-    """The Task State executes the work identified by the Resource field.
-
-    >>> task_state = TaskState("Task", resource="123").add_retrier(["SomeError"], max_attempts=0)
-    >>> task_state.compile()
-    {'Type': 'Task', 'End': True, 'Retry': [{'ErrorEquals': ['SomeError'], 'MaxAttempts': 0}], 'Resource': '123'}
-
-    >>> fail_state = FailState("Fail", error="SomeError", cause="I did it!")
-    >>> _ = task_state >> fail_state
-
-    When the state machine simulates the previous example, task_state should not
-    get retried as even though a retrier was set for the thrown error, max
-    attempts set to zero means it will not be retried.
-
-    >>> transition_state = TaskState("Cleanup", resource="456")
-    >>> _ = task_state.add_catcher(["States.ALL"], next_state=transition_state)
-    >>> task_state.compile()
-    {'Type': 'Task', 'Next': 'Fail', 'Retry': [{'ErrorEquals': ['SomeError'], 'MaxAttempts': 0}], 'Catch': [{'ErrorEquals': ['States.ALL'], 'Next': 'Cleanup'}], 'Resource': '123'}
-
-    >>> another_fail_state = FailState("AnotherFail", error="AnotherError", cause="I did it again!")
-    >>> _ = task_state >> another_fail_state
-
-    When the state machine simulates the previous example, in this case, we
-    should end up at `transition_state` because "States.ALL" catches all errors
-    and transitions to `transition_state`.
-    """
+    """The Task State executes the work identified by the Resource field."""
 
     state_type = "Task"
 
@@ -795,10 +426,6 @@ class TaskState(AbstractRetryCatchState):
 
     def compile(self) -> Dict[str, Any]:  # noqa: A003
         """Compile the state to Amazon States Language.
-
-        >>> task_state = TaskState("Task", resource="arn:aws:lambda:ap-southeast-2:710187714096:function:DummyResource")
-        >>> task_state.compile()
-        {'Type': 'Task', 'End': True, 'Resource': 'arn:aws:lambda:ap-southeast-2:710187714096:function:DummyResource'}
 
         Returns:
             A dictionary representing the compiled state in Amazon States
@@ -845,113 +472,7 @@ class ParallelState(AbstractRetryCatchState):
 
 
 class MapState(AbstractRetryCatchState):
-    """The Map State processes all the elements of an array.
-
-    >>> resource = "<arn>"
-    >>> task_state = TaskState("Validate", resource=resource)
-    >>> iterator = StateMachine(start_state=task_state)
-    >>> map_state = MapState(
-    ...     "Validate-All",
-    ...     input_path="$.detail",
-    ...     items_path="$.shipped",
-    ...     max_concurrency=0,
-    ...     iterator=iterator,
-    ... )
-    >>> state_machine = StateMachine(start_state=map_state)
-
-    You can simulate a state machine with a Map State.
-
-    >>> state_input = {
-    ...    "ship-date": "2016-03-14T01:59:00Z",
-    ...    "detail": {
-    ...        "delivery-partner": "UQS",
-    ...        "shipped": [
-    ...            {"prod": "R31", "dest-code": 9511, "quantity": 1344},
-    ...            {"prod": "S39", "dest-code": 9511, "quantity": 40},
-    ...        ],
-    ...    },
-    ... }
-    >>> def mock_fn(event, context):
-    ...     event["quantity"] *= 2
-    ...     return event
-    >>> _ = state_machine.simulate(
-    ...     state_input,
-    ...     resource_to_mock_fn={resource: mock_fn},
-    ... )
-    Starting simulation of state machine
-    Executing MapState('Validate-All')
-    State input: {'ship-date': '2016-03-14T01:59:00Z', 'detail': {'delivery-partner': 'UQS', 'shipped': [{'prod': 'R31', 'dest-code': 9511, 'quantity': 1344}, {'prod': 'S39', 'dest-code': 9511, 'quantity': 40}]}}
-    State input after applying input path of $.detail: {'delivery-partner': 'UQS', 'shipped': [{'prod': 'R31', 'dest-code': 9511, 'quantity': 1344}, {'prod': 'S39', 'dest-code': 9511, 'quantity': 40}]}
-    Items after applying items_path of $.shipped: [{'prod': 'R31', 'dest-code': 9511, 'quantity': 1344}, {'prod': 'S39', 'dest-code': 9511, 'quantity': 40}]
-    Starting simulation of state machine
-    Executing TaskState('Validate')
-    State input: {'prod': 'R31', 'dest-code': 9511, 'quantity': 1344}
-    State input after applying input path of $: {'prod': 'R31', 'dest-code': 9511, 'quantity': 1344}
-    Output from applying result path of $: {'prod': 'R31', 'dest-code': 9511, 'quantity': 2688}
-    State output after applying output path of $: {'prod': 'R31', 'dest-code': 9511, 'quantity': 2688}
-    State output: {'prod': 'R31', 'dest-code': 9511, 'quantity': 2688}
-    Terminating simulation of state machine
-    Starting simulation of state machine
-    Executing TaskState('Validate')
-    State input: {'prod': 'S39', 'dest-code': 9511, 'quantity': 40}
-    State input after applying input path of $: {'prod': 'S39', 'dest-code': 9511, 'quantity': 40}
-    Output from applying result path of $: {'prod': 'S39', 'dest-code': 9511, 'quantity': 80}
-    State output after applying output path of $: {'prod': 'S39', 'dest-code': 9511, 'quantity': 80}
-    State output: {'prod': 'S39', 'dest-code': 9511, 'quantity': 80}
-    Terminating simulation of state machine
-    Output from applying result path of $: [{'prod': 'R31', 'dest-code': 9511, 'quantity': 2688}, {'prod': 'S39', 'dest-code': 9511, 'quantity': 80}]
-    State output after applying output path of $: [{'prod': 'R31', 'dest-code': 9511, 'quantity': 2688}, {'prod': 'S39', 'dest-code': 9511, 'quantity': 80}]
-    State output: [{'prod': 'R31', 'dest-code': 9511, 'quantity': 2688}, {'prod': 'S39', 'dest-code': 9511, 'quantity': 80}]
-    Terminating simulation of state machine
-
-    You can also compile a state machine with a Map State.
-
-    >>> output = state_machine.compile()
-    >>> expected_output = {
-    ...     "StartAt": "Validate-All",
-    ...     "States": {
-    ...         "Validate-All": {
-    ...             "Type": "Map",
-    ...             "InputPath": "$.detail",
-    ...             "End": True,
-    ...             "ItemsPath": "$.shipped",
-    ...             "MaxConcurrency": 0,
-    ...             "Iterator": {
-    ...                 "StartAt": "Validate",
-    ...                 "States": {
-    ...                     "Validate": {"Type": "Task", "End": True, "Resource": "<arn>"}
-    ...                 },
-    ...             },
-    ...         }
-    ...     },
-    ... }
-    >>> assert output == expected_output
-
-    Be careful that `items_path` Reference Path actually yields a list.
-
-    >>> map_state = MapState(
-    ...     "Validate-All",
-    ...     input_path="$.detail",
-    ...     items_path="$.delivery-partner",
-    ...     max_concurrency=0,
-    ...     iterator=iterator,
-    ... )
-    >>> state_machine = StateMachine(start_state=map_state)
-    >>> _ = state_machine.simulate(
-    ...     state_input,
-    ...     resource_to_mock_fn={resource: mock_fn},
-    ... )
-    Starting simulation of state machine
-    Executing MapState('Validate-All')
-    State input: {'ship-date': '2016-03-14T01:59:00Z', 'detail': {'delivery-partner': 'UQS', 'shipped': [{'prod': 'R31', 'dest-code': 9511, 'quantity': 2688}, {'prod': 'S39', 'dest-code': 9511, 'quantity': 80}]}}
-    State input after applying input path of $.detail: {'delivery-partner': 'UQS', 'shipped': [{'prod': 'R31', 'dest-code': 9511, 'quantity': 2688}, {'prod': 'S39', 'dest-code': 9511, 'quantity': 80}]}
-    Items after applying items_path of $.delivery-partner: UQS
-    StateSimulationError encountered in state
-    Checking for catchers
-    No catchers were matched
-    State output: {}
-    Terminating simulation of state machine
-    """
+    """The Map State processes all the elements of an array."""
 
     state_type = "Map"
 

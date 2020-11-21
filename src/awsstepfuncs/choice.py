@@ -58,11 +58,7 @@ class DataTestExpressionType(Enum):
 
 
 class DataTestExpression:
-    """A data-test expression.
-
-    >>> DataTestExpression("string_equals", "Hello")
-    DataTestExpression(string_equals='Hello')
-    """
+    """A data-test expression."""
 
     def __init__(self, type: str, expression: Any):  # noqa: A002
         """Initialize a data-test expression.
@@ -86,126 +82,6 @@ class ChoiceRule:
     When initializing a Choice Rule, a data test expression must be provided. A
     Choice Rule evalulates to `True` or `False` based on the data-test
     expression on some data.
-
-    >>> career_rule = ChoiceRule("$.career", string_equals="Pirate")
-    >>> career_rule.evaluate({"career": "Pirate", "salary": "10 guineas"})
-    True
-    >>> career_rule.evaluate({"career": "Sailor", "salary": "5 guineas"})
-    False
-
-    A Reference Path can be given too.
-
-    >>> career_rule = ChoiceRule("$.career", string_equals_path="$.expectedCareer")
-    >>> career_rule.evaluate({"career": "Pirate", "expectedCareer": "Pirate"})
-    True
-    >>> career_rule.evaluate({"career": "Pirate", "expectedCareer": "Doctor"})
-    False
-
-    There can only be one data-test expression per Choice Rule.
-
-    >>> ChoiceRule("$.career", string_equals="Pirate", is_present=True)
-    Traceback (most recent call last):
-        ...
-    awsstepfuncs.errors.AWSStepFuncsValueError: Exactly one data-test expression must be defined
-
-    Be careful that if you specify a Reference Path that it evaluates to a value
-    with the expected type.
-
-    >>> salary_rule = ChoiceRule("$.salary", string_equals_path="$.expectedSalary")
-    >>> salary_rule.evaluate({"salary": "100_000", "expectedSalary": 100_000})
-    Traceback (most recent call last):
-        ...
-    awsstepfuncs.errors.AWSStepFuncsValueError: string_equals_path must evaluate to a string value
-
-    There are many different data-test expressions to choose from:
-
-    **string_equals**
-
-    >>> rule = ChoiceRule("$.letter", string_equals="B")
-    >>> rule.evaluate({"letter": "A"})
-    False
-    >>> rule.evaluate({"letter": "B"})
-    True
-
-    **string_equals_path**
-
-    >>> rule = ChoiceRule("$.letter", string_equals_path="$.compareLetter")
-    >>> rule.evaluate({"letter": "A", "compareLetter": "A"})
-    True
-    >>> rule.evaluate({"letter": "B", "compareLetter": "A"})
-    False
-
-    **string_greater_than**
-
-    >>> rule = ChoiceRule("$.letter", string_greater_than="B")
-    >>> rule.evaluate({"letter": "A"})
-    False
-    >>> rule.evaluate({"letter": "C"})
-    True
-
-    **string_greater_than_path**
-
-    >>> rule = ChoiceRule("$.letter", string_greater_than_path="$.compareLetter")
-    >>> rule.evaluate({"letter": "A", "compareLetter": "B"})
-    False
-    >>> rule.evaluate({"letter": "C", "compareLetter": "B"})
-    True
-
-    **string_less_than**
-
-    >>> rule = ChoiceRule("$.letter", string_less_than="B")
-    >>> rule.evaluate({"letter": "A"})
-    True
-    >>> rule.evaluate({"letter": "C"})
-    False
-
-    **string_less_than_path**
-
-    >>> rule = ChoiceRule("$.letter", string_less_than_path="$.compareLetter")
-    >>> rule.evaluate({"letter": "A", "compareLetter": "B"})
-    True
-    >>> rule.evaluate({"letter": "C", "compareLetter": "B"})
-    False
-
-    **string_greater_than_equals**
-
-    >>> rule = ChoiceRule("$.letter", string_greater_than_equals="B")
-    >>> rule.evaluate({"letter": "A"})
-    False
-    >>> rule.evaluate({"letter": "B"})
-    True
-    >>> rule.evaluate({"letter": "C"})
-    True
-
-    **string_greater_than_equals_path**
-
-    >>> rule = ChoiceRule("$.letter", string_greater_than_equals_path="$.compareLetter")
-    >>> rule.evaluate({"letter": "A", "compareLetter": "B"})
-    False
-    >>> rule.evaluate({"letter": "B", "compareLetter": "B"})
-    True
-    >>> rule.evaluate({"letter": "C", "compareLetter": "B"})
-    True
-
-    **string_less_than_equals**
-
-    >>> rule = ChoiceRule("$.letter", string_less_than_equals="B")
-    >>> rule.evaluate({"letter": "A"})
-    True
-    >>> rule.evaluate({"letter": "B"})
-    True
-    >>> rule.evaluate({"letter": "C"})
-    False
-
-    **string_less_than_equals_path**
-
-    >>> rule = ChoiceRule("$.letter", string_less_than_equals_path="$.compareLetter")
-    >>> rule.evaluate({"letter": "A", "compareLetter": "B"})
-    True
-    >>> rule.evaluate({"letter": "B", "compareLetter": "B"})
-    True
-    >>> rule.evaluate({"letter": "C", "compareLetter": "B"})
-    False
     """
 
     def __init__(self, variable: str, **data_test_expression: Any):
@@ -232,9 +108,6 @@ class ChoiceRule:
 
     def __repr__(self) -> str:
         """Return a string representation of the Choice Rule.
-
-        >>> ChoiceRule("$.career", string_equals="Pirate")
-        ChoiceRule('$.career', string_equals='Pirate')
 
         Returns:
             A string representing the Choice Rule.
@@ -364,23 +237,8 @@ class AbstractChoice(ABC):
 class NotChoice(AbstractChoice):
     """Not choice for the Choice State.
 
-    >>> from awsstepfuncs import *
-    >>> next_state = PassState("Passing")
-    >>> not_choice = NotChoice(
-    ...     variable="$.type",
-    ...     string_equals="Private",
-    ...     next_state=next_state,
-    ... )
-
     The Not Choice can be evaluated based on input data to true or false based
     on whether the Choice Rule is false.
-
-    >>> not_choice.evaluate({"type": "Public"})
-    True
-    >>> not_choice.evaluate({"type": "Private"})
-    False
-    >>> not_choice.evaluate({"sex": "Male"})
-    True
     """
 
     def __init__(
@@ -418,30 +276,8 @@ class NotChoice(AbstractChoice):
 class AndChoice(AbstractChoice):
     """And Choice for the Choice State.
 
-    >>> from awsstepfuncs import *
-    >>> next_state = PassState("Passing")
-    >>> and_choice = AndChoice(
-    ...     [
-    ...         ChoiceRule(variable="$.value", is_present=True),
-    ...         ChoiceRule(variable="$.value", numeric_greater_than_equals=20),
-    ...         ChoiceRule(variable="$.value", numeric_less_than=30),
-    ...     ],
-    ...     next_state=next_state,
-    ... )
-
     The And Choice can be evaluated based on input data to true or false based
     on whether all Choice Rules are true.
-
-    >>> and_choice.evaluate({"setting": "on", "value": 20})
-    True
-    >>> and_choice.evaluate({"setting": "on", "value": 25})
-    True
-    >>> and_choice.evaluate({"setting": "on", "value": 30})
-    False
-    >>> and_choice.evaluate({"setting": "on"})
-    False
-    >>> and_choice.evaluate({"setting": "on", "value": 50})
-    False
     """
 
     def __init__(
@@ -474,43 +310,11 @@ class AndChoice(AbstractChoice):
 class VariableChoice(AbstractChoice):
     """Variable Choice for the Choice State.
 
-    >>> from awsstepfuncs import *
-    >>> next_state = PassState("Passing")
-    >>> variable_choice = VariableChoice(
-    ...     variable="$.type",
-    ...     string_equals="Private",
-    ...     next_state=next_state,
-    ... )
-
     The Variable Choice can be evaluated based on input data to true or false
     based on whether the Choice Rule is true.
 
-    >>> variable_choice.evaluate({"type": "Public"})
-    False
-    >>> variable_choice.evaluate({"type": "Private"})
-    True
-
-    Here's another example:
-
-    >>> variable_choice = VariableChoice(
-    ...     variable="$.rating",
-    ...     numeric_greater_than_path="$.auditThreshold",
-    ...     next_state=next_state,
-    ... )
-    >>> variable_choice.evaluate({"rating": 53, "auditThreshold": 60})
-    False
-    >>> variable_choice.evaluate({"rating": 53, "auditThreshold": 50})
-    True
-    >>> variable_choice.evaluate({"rating": 53, "auditThreshold": 53})
-    False
-
     Be careful if you use a Reference Path that it evaluates to the correct
     type.
-
-    >>> variable_choice.evaluate({"rating": 53, "auditThreshold": "50"})
-    Traceback (most recent call last):
-        ...
-    awsstepfuncs.errors.AWSStepFuncsValueError: numeric_greater_than_path must evaluate to a numeric value
     """
 
     def __init__(
