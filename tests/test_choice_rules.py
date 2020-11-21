@@ -1,6 +1,14 @@
 import pytest
 
 from awsstepfuncs import AWSStepFuncsValueError, ChoiceRule
+from awsstepfuncs.choice import DataTestExpression
+
+
+def test_data_test_expression_repr():
+    assert (
+        repr(DataTestExpression("string_equals", "Hello"))
+        == "DataTestExpression(string_equals='Hello')"
+    )
 
 
 def test_string_equals_reference_path():
@@ -16,13 +24,22 @@ def test_multiple_data_test_expressions():
         ChoiceRule("$.career", string_equals="Pirate", is_present=True)
 
 
-def test_bad_reference_path_value():
+def test_bad_string_equals_path():
     salary_rule = ChoiceRule("$.salary", string_equals_path="$.expectedSalary")
     with pytest.raises(
         AWSStepFuncsValueError,
         match="string_equals_path must evaluate to a string value",
     ):
         salary_rule.evaluate({"salary": "100_000", "expectedSalary": 100_000})
+
+
+def test_bad_numeric_greater_than_path():
+    rating_rule = ChoiceRule("$.rating", numeric_greater_than_path="$.auditThreshold")
+    with pytest.raises(
+        AWSStepFuncsValueError,
+        match="numeric_greater_than_path must evaluate to a numeric value",
+    ):
+        rating_rule.evaluate({"rating": 53, "auditThreshold": "50"})
 
 
 def test_string_equals():
@@ -91,4 +108,4 @@ def test_string_less_than_equals_path():
 
 def test_repr():
     choice_rule = ChoiceRule("$.career", string_equals="Pirate")
-    assert repr(choice_rule) == ChoiceRule("$.career", string_equals="Pirate")
+    assert repr(choice_rule) == "ChoiceRule('$.career', string_equals='Pirate')"
