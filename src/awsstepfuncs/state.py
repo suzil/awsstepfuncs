@@ -416,17 +416,26 @@ class TaskState(AbstractRetryCatchState):
 
     state_type = "Task"
 
-    def __init__(self, *args: Any, resource: str, **kwargs: Any):
+    def __init__(
+        self,
+        *args: Any,
+        resource: str,
+        timeout_seconds: Optional[int] = None,
+        **kwargs: Any,
+    ):
         """Initialize a Task State.
 
         Args:
             args: Args to pass to parent classes.
             resource: A URI, especially an ARN that uniquely identifies the
                 specific task to execute.
+            timeout_seconds: How long the task is allowed to run before throwing
+                a timeout exception. Defaults to 60 seconds if not specified.
             kwargs: Kwargs to pass to parent classes.
         """
         super().__init__(*args, **kwargs)
         self.resource = resource
+        self.timeout_seconds = timeout_seconds
 
     def compile(self) -> Dict[str, Any]:  # noqa: A003
         """Compile the state to Amazon States Language.
@@ -437,6 +446,8 @@ class TaskState(AbstractRetryCatchState):
         """
         compiled = super().compile()
         compiled["Resource"] = self.resource
+        if timeout_seconds := self.timeout_seconds:
+            compiled["TimeoutSeconds"] = timeout_seconds
         return compiled
 
     def _execute(
@@ -466,12 +477,9 @@ class TaskState(AbstractRetryCatchState):
         else:
             return state_output
 
-    @staticmethod
-    def _run_lambda_function(
-        lambda_fn: Callable, event: Any, timeout_seconds: int = 5
-    ) -> Any:
+    def _run_lambda_function(self, lambda_fn: Callable, event: Any) -> Any:
         output = lambda_call(
-            lambda_fn, event, LambdaContext(timeout_in_seconds=timeout_seconds)
+            lambda_fn, event, LambdaContext(self.timeout_seconds or 60)
         )[0]
         try:
             return json.loads(output)

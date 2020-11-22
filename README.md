@@ -148,16 +148,16 @@ As you can see from the standard output, each state is executed and data flows b
 
 ### States compilation and simulation
 
-| State        | Compilation                                                                          | Simulation                                                                           |
-| ------------ | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------ |
-| **Fail**     | ✔️                                                                                    | ✔️                                                                                    |
-| **Succeed**  | ✔️                                                                                    | ✔️                                                                                    |
-| **Choice**   | ❌                                                                                    | ❌                                                                                    |
-| **Wait**     | ✔️                                                                                    | ✔️                                                                                    |
-| **Pass**     | ✔️                                                                                    | ✔️                                                                                    |
-| **Map**      | ✔️                                                                                    | ✔️                                                                                    |
-| **Parallel** | ❌                                                                                    | ❌                                                                                    |
-| **Task**     | ❌ Missing TimeoutSeconds, TimeoutSecondsPath, HeartbeatSeconds, HeartbeatSecondsPath | ❌ Missing TimeoutSeconds, TimeoutSecondsPath, HeartbeatSeconds, HeartbeatSecondsPath |
+| State        | Compilation                                                          | Simulation                                                           |
+| ------------ | -------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| **Fail**     | ✔️                                                                    | ✔️                                                                    |
+| **Succeed**  | ✔️                                                                    | ✔️                                                                    |
+| **Choice**   | ❌                                                                    | ❌                                                                    |
+| **Wait**     | ✔️                                                                    | ✔️                                                                    |
+| **Pass**     | ✔️                                                                    | ✔️                                                                    |
+| **Map**      | ✔️                                                                    | ✔️                                                                    |
+| **Parallel** | ❌                                                                    | ❌                                                                    |
+| **Task**     | ❌ Missing TimeoutSecondsPath, HeartbeatSeconds, HeartbeatSecondsPath | ❌ Missing TimeoutSecondsPath, HeartbeatSeconds, HeartbeatSecondsPath |
 
 
 ### Input and output processing

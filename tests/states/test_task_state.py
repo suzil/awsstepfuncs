@@ -10,7 +10,10 @@ def dummy_resource():
 
 def test_task_state(dummy_resource, capture_stdout):
     pass_state = PassState("Pass", comment="The starting state")
-    task_state = TaskState("Task", resource=dummy_resource)
+    timeout_seconds = 10
+    task_state = TaskState(
+        "Task", resource=dummy_resource, timeout_seconds=timeout_seconds
+    )
 
     # Define the state machine
     pass_state >> task_state
@@ -28,6 +31,7 @@ def test_task_state(dummy_resource, capture_stdout):
             task_state.name: {
                 "Type": "Task",
                 "Resource": dummy_resource,
+                "TimeoutSeconds": timeout_seconds,
                 "End": True,
             },
         },
