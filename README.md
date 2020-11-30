@@ -8,7 +8,7 @@
 [![codecov](https://codecov.io/gh/suzil/awsstepfuncs/branch/master/graph/badge.svg?token=PF990VH0YU)](https://codecov.io/gh/suzil/awsstepfuncs)
 [![Documentation Status](https://readthedocs.org/projects/awsstepfuncs/badge/?version=latest)](https://awsstepfuncs.readthedocs.io/en/latest/?badge=latest)
 
-⚠️ **WARNING: This project is still a work-in-progress.** ⚠️
+⚠️ **WARNING: This project is still a work-in-progress. Any feedback on the project is highly appreciated.** ⚠️
 
 The Python SDK `awsstepfuncs` can compile to [Amazon States Machine](https://states-language.net/) to use in a real AWS Step Functions application and can run simulations with mocked functions to debug state machines.
 
